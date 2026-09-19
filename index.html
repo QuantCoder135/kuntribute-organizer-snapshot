@@ -199,6 +199,8 @@ button { font-family:inherit; }
 .circle-card-top h3 { font-size:.98rem; margin-bottom:3px; }
 .circle-card-top p { color:var(--muted); font-size:.78rem; }
 .circle-card-avatar { width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg,var(--green),var(--green-dark)); display:grid; place-items:center; font-weight:700; color:#fff; flex-shrink:0; font-size:.85rem; }
+.circle-card-top-right { display:flex; align-items:center; gap:10px; flex-shrink:0; }
+.circle-card-chevron { color:var(--muted); font-size:14px; }
 .circle-card-badges { display:flex; flex-wrap:wrap; gap:7px; }
 .circle-card-badges span { padding:5px 11px; border-radius:999px; font-size:.72rem; font-weight:600; }
 .badge-amount { background:rgba(34,197,94,.14); color:var(--green); }
@@ -406,7 +408,7 @@ button { font-family:inherit; }
 
 /* member rows — .entity-row is the same component under a neutral
    name, reused by Programs so no new row/card system is introduced. */
-.member-list, .entity-list { display:flex; flex-direction:column; gap:9px; }
+.member-list, .entity-list { display:flex; flex-direction:column; gap:12px; }
 .member-row, .entity-row { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:13px 15px; background:var(--card2); border:1px solid var(--border); border-radius:13px; width:100%; color:var(--text); text-align:left; cursor:pointer; }
 .member-row:hover, .entity-row:hover { border-color:var(--green-border); }
 .member-row-left { display:flex; align-items:center; gap:11px; min-width:0; }
@@ -544,15 +546,32 @@ button { font-family:inherit; }
   .mobile-drawer-exit { color:var(--green); font-weight:700; }
 }
 
-/* Programs — simplified snapshot list (see JS: renderProgramsPage). */
-.program-snapshot-list { display:flex; flex-direction:column; gap:12px; }
-.program-snapshot-card { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:18px; }
-.program-snapshot-top h3 { font-size:1rem; margin-bottom:4px; }
-.program-snapshot-top p { color:var(--muted); font-size:.82rem; }
-.program-snapshot-meta { margin:12px 0; }
-.program-snapshot-meta span { display:inline-block; padding:5px 11px; border-radius:999px; font-size:.72rem; font-weight:600; }
-.program-snapshot-card .text-action { color:var(--green); font-weight:700; font-size:.85rem; background:none; border:none; padding:0; cursor:pointer; display:inline-flex; align-items:center; gap:6px; }
-.program-snapshot-card .text-action:hover { color:var(--green-dark); }
+/* Member Detail — Quick Actions grid (Pay Member / Suspend / Report /
+   Support). Prototype-only: Pay Member/Report/Support are UI concepts
+   with no backing API, same "planned" toast convention used elsewhere. */
+.member-qa-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.member-qa-item { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; background:var(--card2); border:1px solid var(--border); border-radius:14px; padding:14px 8px; color:var(--text); font-size:.78rem; font-weight:600; cursor:pointer; text-align:center; }
+.member-qa-item:hover { border-color:var(--green-border); }
+.member-qa-item i { font-size:16px; color:var(--green); }
+
+/* Payment/receipt screenshot placeholder — this prototype has no real
+   uploaded files, so both the Contribution and Payout detail sheets
+   show a plain mock placeholder rather than fabricating an image. */
+.payment-proof-box { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; padding:26px 16px; border:1px dashed var(--border); border-radius:14px; color:var(--muted); text-align:center; }
+.payment-proof-box i { font-size:22px; }
+.payment-proof-box p { font-size:.8rem; line-height:1.5; }
+
+/* Cycles — compact summary card with a progress bar, replacing the
+   previous single-line cycle-row. */
+.cycle-summary-card { padding:14px 16px; border:1px solid var(--border); border-radius:13px; background:var(--card2); cursor:pointer; }
+.cycle-summary-card:hover { border-color:var(--green-border); }
+.cycle-summary-top { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:10px; }
+.cycle-summary-top h4 { font-size:.86rem; }
+.cycle-summary-amounts { display:flex; justify-content:space-between; align-items:baseline; font-size:.78rem; color:var(--muted); margin-bottom:6px; }
+.cycle-summary-amounts strong { color:var(--text); font-weight:700; }
+.cycle-progress-bar { height:6px; border-radius:999px; background:var(--card); overflow:hidden; margin-bottom:8px; }
+.cycle-progress-fill { height:100%; background:var(--green); border-radius:999px; }
+.cycle-summary-bottom { display:flex; justify-content:space-between; align-items:center; font-size:.74rem; color:var(--muted); }
 
     </style>
   </head>
@@ -740,36 +759,44 @@ button { font-family:inherit; }
           </div>
 
           <div class="cd-tabs" id="cd-tabs">
-            <button class="cd-tab active" data-tab="overview">Overview</button>
-            <button class="cd-tab" data-tab="members">Members</button>
+            <button class="cd-tab active" data-tab="members">Members</button>
             <button class="cd-tab" data-tab="contributions">Contributions</button>
             <button class="cd-tab" data-tab="cycles">Cycles</button>
             <button class="cd-tab" data-tab="payouts">Payouts</button>
           </div>
 
-          <div class="cd-tabpanel active" data-panel="overview">
-            <div class="cd-section">
-              <div class="cd-section-head"><h3>Members</h3><a href="#" id="cd-view-all-members">View all <i class="fa-solid fa-chevron-right"></i></a></div>
-              <div class="mini-list" id="cd-members-preview"></div>
-            </div>
-            <div class="cd-section">
-              <div class="cd-section-head"><h3>Recent Activity</h3><a href="#" id="cd-view-all-activity">View all <i class="fa-solid fa-chevron-right"></i></a></div>
-              <div class="activity-feed-list" id="cd-activity-preview"></div>
-            </div>
-          </div>
-
-          <div class="cd-tabpanel" data-panel="members">
+          <div class="cd-tabpanel active" data-panel="members">
             <div class="cd-section"><div class="member-list" id="cd-members-full"></div></div>
           </div>
           <div class="cd-tabpanel" data-panel="contributions">
-            <div class="cd-section"><div class="activity-feed-list" id="cd-contributions-full"></div></div>
+            <div class="cd-section">
+              <div class="cd-section-head"><h3>Recent Contributions</h3><a href="#" id="cd-view-all-contributions">View all <i class="fa-solid fa-chevron-right"></i></a></div>
+              <div class="activity-feed-list" id="cd-contributions-recent"></div>
+            </div>
           </div>
           <div class="cd-tabpanel" data-panel="cycles">
             <div class="cd-section"><div class="cycle-list" id="cd-cycles-full"></div></div>
           </div>
           <div class="cd-tabpanel" data-panel="payouts">
-            <div class="cd-section"><div class="activity-feed-list" id="cd-payouts-full"></div></div>
+            <div class="cd-section">
+              <div class="cd-section-head"><h3>Recent Payouts</h3><a href="#" id="cd-view-all-payouts">View all <i class="fa-solid fa-chevron-right"></i></a></div>
+              <div class="activity-feed-list" id="cd-payouts-recent"></div>
+            </div>
           </div>
+        </div>
+
+        <!-- ================= CONTRIBUTIONS HISTORY (per circle) ================= -->
+        <div id="page-contributions-history" class="page" data-title="Contributions">
+          <a href="#" id="contributions-history-back" class="workflow-back" style="display:inline-flex;align-items:center;gap:8px;color:var(--green);font-size:.86rem;font-weight:700;margin-bottom:12px;"><i class="fa-solid fa-arrow-left"></i> <span id="contributions-history-back-label">Circle</span></a>
+          <div class="page-header"><div><h1>Contributions</h1><p id="contributions-history-subtitle">Every contribution recorded for this circle</p></div></div>
+          <div class="panel"><div class="activity-feed-list" id="contributions-history-list"></div></div>
+        </div>
+
+        <!-- ================= PAYOUTS HISTORY (per circle) ================= -->
+        <div id="page-payouts-history" class="page" data-title="Payouts">
+          <a href="#" id="payouts-history-back" class="workflow-back" style="display:inline-flex;align-items:center;gap:8px;color:var(--green);font-size:.86rem;font-weight:700;margin-bottom:12px;"><i class="fa-solid fa-arrow-left"></i> <span id="payouts-history-back-label">Circle</span></a>
+          <div class="page-header"><div><h1>Payouts</h1><p id="payouts-history-subtitle">Every payout recorded for this circle</p></div></div>
+          <div class="panel"><div class="activity-feed-list" id="payouts-history-list"></div></div>
         </div>
 
         <!-- ================= MEMBERS ================= -->
@@ -798,9 +825,14 @@ button { font-family:inherit; }
              anyone commits to the full Circle Detail experience. Uses
              the same circlesData as My Circles; no separate Program
              data model. -->
+        <!-- ================= PROGRAMS =================
+             Three program types only, presentation inspired by the
+             Member-facing Programs page. Selecting Rotational Savings
+             goes straight to the existing My Circles page — no
+             Program Type -> Program -> Circle hierarchy. -->
         <div id="page-programs" class="page" data-title="Programs">
-          <div class="page-header"><div><h1>Programs</h1><p>Your circles, at a glance</p></div></div>
-          <div class="program-snapshot-list" id="programs-page-list"></div>
+          <div class="page-header"><div><h1>Programs</h1><p>The kinds of financial programs KUNTRIBUTE coordinates</p></div></div>
+          <div class="entity-list" id="programs-page-list"></div>
         </div>
 
         <div id="page-notifications" class="page" data-title="Notifications">
@@ -1014,10 +1046,9 @@ button { font-family:inherit; }
 
           <p class="me-section-label">Identity</p>
           <div class="review-section">
-            <div class="review-row"><span>Full Name</span><strong id="member-detail-fullname">-</strong></div>
+            <div class="review-row"><span>Name</span><strong id="member-detail-fullname">-</strong></div>
             <div class="review-row"><span>Email</span><a class="detail-link" id="member-detail-email" href="#">-</a></div>
-            <div class="review-row"><span>Phone Number</span><a class="detail-link" id="member-detail-phone" href="#">-</a></div>
-            <div class="review-row"><span>KUNTRIBUTE ID</span><strong id="member-detail-ktb">-</strong></div>
+            <div class="review-row"><span>KTB ID</span><strong id="member-detail-ktb">-</strong></div>
           </div>
 
           <p class="me-section-label">Account / Payout Details</p>
@@ -1029,22 +1060,14 @@ button { font-family:inherit; }
             </div>
           </div>
 
-          <!-- A member can belong to more than one circle (e.g. David
-               Okoro is in two circles in this mock data), so the global
-               Member Detail shows a count, not one circle's specifics
-               as though it were universal. Per-circle position/amount
-               still live in that circle's own Members tab. -->
-          <p class="me-section-label">Circle Participation</p>
-          <div class="review-section">
-            <div class="review-row"><span>Number of Circles</span><strong id="member-detail-circle-count">-</strong></div>
+          <p class="me-section-label">Quick Actions</p>
+          <div class="member-qa-grid">
+            <button type="button" class="member-qa-item" id="member-pay-btn"><i class="fa-solid fa-hand-holding-dollar"></i>Pay Member</button>
+            <button type="button" class="member-qa-item" id="member-suspend-btn"><i class="fa-solid fa-circle-pause"></i>Suspend Member</button>
+            <button type="button" class="member-qa-item" id="member-report-btn"><i class="fa-solid fa-flag"></i>Report</button>
+            <button type="button" class="member-qa-item" id="member-support-btn"><i class="fa-solid fa-headset"></i>Support</button>
           </div>
-
-          <p class="me-section-label">Actions</p>
-          <div style="display:flex;flex-direction:column;gap:10px;">
-            <button type="button" class="modal-secondary warn" id="member-suspend-btn">Suspend Member</button>
-            <button type="button" class="modal-secondary danger" id="member-remove-btn">Remove Member</button>
-            <button type="button" class="modal-secondary" id="member-download-btn"><i class="fa-solid fa-download"></i> Download Member Details</button>
-          </div>
+          <button type="button" class="modal-secondary" id="member-download-btn" style="margin-top:10px;"><i class="fa-solid fa-download"></i> Download Member Details</button>
         </div>
       </div>
 
@@ -1057,12 +1080,84 @@ button { font-family:inherit; }
         </div>
       </div>
 
-      <!-- ================= REMOVE MEMBER CONFIRMATION ================= -->
-      <div class="modal-overlay" id="remove-member-overlay">
+      <!-- ================= CIRCLE SNAPSHOT (My Circles -> tap a circle) =================
+           Reference: Member prototype's #circle-detail-overlay pattern —
+           a bottom-sheet snapshot with a CTA into the full page, reused
+           here with Organizer's own existing .cd-stats/.cd-status
+           components rather than importing Member's markup. -->
+      <div class="modal-overlay" id="circle-snapshot-overlay">
         <div class="modal-sheet"><div class="modal-handle"></div>
-          <div class="modal-header"><h2>Remove Member</h2><button type="button" class="modal-close" id="close-remove-member" aria-label="Close"><i class="fa-solid fa-xmark"></i></button></div>
-          <p class="modal-subtext" id="remove-member-copy">Removing this member ends their participation and access in this circle. Their historical contribution and payout records are preserved and will not disappear.</p>
-          <div class="wizard-actions"><button type="button" class="modal-secondary" id="remove-cancel-btn">Cancel</button><button type="button" class="modal-secondary danger" id="remove-confirm-btn">Remove Member</button></div>
+          <div class="modal-header"><h2 id="snapshot-circle-name">Circle</h2><button type="button" class="modal-close" id="close-circle-snapshot" aria-label="Close"><i class="fa-solid fa-xmark"></i></button></div>
+          <div class="cd-identity-meta" style="margin-bottom:6px;"><span class="cd-type" id="snapshot-circle-type">Rotational Savings</span><span class="dot">·</span><span class="cd-status status-active" id="snapshot-circle-status">Active</span></div>
+          <div class="cd-stats">
+            <div class="cd-stat"><span>Contribution</span><strong id="snapshot-amount">—</strong></div>
+            <div class="cd-stat"><span>Frequency</span><strong id="snapshot-frequency">—</strong></div>
+            <div class="cd-stat"><span>Members</span><strong id="snapshot-member-count">0</strong></div>
+            <div class="cd-stat cd-stat-cycle" style="grid-column:1/-1;"><span>Current Cycle</span><strong id="snapshot-current-cycle">—</strong></div>
+          </div>
+          <button type="button" class="modal-submit" id="snapshot-see-details" style="margin-top:18px;">See Details <i class="fa-solid fa-arrow-right"></i></button>
+        </div>
+      </div>
+
+      <!-- ================= CONTRIBUTION DETAIL (slide-up) ================= -->
+      <div class="modal-overlay" id="contribution-detail-overlay">
+        <div class="modal-sheet"><div class="modal-handle"></div>
+          <div class="modal-header"><h2>Contribution</h2><button type="button" class="modal-close" id="close-contribution-detail" aria-label="Close"><i class="fa-solid fa-xmark"></i></button></div>
+          <div class="review-section">
+            <div class="review-row"><span>Member</span><strong id="contribution-detail-member">-</strong></div>
+            <div class="review-row"><span>Amount</span><strong id="contribution-detail-amount">-</strong></div>
+            <div class="review-row"><span>Date</span><strong id="contribution-detail-date">-</strong></div>
+            <div class="review-row"><span>Status</span><span class="activity-status" id="contribution-detail-status">-</span></div>
+          </div>
+          <p class="me-section-label">Payment Screenshot</p>
+          <div class="payment-proof-box" id="contribution-detail-proof-box">
+            <i class="fa-regular fa-image"></i>
+            <p id="contribution-detail-proof-text">No screenshot uploaded for this contribution.</p>
+          </div>
+          <div class="wizard-actions" id="contribution-detail-proof-actions" style="margin-top:10px;">
+            <button type="button" class="modal-secondary" id="contribution-detail-view-proof"><i class="fa-solid fa-eye"></i> View</button>
+            <button type="button" class="modal-secondary" id="contribution-detail-download-proof"><i class="fa-solid fa-download"></i> Download</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= CYCLE DETAIL — member payment breakdown (slide-up) ================= -->
+      <div class="modal-overlay" id="cycle-detail-overlay">
+        <div class="modal-sheet"><div class="modal-handle"></div>
+          <div class="modal-header"><h2 id="cycle-detail-title">Cycle</h2><button type="button" class="modal-close" id="close-cycle-detail" aria-label="Close"><i class="fa-solid fa-xmark"></i></button></div>
+          <p class="modal-subtext" id="cycle-detail-subtext" style="text-align:left;">-</p>
+          <p class="me-section-label">Paid</p>
+          <div class="mini-list" id="cycle-detail-paid"></div>
+          <p class="me-section-label">Not Paid</p>
+          <div class="mini-list" id="cycle-detail-unpaid"></div>
+        </div>
+      </div>
+
+      <!-- ================= PAYOUT DETAIL (slide-up) ================= -->
+      <div class="modal-overlay" id="payout-detail-overlay">
+        <div class="modal-sheet"><div class="modal-handle"></div>
+          <div class="modal-header"><h2>Payout</h2><button type="button" class="modal-close" id="close-payout-detail" aria-label="Close"><i class="fa-solid fa-xmark"></i></button></div>
+          <div class="review-section">
+            <div class="review-row"><span>Recipient</span><strong id="payout-detail-recipient">-</strong></div>
+            <div class="review-row"><span>Amount</span><strong id="payout-detail-amount">-</strong></div>
+            <div class="review-row"><span>Date</span><strong id="payout-detail-date">-</strong></div>
+            <div class="review-row"><span>Status</span><span class="activity-status" id="payout-detail-status">-</span></div>
+          </div>
+          <p class="me-section-label">Bank Details</p>
+          <div class="review-section">
+            <div class="review-row"><span>Bank Name</span><strong id="payout-detail-bank">-</strong></div>
+            <div class="review-row"><span>Account Name</span><strong id="payout-detail-account-name">-</strong></div>
+            <div class="review-row"><span>Account Number</span><strong id="payout-detail-account-number">-</strong></div>
+          </div>
+          <p class="me-section-label">Receipt</p>
+          <div class="payment-proof-box" id="payout-detail-proof-box">
+            <i class="fa-regular fa-file-lines"></i>
+            <p id="payout-detail-proof-text">No receipt uploaded for this payout.</p>
+          </div>
+          <div class="wizard-actions" id="payout-detail-proof-actions" style="margin-top:10px;">
+            <button type="button" class="modal-secondary" id="payout-detail-view-receipt"><i class="fa-solid fa-eye"></i> View Receipt</button>
+            <button type="button" class="modal-secondary" id="payout-detail-download-receipt"><i class="fa-solid fa-download"></i> Download Receipt</button>
+          </div>
         </div>
       </div>
 
@@ -1113,6 +1208,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initializeCirclesSegments();
   initializeMemberFilters();
   initializeCircleDetailTabs();
+  initializeCircleWorkflows();
   initializeTheme();
   bootstrapSession();
 });
@@ -1238,6 +1334,9 @@ function formatActivityDate(value) {
   return Number.isNaN(date.getTime()) ? "Date not recorded" : date.toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" });
 }
 function getInitials(name) { return (name || "").split(" ").filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase() || "?"; }
+// Universal, non-name-derived circle icon — same concept as the Member
+// prototype's CIRCLE_ICON, replacing per-circle initials on My Circles.
+const CIRCLE_ICON = '<i class="fa-solid fa-people-arrows"></i>';
 
 function showToast(message, icon = "fa-solid fa-circle-check") {
   const stack = document.getElementById("toast-stack");
@@ -1547,7 +1646,10 @@ function renderCirclesPage(searchTerm = "") {
     <div class="circle-card" data-circle-id="${circle.id}">
       <div class="circle-card-top">
         <div><h3>${circle.name}</h3><p>${circle.membersJoined} Member${circle.membersJoined === 1 ? "" : "s"}</p></div>
-        <div class="circle-card-avatar">${getInitials(circle.name)}</div>
+        <div class="circle-card-top-right">
+          <div class="circle-card-avatar">${CIRCLE_ICON}</div>
+          <i class="fa-solid fa-chevron-right circle-card-chevron"></i>
+        </div>
       </div>
       <div class="circle-card-badges">
         <span class="badge-amount">${formatNaira(circle.amount)}</span>
@@ -1556,42 +1658,43 @@ function renderCirclesPage(searchTerm = "") {
       </div>
     </div>`).join("");
 
-  container.querySelectorAll(".circle-card").forEach((el) => el.addEventListener("click", () => openCircleDetail(Number(el.dataset.circleId))));
+  // Tapping a circle opens the concise Circle Snapshot first (slide-up),
+  // not the full Circle Detail directly — see openCircleSnapshot().
+  container.querySelectorAll(".circle-card").forEach((el) => el.addEventListener("click", () => openCircleSnapshot(Number(el.dataset.circleId))));
 }
 
 /* ==========================================================
-   PROGRAMS — simplified MVP: Programs -> My Circles -> Circle
-   Snapshot -> View Full Detail. No Program Type / Program layer;
-   reuses the same circlesData as My Circles, presented as a
-   lighter-weight snapshot. "View Full Detail" opens the existing
-   Circle Detail page — no competing circle experience.
+   PROGRAMS — three program types only (Rotational Savings, Welfare,
+   Cooperative Savings), presentation directly inspired by the
+   Member-facing Programs page (ktb/prototypes/member-desktop): an
+   .entity-row list, one enabled row with a chevron leading straight
+   into My Circles, the other two shown as Planned. No Program Type ->
+   Program -> Circle hierarchy — selecting Rotational Savings goes
+   straight to the existing My Circles page (circlesData is honestly
+   all Rotational Savings in this prototype's mock data).
 ========================================================== */
 function renderProgramsPage() {
   const container = document.getElementById("programs-page-list");
   if (!container) return;
 
-  if (!circlesData.length) {
-    container.innerHTML = `<div class="empty-state compact"><i class="fa-solid fa-sitemap"></i><p>No circles yet. Create one from My Circles to see it here.</p></div>`;
-    return;
-  }
+  const count = circlesData.length;
+  const rotationalNote = count ? `${count} circle${count === 1 ? "" : "s"} you organize` : "No circles yet";
 
-  container.innerHTML = circlesData
-    .map(
-      (circle) => `
-    <div class="program-snapshot-card">
-      <div class="program-snapshot-top">
-        <h3>${circle.name}</h3>
-        <p>${circle.membersJoined} Member${circle.membersJoined === 1 ? "" : "s"} · ${circle.frequency}</p>
-      </div>
-      <div class="program-snapshot-meta"><span class="badge-amount">${formatNaira(circle.amount)}</span></div>
-      <button type="button" class="text-action" data-view-detail="${circle.id}">View Full Detail <i class="fa-solid fa-chevron-right"></i></button>
-    </div>`,
-    )
-    .join("");
+  container.innerHTML = `
+    <button type="button" class="entity-row" id="open-rotational-savings">
+      <div class="member-row-left"><div class="entity-icon"><i class="fa-solid fa-people-arrows"></i></div><div><h4>Rotational Savings</h4><p class="member-row-note">${rotationalNote}</p></div></div>
+      <i class="fa-solid fa-chevron-right member-chevron"></i>
+    </button>
+    <div class="entity-row" style="opacity:.55;cursor:not-allowed;" aria-disabled="true">
+      <div class="member-row-left"><div class="entity-icon" style="background:var(--card2);color:var(--muted);"><i class="fa-solid fa-hand-holding-heart"></i></div><div><h4>Welfare</h4><p class="member-row-note">Collective welfare contributions.</p></div></div>
+      <span class="type-badge">Planned</span>
+    </div>
+    <div class="entity-row" style="opacity:.55;cursor:not-allowed;" aria-disabled="true">
+      <div class="member-row-left"><div class="entity-icon" style="background:var(--card2);color:var(--muted);"><i class="fa-solid fa-piggy-bank"></i></div><div><h4>Cooperative Savings</h4><p class="member-row-note">Shared savings toward a common goal.</p></div></div>
+      <span class="type-badge">Planned</span>
+    </div>`;
 
-  container.querySelectorAll("[data-view-detail]").forEach((btn) => {
-    btn.addEventListener("click", () => openCircleDetail(Number(btn.dataset.viewDetail)));
-  });
+  document.getElementById("open-rotational-savings")?.addEventListener("click", () => switchPage("circles"));
 }
 
 /* ==========================================================
@@ -1608,10 +1711,6 @@ function initializeCircleDetailTabs() {
   document.querySelectorAll("#cd-tabs .cd-tab").forEach((tab) => {
     tab.addEventListener("click", () => setCircleDetailTab(tab.dataset.tab));
   });
-  const viewMembers = document.getElementById("cd-view-all-members");
-  if (viewMembers) viewMembers.addEventListener("click", (e) => { e.preventDefault(); setCircleDetailTab("members"); });
-  const viewActivity = document.getElementById("cd-view-all-activity");
-  if (viewActivity) viewActivity.addEventListener("click", (e) => { e.preventDefault(); setCircleDetailTab("contributions"); });
   const manageBtn = document.getElementById("cd-manage-btn");
   if (manageBtn) manageBtn.addEventListener("click", () => openModal("manage-circle-overlay"));
   const insightsBtn = document.getElementById("cd-insights-btn");
@@ -1621,6 +1720,70 @@ function initializeCircleDetailTabs() {
     openModal("circle-insights-overlay");
   });
   document.getElementById("close-circle-insights")?.addEventListener("click", () => closeModal("circle-insights-overlay"));
+}
+
+/* ==========================================================
+   Circle Snapshot, Contribution/Payout/Cycle detail sheets, and the
+   circle-scoped Contributions/Payouts history pages — wiring only
+   (rendering lives with each feature's own functions above).
+========================================================== */
+function initializeCircleWorkflows() {
+  document.getElementById("close-circle-snapshot")?.addEventListener("click", () => closeModal("circle-snapshot-overlay"));
+  document.getElementById("snapshot-see-details")?.addEventListener("click", () => {
+    closeModal("circle-snapshot-overlay");
+    if (snapshotCircleId != null) openCircleDetail(snapshotCircleId);
+  });
+
+  document.getElementById("close-contribution-detail")?.addEventListener("click", () => closeModal("contribution-detail-overlay"));
+  document.getElementById("contribution-detail-view-proof")?.addEventListener("click", () => showToast("Opening the payment screenshot (mock preview only).", "fa-regular fa-image"));
+  document.getElementById("contribution-detail-download-proof")?.addEventListener("click", () => downloadMockFile("payment-screenshot.txt", "Mock placeholder for a member-uploaded payment screenshot."));
+
+  document.getElementById("close-payout-detail")?.addEventListener("click", () => closeModal("payout-detail-overlay"));
+  document.getElementById("payout-detail-view-receipt")?.addEventListener("click", () => showToast("Opening the payout receipt (mock preview only).", "fa-regular fa-file-lines"));
+  document.getElementById("payout-detail-download-receipt")?.addEventListener("click", () => downloadMockFile("payout-receipt.txt", "Mock placeholder for an uploaded payout receipt."));
+
+  document.getElementById("close-cycle-detail")?.addEventListener("click", () => closeModal("cycle-detail-overlay"));
+
+  // "View all" (Contributions/Payouts tabs) -> dedicated history page.
+  // Back returns to Circle Detail on the same tab it was opened from.
+  document.getElementById("cd-view-all-contributions")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    if (activeCircleId == null) return;
+    renderContributionsHistoryPage(activeCircleId);
+    switchPage("contributions-history");
+  });
+  document.getElementById("cd-view-all-payouts")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    if (activeCircleId == null) return;
+    renderPayoutsHistoryPage(activeCircleId);
+    switchPage("payouts-history");
+  });
+  document.getElementById("contributions-history-back")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    switchPage("circle-detail");
+    setCircleDetailTab("contributions");
+  });
+  document.getElementById("payouts-history-back")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    switchPage("circle-detail");
+    setCircleDetailTab("payouts");
+  });
+}
+
+// Small local-only "download" used by the mock screenshot/receipt
+// placeholders — same Blob pattern as downloadMemberDetails/
+// downloadCircleReceipt, no real file exists to serve.
+function downloadMockFile(filename, text) {
+  const blob = new Blob([text], { type: "text/plain" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  showToast("Downloaded (prototype placeholder).", "fa-solid fa-download");
 }
 
 function setCircleDetailTab(tabId) {
@@ -1646,50 +1809,207 @@ function openCircleDetail(circleId) {
   setText("cd-start-date", circle.startDate ? formatActivityDate(circle.startDate) : "Unavailable");
   setText("cd-current-cycle", currentCycleLabel(circle.cycles));
 
-  // Members preview (max 3) + full list
-  const preview = document.getElementById("cd-members-preview");
-  preview.innerHTML = circle.members.length
-    ? circle.members.slice(0, 3).map((m) => `<div class="mini-row"><span>${m.name}</span><span class="member-status ${m.status}">${m.status === "confirmed" ? "Confirmed" : "Pending"}</span></div>`).join("")
-    : `<div class="empty-state compact"><i class="fa-solid fa-users"></i><p>No members yet</p></div>`;
   renderMemberListInto("cd-members-full", circle.members.map((m) => ({ ...m, circleId: circle.id })));
 
-  // Activity preview (max 3) + full contributions/payouts lists
-  const activity = [
-    ...circle.contributions.map((item) => ({ kind: "contribution", amount: item.amount, status: item.status, date: item.payment_date, title: `${item.full_name || "Member"} contribution` })),
-    ...circle.payouts.map((item) => ({ kind: "payout", amount: item.amount, status: item.status, date: item.payout_date, title: `${item.full_name || "Member"} payout` })),
-  ].sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
-  renderActivityRowsInto("cd-activity-preview", activity.slice(0, 3));
-  renderActivityRowsInto("cd-contributions-full", circle.contributions.map((c) => ({ kind: "contribution", amount: c.amount, status: c.status, date: c.payment_date, title: `${c.full_name || "Member"} contribution` })));
-  renderActivityRowsInto("cd-payouts-full", circle.payouts.map((p) => ({ kind: "payout", amount: p.amount, status: p.status, date: p.payout_date, title: `${p.full_name || "Member"} payout` })));
+  // Contributions/Payouts tabs show only the 5 most recent — "View all"
+  // opens the dedicated history page for this circle (see
+  // renderContributionsHistoryPage/renderPayoutsHistoryPage).
+  const recentContributions = [...circle.contributions].sort((a, b) => new Date(b.payment_date || 0) - new Date(a.payment_date || 0));
+  const recentPayouts = [...circle.payouts].sort((a, b) => new Date(b.payout_date || 0) - new Date(a.payout_date || 0));
+  renderActivityRowsInto("cd-contributions-recent", recentContributions.slice(0, 5), "contribution");
+  renderActivityRowsInto("cd-payouts-recent", recentPayouts.slice(0, 5), "payout");
 
   renderCyclesList("cd-cycles-full", circle.cycles);
-  setCircleDetailTab("overview");
+  setCircleDetailTab("members");
   switchPage("circle-detail");
 }
 
-function renderActivityRowsInto(id, items) {
+// items are raw mockContributions/mockPayouts records (not a mapped
+// shape) so each row can carry its own id and open the matching
+// slide-up detail (openContributionDetail/openPayoutDetail).
+function renderActivityRowsInto(id, items, kind) {
   const el = document.getElementById(id);
   if (!el) return;
+  const isPayout = kind === "payout";
+  const recordId = (item) => (isPayout ? item.payout_id : item.contribution_id);
+  const date = (item) => (isPayout ? item.payout_date : item.payment_date);
+  const title = (item) => `${item.full_name || "Member"} ${isPayout ? "payout" : "contribution"}`;
+
   el.innerHTML = items.length
-    ? items.map((item) => `<div class="activity-row"><div class="activity-row-icon ${item.kind}"><i class="fa-solid ${item.kind === "payout" ? "fa-money-bill-transfer" : "fa-money-check-dollar"}"></i></div><div class="activity-row-body"><h4>${item.title}</h4><p>${formatActivityDate(item.date)}</p></div><div class="activity-row-right"><strong>${formatNaira(item.amount)}</strong><span class="activity-status ${item.status}">${item.status}</span></div></div>`).join("")
+    ? items.map((item) => `<div class="activity-row" data-record-id="${recordId(item)}"><div class="activity-row-icon ${kind}"><i class="fa-solid ${isPayout ? "fa-money-bill-transfer" : "fa-money-check-dollar"}"></i></div><div class="activity-row-body"><h4>${title(item)}</h4><p>${formatActivityDate(date(item))}</p></div><div class="activity-row-right"><strong>${formatNaira(item.amount)}</strong><span class="activity-status ${item.status}">${item.status}</span></div></div>`).join("")
     : `<div class="empty-state compact"><i class="fa-regular fa-clock"></i><p>No records yet.</p></div>`;
+
+  el.querySelectorAll("[data-record-id]").forEach((row) => {
+    row.addEventListener("click", () => {
+      const recId = Number(row.dataset.recordId);
+      if (isPayout) openPayoutDetail(recId); else openContributionDetail(recId);
+    });
+  });
+}
+
+// Compact per-cycle summary: contributed vs expected, a progress bar,
+// paid/total members, and lifecycle status. Tapping a cycle opens the
+// member payment breakdown (openCycleDetailSheet).
+// Mock contributions carry a payment_date but no cycle_id, so a
+// confirmed contribution is scoped to a cycle by whether its date
+// falls within that cycle's date range — this is what keeps a
+// "Scheduled" (future) cycle honestly at 0%, rather than a flawed
+// circle-wide approximation.
+function confirmedContributionsForCycle(circle, cycle) {
+  const start = new Date(cycle.start_date);
+  const end = new Date(cycle.end_date);
+  end.setHours(23, 59, 59, 999);
+  return circle.contributions.filter((c) => {
+    if (c.status !== "confirmed" || !c.payment_date) return false;
+    const paid = new Date(c.payment_date);
+    return paid >= start && paid <= end;
+  });
 }
 
 function renderCyclesList(id, cycles) {
   const el = document.getElementById(id);
   if (!el) return;
+  const circle = circlesData.find((c) => c.id === activeCircleId);
   el.innerHTML = cycles.length
-    ? cycles.map((cycle) => `
-      <div class="cycle-row">
-        <div class="cycle-row-left"><div class="cycle-number">#${cycle.cycle_number}</div>
-          <div class="cycle-row-body"><h4>${formatActivityDate(cycle.start_date)} – ${formatActivityDate(cycle.end_date)}</h4><p>Payout to ${cycle.recipient_full_name}</p></div>
-        </div>
-        <div class="cycle-row-right">
-          <span class="activity-status ${cycle.status}">${cycle.status}</span>
-          ${cycle.payout_id ? `<div class="cycle-status-group"><strong>${formatNaira(cycle.payout_amount)}</strong><span class="activity-status ${cycle.payout_status}">${cycle.payout_status}</span></div>` : `<span class="detail-caption">No payout yet</span>`}
-        </div>
-      </div>`).join("")
+    ? cycles.map((cycle) => {
+        const totalMembers = circle ? circle.membersJoined : 0;
+        const paidContributions = circle ? confirmedContributionsForCycle(circle, cycle) : [];
+        const paidMembers = new Set(paidContributions.map((c) => c.user_id)).size;
+        const contributed = paidContributions.reduce((t, c) => t + Number(c.amount), 0);
+        const expected = (circle ? circle.amount : 0) * totalMembers;
+        const pct = expected ? Math.round((contributed / expected) * 100) : 0;
+        const statusLabel = cycle.status === "open" ? "Pending" : cycle.status === "scheduled" ? "Scheduled" : "Completed";
+        return `
+      <div class="cycle-summary-card" data-cycle-id="${cycle.cycle_id}">
+        <div class="cycle-summary-top"><h4>Cycle #${cycle.cycle_number}</h4><span class="activity-status ${cycle.status}">${statusLabel}</span></div>
+        <div class="cycle-summary-amounts"><span>Contributed</span><strong>${formatNaira(contributed)} of ${formatNaira(expected)}</strong></div>
+        <div class="cycle-progress-bar"><div class="cycle-progress-fill" style="width:${pct}%;"></div></div>
+        <div class="cycle-summary-bottom"><span>${paidMembers} of ${totalMembers} members paid</span><span>${formatActivityDate(cycle.start_date)} – ${formatActivityDate(cycle.end_date)}</span></div>
+      </div>`;
+      }).join("")
     : `<div class="empty-state compact"><i class="fa-solid fa-rotate"></i><p>No cycles scheduled yet.</p></div>`;
+
+  el.querySelectorAll("[data-cycle-id]").forEach((card) => {
+    card.addEventListener("click", () => openCycleDetailSheet(Number(card.dataset.cycleId)));
+  });
+}
+
+/* ==========================================================
+   CIRCLE SNAPSHOT — My Circles tap target. Reference: Member
+   prototype's #circle-detail-overlay bottom-sheet pattern (concise
+   stats + a single CTA into the full page), built here with
+   Organizer's own existing .cd-stats/.cd-status markup.
+========================================================== */
+let snapshotCircleId = null;
+
+function openCircleSnapshot(circleId) {
+  const circle = circlesData.find((c) => c.id === circleId);
+  if (!circle) return;
+  snapshotCircleId = circleId;
+
+  setText("snapshot-circle-name", circle.name);
+  setText("snapshot-circle-type", "Rotational Savings");
+  const statusEl = document.getElementById("snapshot-circle-status");
+  statusEl.textContent = circle.status;
+  statusEl.className = "cd-status status-" + circle.status;
+  setText("snapshot-amount", formatNaira(circle.amount));
+  setText("snapshot-frequency", circle.frequency);
+  setText("snapshot-member-count", circle.membersJoined);
+  setText("snapshot-current-cycle", currentCycleLabel(circle.cycles));
+
+  openModal("circle-snapshot-overlay");
+}
+
+/* ==========================================================
+   CONTRIBUTION / PAYOUT DETAIL (slide-up) + circle-scoped history
+   pages. Neither the contribution nor payout mock records carry a
+   real uploaded file, so the "screenshot"/"receipt" section is a
+   plain mock placeholder rather than a fabricated image — confirmed
+   contributions and paid payouts simply present it as available.
+========================================================== */
+function openContributionDetail(contributionId) {
+  const item = mockContributions.find((c) => c.contribution_id === contributionId);
+  if (!item) return;
+
+  setText("contribution-detail-member", item.full_name || "Member");
+  setText("contribution-detail-amount", formatNaira(item.amount));
+  setText("contribution-detail-date", formatActivityDate(item.payment_date));
+  const statusEl = document.getElementById("contribution-detail-status");
+  statusEl.textContent = item.status;
+  statusEl.className = "activity-status " + item.status;
+
+  const hasProof = item.status === "confirmed";
+  setText("contribution-detail-proof-text", hasProof ? "payment-screenshot.jpg" : "No screenshot uploaded for this contribution.");
+  document.getElementById("contribution-detail-proof-actions").style.display = hasProof ? "flex" : "none";
+
+  openModal("contribution-detail-overlay");
+}
+
+function openPayoutDetail(payoutId) {
+  const item = mockPayouts.find((p) => p.payout_id === payoutId);
+  if (!item) return;
+  const member = mockCircleMembers.find((m) => m.circle_member_id === item.circle_member_id);
+
+  setText("payout-detail-recipient", item.full_name || "Member");
+  setText("payout-detail-amount", formatNaira(item.amount));
+  setText("payout-detail-date", formatActivityDate(item.payout_date));
+  const statusEl = document.getElementById("payout-detail-status");
+  statusEl.textContent = item.status;
+  statusEl.className = "activity-status " + item.status;
+
+  setText("payout-detail-bank", member?.bank_name || "Unavailable");
+  setText("payout-detail-account-name", item.full_name || "Unavailable");
+  setText("payout-detail-account-number", member?.account_number || "Unavailable");
+
+  const hasReceipt = item.status === "paid";
+  setText("payout-detail-proof-text", hasReceipt ? "payout-receipt.pdf" : "No receipt uploaded for this payout.");
+  document.getElementById("payout-detail-proof-actions").style.display = hasReceipt ? "flex" : "none";
+
+  openModal("payout-detail-overlay");
+}
+
+function renderContributionsHistoryPage(circleId) {
+  const circle = circlesData.find((c) => c.id === circleId);
+  if (!circle) return;
+  setText("contributions-history-back-label", circle.name);
+  setText("contributions-history-subtitle", `Every contribution recorded for ${circle.name}`);
+  const sorted = [...circle.contributions].sort((a, b) => new Date(b.payment_date || 0) - new Date(a.payment_date || 0));
+  renderActivityRowsInto("contributions-history-list", sorted, "contribution");
+}
+
+function renderPayoutsHistoryPage(circleId) {
+  const circle = circlesData.find((c) => c.id === circleId);
+  if (!circle) return;
+  setText("payouts-history-back-label", circle.name);
+  setText("payouts-history-subtitle", `Every payout recorded for ${circle.name}`);
+  const sorted = [...circle.payouts].sort((a, b) => new Date(b.payout_date || 0) - new Date(a.payout_date || 0));
+  renderActivityRowsInto("payouts-history-list", sorted, "payout");
+}
+
+/* ==========================================================
+   CYCLE DETAIL — member payment breakdown (slide-up). Same
+   circle-level "confirmed" approximation used in renderCyclesList,
+   since mock contributions aren't scoped to a specific cycle.
+========================================================== */
+function openCycleDetailSheet(cycleId) {
+  const circle = circlesData.find((c) => c.id === activeCircleId);
+  if (!circle) return;
+  const cycle = circle.cycles.find((c) => c.cycle_id === cycleId);
+  if (!cycle) return;
+
+  setText("cycle-detail-title", `Cycle #${cycle.cycle_number}`);
+  setText("cycle-detail-subtext", `${formatActivityDate(cycle.start_date)} – ${formatActivityDate(cycle.end_date)} · Payout to ${cycle.recipient_full_name}`);
+
+  const paidUserIds = new Set(confirmedContributionsForCycle(circle, cycle).map((c) => c.user_id));
+  const paid = circle.members.filter((m) => paidUserIds.has(m.userId));
+  const unpaid = circle.members.filter((m) => !paidUserIds.has(m.userId));
+
+  const paidEl = document.getElementById("cycle-detail-paid");
+  const unpaidEl = document.getElementById("cycle-detail-unpaid");
+  paidEl.innerHTML = paid.length ? paid.map((m) => `<div class="mini-row"><span>${m.name}</span><span class="member-status confirmed">${formatNaira(circle.amount)}</span></div>`).join("") : `<div class="empty-state compact"><i class="fa-regular fa-circle-check"></i><p>No members have paid yet.</p></div>`;
+  unpaidEl.innerHTML = unpaid.length ? unpaid.map((m) => `<div class="mini-row"><span>${m.name}</span><span class="member-status pending">Not paid</span></div>`).join("") : `<div class="empty-state compact"><i class="fa-regular fa-circle-check"></i><p>Everyone has paid.</p></div>`;
+
+  openModal("cycle-detail-overlay");
 }
 
 /* ==========================================================
@@ -1735,16 +2055,11 @@ function openMemberDetail(member) {
   setText("member-detail-fullname", member.name);
   const emailLink = document.getElementById("member-detail-email");
   if (emailLink) { emailLink.textContent = member.email || "Unavailable"; emailLink.href = member.email ? `mailto:${member.email}` : "#"; }
-  const phoneLink = document.getElementById("member-detail-phone");
-  if (phoneLink) { phoneLink.textContent = member.phone || "Unavailable"; phoneLink.href = member.phone ? `tel:${member.phone}` : "#"; }
   setText("member-detail-ktb", member.ktbId || "Unavailable");
 
   setText("member-detail-bank", member.bankName || "Unavailable");
   setText("member-detail-account-name", member.name);
   setText("member-detail-account-number", member.accountNumber || "Unavailable");
-
-  const circleCount = new Set(mockCircleMembers.filter((m) => m.user_id === member.userId).map((m) => m.circle_id)).size;
-  setText("member-detail-circle-count", circleCount);
 
   openModal("member-detail-overlay");
 }
@@ -1767,16 +2082,12 @@ function initializeMemberActions() {
     renderMembersPage(membersPageFilter);
   });
 
-  document.getElementById("member-remove-btn")?.addEventListener("click", () => { closeModal("member-detail-overlay"); openModal("remove-member-overlay"); });
-  document.getElementById("remove-cancel-btn")?.addEventListener("click", () => { closeModal("remove-member-overlay"); if (activeMemberDetail) openMemberDetail(activeMemberDetail); });
-  document.getElementById("remove-confirm-btn")?.addEventListener("click", () => {
-    if (!activeMemberDetail) return;
-    updateMemberMembershipStatus(activeMemberDetail, "removed");
-    closeModal("remove-member-overlay");
-    closeModal("member-detail-overlay");
-    showToast("Member removed. Historical records are preserved.", "fa-solid fa-clock-rotate-left");
-    renderMembersPage(membersPageFilter);
-  });
+  // Pay Member / Report / Support: prototype-only UI concepts, same
+  // "planned" toast convention already used across this file — no
+  // backing API to call.
+  document.getElementById("member-pay-btn")?.addEventListener("click", () => showToast("Pay Member is planned for a future release.", "fa-solid fa-hourglass-half"));
+  document.getElementById("member-report-btn")?.addEventListener("click", () => showToast("Reporting is planned for a future release.", "fa-solid fa-hourglass-half"));
+  document.getElementById("member-support-btn")?.addEventListener("click", () => showToast("Support is planned for a future release.", "fa-solid fa-hourglass-half"));
 
   document.getElementById("member-detail-copy-account")?.addEventListener("click", async () => {
     const value = document.getElementById("member-detail-account-number")?.textContent || "";
@@ -1790,21 +2101,17 @@ function initializeMemberActions() {
 function downloadMemberDetails() {
   const member = activeMemberDetail;
   if (!member) return;
-  const circleCount = new Set(mockCircleMembers.filter((m) => m.user_id === member.userId).map((m) => m.circle_id)).size;
   const lines = [
     "KUNTRIBUTE — Member Record (Prototype)",
     "=========================================",
-    `Full Name: ${member.name}`,
+    `Name: ${member.name}`,
     `Email: ${member.email || "Unavailable"}`,
-    `Phone: ${member.phone || "Unavailable"}`,
-    `KUNTRIBUTE ID: ${member.ktbId || "Unavailable"}`,
+    `KTB ID: ${member.ktbId || "Unavailable"}`,
     `Status: ${membershipStatusLabel(member.membershipStatus)}`,
     "",
     `Bank Name: ${member.bankName || "Unavailable"}`,
     `Account Name: ${member.name}`,
     `Account Number: ${member.accountNumber || "Unavailable"}`,
-    "",
-    `Number of Circles: ${circleCount}`,
     "",
     "This is a prototype document generated locally. No real financial",
     "transactions or account data are represented.",
@@ -1933,7 +2240,12 @@ function renderMembersPage(circleId = membersPageFilter) {
     const expanded = expandedMemberGroups.has(circle.id) || Boolean(searchTerm);
     const visible = expanded ? members : members.slice(0, 3);
     const remaining = members.length - visible.length;
-    return `<section style="margin-bottom:18px;"><p style="color:var(--muted);font-size:.76rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin:0 4px 8px;">${circle.name}</p>${visible.map(buildMemberRowHTML).join("")}${remaining > 0 ? `<button class="modal-secondary" type="button" style="width:100%;margin-top:8px;" data-view-more="${circle.id}">View ${remaining} more <i class="fa-solid fa-chevron-down"></i></button>` : ""}</section>`;
+    // Nested .member-list so grouped rows get the same inter-card gap
+    // as every other member list in the app — without this wrapper the
+    // rows here sat flush against each other since .member-list's flex
+    // gap only ever applied to this <section>'s own siblings, not to
+    // the member-rows inside it.
+    return `<section style="margin-bottom:18px;"><p style="color:var(--muted);font-size:.76rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin:0 4px 8px;">${circle.name}</p><div class="member-list">${visible.map(buildMemberRowHTML).join("")}</div>${remaining > 0 ? `<button class="modal-secondary" type="button" style="width:100%;margin-top:8px;" data-view-more="${circle.id}">View ${remaining} more <i class="fa-solid fa-chevron-down"></i></button>` : ""}</section>`;
   }).join("");
 
   container.querySelectorAll("[data-view-more]").forEach((btn) => btn.addEventListener("click", () => { expandedMemberGroups.add(Number(btn.dataset.viewMore)); renderMembersPage(null); }));
