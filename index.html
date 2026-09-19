@@ -126,10 +126,9 @@ button { font-family:inherit; }
 .summary { margin-bottom:28px; }
 .summary-card { background:linear-gradient(135deg,rgba(255,255,255,.08),rgba(255,255,255,.02)),var(--card); border:1px solid rgba(255,255,255,.12); box-shadow:0 12px 35px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.06); border-radius:20px; padding:22px; }
 .wallet-top { display:flex; flex-direction:column; gap:10px; }
-.wallet-label-row { display:flex; align-items:center; justify-content:space-between; gap:10px; }
-.wallet-label { display:flex; align-items:center; gap:7px; color:var(--muted); font-size:.86rem; min-width:0; }
+.wallet-label-row { display:flex; align-items:center; gap:8px; }
+.wallet-label { display:flex; align-items:center; gap:7px; color:var(--muted); font-size:.86rem; min-width:0; margin-right:auto; }
 .wallet-label span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.wallet-utility { display:flex; align-items:center; gap:2px; flex-shrink:0; }
 .metric-info, .toggle-balance { background:none; border:none; color:var(--muted); font-size:14px; cursor:pointer; width:28px; height:28px; border-radius:8px; display:grid; place-items:center; flex-shrink:0; }
 .metric-info:hover, .toggle-balance:hover { color:var(--green); background:rgba(34,197,94,.1); }
 .wallet-balance-row { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:nowrap; }
@@ -143,17 +142,13 @@ button { font-family:inherit; }
 .contrib-strip strong { color:var(--green); }
 
 .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:28px; }
-/* Mobile-only alternate presentation of the same four metrics as
-   compact full-width rows (see the "FIXED MOBILE APP SHELL" media
+/* Mobile-only alternate presentation of the same four metrics as one
+   compact side-by-side strip (see the "FIXED MOBILE APP SHELL" media
    query for the ≤992px swap). Desktop grid above is untouched. */
-.stats-mobile-list { display:none; }
-.entity-row.static { cursor:default; }
-.metric-value { color:var(--green); }
+.stats-mobile-compact { display:none; }
 .stat-card { background:var(--card); border:1px solid var(--border); padding:18px 14px; border-radius:16px; }
-/* Quick Metrics treatment borrowed from the Organization prototype's
-   .mini-stat: a neutral icon badge (not colored per-metric) so the
-   green number stays the only accent — quieter than a green badge
-   on every card. */
+/* Neutral icon badge (not colored per-metric) so the green number
+   stays the only accent — quieter than a green badge on every card. */
 .stat-icon { width:34px; height:34px; border-radius:10px; background:var(--card2); color:var(--muted); display:grid; place-items:center; margin-bottom:10px; font-size:14px; }
 .stat-card h2 { font-size:1.5rem; color:var(--green); }
 .stat-card p { color:var(--muted); margin-top:4px; font-size:.76rem; }
@@ -346,15 +341,6 @@ button { font-family:inherit; }
 .success-actions-row { display:flex; gap:10px; }
 .success-actions-row .modal-secondary { flex:1; }
 
-/* ==========================================================
-   PROTOTYPE NOTICE — Login is explicitly out of scope for this pass;
-   the prototype opens directly on the Dashboard, exactly like
-   ktb/prototypes/organizer. This banner is that reference's own
-   convention for flagging a page as sample data.
-========================================================== */
-.prototype-notice { display:flex; align-items:center; gap:9px; background:rgba(245,158,11,.1); border:1px solid rgba(245,158,11,.22); border-radius:12px; padding:10px 14px; margin-bottom:18px; color:var(--muted); font-size:.78rem; font-weight:600; }
-.prototype-notice i { color:var(--warning); flex-shrink:0; }
-
 /* Base (desktop-default) rule for .bottom-nav must come BEFORE the
    mobile media query below. Both this rule and the media query's
    `.bottom-nav { display:block; }` have equal specificity, so when
@@ -386,10 +372,15 @@ button { font-family:inherit; }
   /* Quick Actions is a desktop convenience; mobile already has the
      bottom nav + per-page primary actions, so it stays out of the way. */
   .quick-actions-section { display:none; }
-  /* Quick Metrics: boxed 2x2 grid on desktop, compact full-width rows
-     on mobile — same data, same order, different presentation. */
+  /* Quick metrics: boxed 2x2 grid on desktop, one compact side-by-side
+     strip on mobile — same data, same order, no section heading. */
   .stats { display:none; }
-  .stats-mobile-list { display:block; margin-bottom:28px; }
+  .stats-mobile-compact { display:flex; background:var(--card); border:1px solid var(--border); border-radius:16px; margin-bottom:28px; overflow:hidden; }
+  .stats-mobile-cell { flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; text-align:center; gap:6px; padding:16px 6px; border-left:1px solid var(--border); }
+  .stats-mobile-cell:first-child { border-left:0; }
+  .stats-mobile-icon { width:28px; height:28px; border-radius:9px; background:var(--card2); color:var(--muted); display:grid; place-items:center; font-size:12px; }
+  .stats-mobile-cell h4 { font-size:1.05rem; color:var(--green); }
+  .stats-mobile-cell p { font-size:.6rem; color:var(--muted); line-height:1.25; }
   .topbar-user { display:none; }
 }
 .sidebar-head { display:none; }
@@ -503,6 +494,66 @@ button { font-family:inherit; }
   .cycle-row-right { flex-direction:row; align-items:center; justify-content:space-between; width:100%; margin-top:8px; }
 }
 
+/* ==========================================================
+   MOBILE ORGANIZER UX PASS (<=992px only, unless noted) — Total
+   Contributions icon order, mobile hamburger drawer, Programs
+   snapshot flow. Placed at the end of this stylesheet on purpose:
+   with equal-specificity selectors CSS resolves ties by source
+   order regardless of media-query nesting, so declaring overrides
+   any earlier than the base rules they target causes them to
+   silently lose the cascade. Desktop is otherwise untouched.
+========================================================== */
+@media (max-width:700px) {
+  /* Total Contributions: eye stays glued to the label; info moves to
+     the card's far right edge instead of clustering with the eye. */
+  .wallet-label { margin-right:0; }
+  .metric-info { margin-left:auto; }
+}
+
+/* Mobile hamburger drawer — separate markup from the desktop .sidebar
+   on purpose (see the HTML comment above #mobile-drawer). */
+.mobile-drawer { display:none; }
+@media (max-width:992px) {
+  .mobile-drawer {
+    display:flex; flex-direction:column; position:fixed; top:0; left:-300px;
+    width:280px; max-width:84vw; height:100vh; background:var(--sidebar);
+    z-index:1000; box-shadow:var(--shadow);
+    transition:left .35s cubic-bezier(.22,.61,.36,1); overflow:hidden;
+  }
+  .mobile-drawer.showSidebar { left:0; }
+
+  .mobile-drawer-brand { display:flex; align-items:center; gap:12px; padding:22px 20px 18px; border-bottom:1px solid var(--border); }
+  .mobile-drawer-brand .brand-mark { width:40px; height:40px; border-radius:12px; background:linear-gradient(135deg,var(--green),var(--green-dark)); display:flex; align-items:center; justify-content:center; padding:7px; flex-shrink:0; }
+  .mobile-drawer-brand .brand-mark img { width:100%; height:100%; object-fit:contain; display:block; }
+  .mobile-drawer-brand .brand-name { font-size:1.02rem; font-weight:800; letter-spacing:-0.01em; color:var(--text); }
+  .mobile-drawer-brand .brand-tagline { font-size:.66rem; color:var(--muted); margin-top:2px; line-height:1.3; }
+  .mobile-drawer-brand .brand-quote { font-size:.66rem; color:var(--green); font-weight:700; margin-top:3px; }
+
+  .mobile-drawer-scroll { flex:1; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:14px 16px 10px; }
+  .mobile-drawer-group-label { color:var(--muted); font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:.07em; margin:16px 6px 6px; }
+  .mobile-drawer-group-label:first-child { margin-top:0; }
+  .mobile-drawer-link { display:flex; align-items:center; gap:13px; padding:12px 10px; border-radius:12px; color:var(--nav-text); font-size:.92rem; }
+  .mobile-drawer-link i { width:18px; text-align:center; }
+  .mobile-drawer-link:hover { background:rgba(34,197,94,.12); color:var(--text); }
+  .mobile-drawer-link.active { background:linear-gradient(135deg,var(--green),var(--green-dark)); color:#fff; }
+  .mobile-drawer-link.planned-nav { opacity:.55; cursor:not-allowed; }
+  .mobile-drawer-link.planned-nav:hover { background:transparent; color:var(--nav-text); }
+  .mobile-drawer-link.planned-nav span { margin-left:auto; padding:2px 7px; border-radius:999px; background:var(--card2); color:var(--muted); font-size:.6rem; font-weight:700; text-transform:uppercase; }
+
+  .mobile-drawer-bottom { padding:14px 16px calc(16px + env(safe-area-inset-bottom)); border-top:1px solid var(--border); }
+  .mobile-drawer-exit { color:var(--green); font-weight:700; }
+}
+
+/* Programs — simplified snapshot list (see JS: renderProgramsPage). */
+.program-snapshot-list { display:flex; flex-direction:column; gap:12px; }
+.program-snapshot-card { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:18px; }
+.program-snapshot-top h3 { font-size:1rem; margin-bottom:4px; }
+.program-snapshot-top p { color:var(--muted); font-size:.82rem; }
+.program-snapshot-meta { margin:12px 0; }
+.program-snapshot-meta span { display:inline-block; padding:5px 11px; border-radius:999px; font-size:.72rem; font-weight:600; }
+.program-snapshot-card .text-action { color:var(--green); font-weight:700; font-size:.85rem; background:none; border:none; padding:0; cursor:pointer; display:inline-flex; align-items:center; gap:6px; }
+.program-snapshot-card .text-action:hover { color:var(--green-dark); }
+
     </style>
   </head>
   <body>
@@ -539,8 +590,42 @@ button { font-family:inherit; }
         </div>
       </aside>
 
+      <!-- ================= MOBILE HAMBURGER DRAWER (<=992px only) =================
+           Deliberately separate from the desktop .sidebar above (left
+           untouched): this mobile IA (grouped workflow labels, no theme
+           toggle, official logo treatment) is materially different from
+           the desktop list, so it's independent markup rather than one
+           shared list reshuffled with CSS. .sidebar is simply never
+           opened at mobile widths; this drawer takes over the hamburger. -->
+      <nav class="mobile-drawer" id="mobile-drawer" aria-label="Primary">
+        <div class="mobile-drawer-brand">
+          <span class="brand-mark"><img src="assets/kuntribute-mark.png" alt="KUNTRIBUTE" /></span>
+          <div>
+            <h1 class="brand-name">KUNTRIBUTE</h1>
+            <p class="brand-tagline">Smarter Contributions. Stronger Communities.</p>
+            <p class="brand-quote">Trust that scales</p>
+          </div>
+        </div>
+
+        <div class="mobile-drawer-scroll">
+          <p class="mobile-drawer-group-label">Workspace</p>
+          <a href="#" class="mobile-drawer-link active" data-page="dashboard"><i class="fa-solid fa-house"></i>Dashboard</a>
+          <a href="#" class="mobile-drawer-link" data-page="programs"><i class="fa-solid fa-sitemap"></i>Programs</a>
+          <a href="#" class="mobile-drawer-link" data-page="members"><i class="fa-solid fa-users"></i>Members</a>
+          <a href="#" class="mobile-drawer-link planned-nav" aria-disabled="true"><i class="fa-solid fa-wallet"></i>Payments <span>Planned</span></a>
+
+          <p class="mobile-drawer-group-label">Analytics</p>
+          <a href="#" class="mobile-drawer-link planned-nav" aria-disabled="true"><i class="fa-solid fa-chart-simple"></i>Group Performance <span>Planned</span></a>
+          <a href="#" class="mobile-drawer-link planned-nav" aria-disabled="true"><i class="fa-solid fa-chart-line"></i>Reports <span>Planned</span></a>
+          <a href="#" class="mobile-drawer-link planned-nav" aria-disabled="true"><i class="fa-solid fa-star"></i>Reviews <span>Planned</span></a>
+        </div>
+
+        <div class="mobile-drawer-bottom">
+          <a href="#" id="mobile-drawer-back-website" class="mobile-drawer-link mobile-drawer-exit"><i class="fa-solid fa-arrow-right-from-bracket"></i>Back to Website</a>
+        </div>
+      </nav>
+
       <main class="main">
-        <p class="prototype-notice"><i class="fa-solid fa-flask"></i> Organizer prototype: sample data only. Changes reset when you leave this page.</p>
         <header class="topbar">
           <button class="mobile-menu" type="button" aria-label="Open menu"><i class="fa-solid fa-bars"></i></button>
           <div class="topbar-context"><h3 id="topbar-context-title">Dashboard</h3></div>
@@ -549,7 +634,7 @@ button { font-family:inherit; }
             <div class="topbar-user-info"><h4 id="topbar-user-name">Loading…</h4><p><i class="fa-solid fa-circle-user"></i> Organizer</p></div>
           </div>
           <div class="profile">
-            <button id="topbar-help" type="button" class="topbar-icon-btn planned-action" aria-label="Help" title="Help & support is planned"><i class="fa-regular fa-circle-question"></i></button>
+            <button id="topbar-help" type="button" class="topbar-icon-btn planned-action" aria-label="Help" title="Help & support is planned"><i class="fa-solid fa-headset"></i></button>
             <div class="notify" id="topbar-notifications" data-goto="notifications" role="button" tabindex="0" aria-label="Notifications"><i class="fa-solid fa-bell"></i><span class="dot"></span></div>
           </div>
         </header>
@@ -561,10 +646,8 @@ button { font-family:inherit; }
               <div class="wallet-top">
                 <div class="wallet-label-row">
                   <div class="wallet-label"><i class="fa-solid fa-shield-halved"></i><span>Total Contributions</span></div>
-                  <div class="wallet-utility">
-                    <button class="metric-info" id="total-contributions-info" type="button" aria-label="Details"><i class="fa-solid fa-circle-info"></i></button>
-                    <button class="toggle-balance" type="button" aria-label="Toggle balance visibility" aria-pressed="false"><i class="fa-solid fa-eye"></i></button>
-                  </div>
+                  <button class="toggle-balance" type="button" aria-label="Toggle balance visibility" aria-pressed="false"><i class="fa-solid fa-eye"></i></button>
+                  <button class="metric-info" id="total-contributions-info" type="button" aria-label="Details"><i class="fa-solid fa-circle-info"></i></button>
                 </div>
                 <div class="wallet-balance-row">
                   <h1 id="wallet-balance">Loading…</h1>
@@ -586,19 +669,16 @@ button { font-family:inherit; }
             <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-money-bill-transfer"></i></div><h2 id="upcoming-payouts-count">—</h2><p>Upcoming Payouts</p></div>
           </section>
 
-          <!-- Same four metrics, same data, as compact full-width rows for
-               mobile quick-glance — desktop keeps the .stats grid above
-               untouched; this list is hidden on desktop via CSS and shown
-               only ≤992px. Built from the same row component already used
-               by Members/Programs (.entity-row), not a new component. -->
-          <section class="stats-mobile-list">
-            <p class="section-label">Quick Metrics</p>
-            <div class="entity-list">
-              <div class="entity-row static"><div class="member-row-left"><div class="entity-icon"><i class="fa-solid fa-layer-group"></i></div><div><h4 class="metric-value" id="active-circles-count-mobile">—</h4><p class="member-row-note">Active Circles</p></div></div><i class="fa-solid fa-chevron-right member-chevron"></i></div>
-              <div class="entity-row static"><div class="member-row-left"><div class="entity-icon"><i class="fa-solid fa-users"></i></div><div><h4 class="metric-value" id="total-members-count-mobile">—</h4><p class="member-row-note">Total Members</p></div></div><i class="fa-solid fa-chevron-right member-chevron"></i></div>
-              <div class="entity-row static"><div class="member-row-left"><div class="entity-icon"><i class="fa-solid fa-clock"></i></div><div><h4 class="metric-value" id="pending-payments-count-mobile">—</h4><p class="member-row-note">Pending Confirmations</p></div></div><i class="fa-solid fa-chevron-right member-chevron"></i></div>
-              <div class="entity-row static"><div class="member-row-left"><div class="entity-icon"><i class="fa-solid fa-money-bill-transfer"></i></div><div><h4 class="metric-value" id="upcoming-payouts-count-mobile">—</h4><p class="member-row-note">Upcoming Payouts</p></div></div><i class="fa-solid fa-chevron-right member-chevron"></i></div>
-            </div>
+          <!-- Same four metrics, same data, as one compact side-by-side
+               strip instead of a titled analytics block — no "Quick
+               Metrics" heading, reads as part of the quick-glance summary.
+               Desktop keeps the .stats grid above untouched; this strip is
+               hidden on desktop via CSS and shown only ≤992px. -->
+          <section class="stats-mobile-compact">
+            <div class="stats-mobile-cell"><div class="stats-mobile-icon"><i class="fa-solid fa-layer-group"></i></div><h4 id="active-circles-count-mobile">—</h4><p>Active Circles</p></div>
+            <div class="stats-mobile-cell"><div class="stats-mobile-icon"><i class="fa-solid fa-users"></i></div><h4 id="total-members-count-mobile">—</h4><p>Total Members</p></div>
+            <div class="stats-mobile-cell"><div class="stats-mobile-icon"><i class="fa-solid fa-clock"></i></div><h4 id="pending-payments-count-mobile">—</h4><p>Pending Confirmations</p></div>
+            <div class="stats-mobile-cell"><div class="stats-mobile-icon"><i class="fa-solid fa-money-bill-transfer"></i></div><h4 id="upcoming-payouts-count-mobile">—</h4><p>Upcoming Payouts</p></div>
           </section>
 
           <section class="quick-actions-section">
@@ -708,36 +788,19 @@ button { font-family:inherit; }
              Program Type → Program → Circle. Separate from My Circles,
              which stays the organizer's flat working list. Tapping a
              circle here opens the same Circle Detail, not a new one. -->
+        <!-- ================= PROGRAMS =================
+             Simplified MVP flow: Programs -> My Circles -> Circle
+             Snapshot -> View Full Detail. Deliberately NOT the older
+             Program Type -> Program -> Circle hierarchy (removed) — this
+             page just is "My Circles", presented as a concise snapshot
+             per circle instead of the full detailed card grid, so
+             tapping a circle answers "what's going on here?" before
+             anyone commits to the full Circle Detail experience. Uses
+             the same circlesData as My Circles; no separate Program
+             data model. -->
         <div id="page-programs" class="page" data-title="Programs">
-          <div class="page-header"><div><h1>Programs</h1><p>The organizational umbrella your circles run under</p></div></div>
-          <div class="entity-list" id="program-types-list"></div>
-        </div>
-
-        <div id="page-program-type" class="page" data-title="Programs">
-          <a href="#" id="program-type-back" class="workflow-back" style="display:inline-flex;align-items:center;gap:8px;color:var(--green);font-size:.86rem;font-weight:700;margin-bottom:12px;"><i class="fa-solid fa-arrow-left"></i> Programs</a>
-          <div class="page-header"><div><h1 id="program-type-name">Program Type</h1><p id="program-type-meta">—</p></div></div>
-          <div class="entity-list" id="program-type-list"></div>
-        </div>
-
-        <div id="page-program-detail" class="page" data-title="Programs">
-          <a href="#" id="program-detail-back" class="workflow-back" style="display:inline-flex;align-items:center;gap:8px;color:var(--green);font-size:.86rem;font-weight:700;margin-bottom:12px;"><i class="fa-solid fa-arrow-left"></i> <span id="program-detail-back-label">Programs</span></a>
-          <div class="cd-header">
-            <div class="cd-header-top">
-              <div class="cd-identity">
-                <h1 id="program-detail-name">Program</h1>
-                <div class="cd-identity-meta"><span class="cd-type" id="program-detail-type">Program</span><span class="dot">·</span><span class="cd-status status-active" id="program-detail-status">Active</span></div>
-              </div>
-            </div>
-            <div class="cd-stats">
-              <div class="cd-stat"><span>Circles</span><strong id="program-detail-circle-count">0</strong></div>
-              <div class="cd-stat"><span>Members</span><strong id="program-detail-member-count">0</strong></div>
-              <div class="cd-stat" style="grid-column:1/-1;"><span>Contributions</span><strong id="program-detail-contributions">₦0</strong></div>
-            </div>
-          </div>
-          <div class="cd-section">
-            <div class="cd-section-head"><h3>Circles in this program</h3></div>
-            <div class="entity-list" id="program-detail-circles"></div>
-          </div>
+          <div class="page-header"><div><h1>Programs</h1><p>Your circles, at a glance</p></div></div>
+          <div class="program-snapshot-list" id="programs-page-list"></div>
         </div>
 
         <div id="page-notifications" class="page" data-title="Notifications">
@@ -1050,7 +1113,6 @@ document.addEventListener("DOMContentLoaded", () => {
   initializeCirclesSegments();
   initializeMemberFilters();
   initializeCircleDetailTabs();
-  initializeProgramsNav();
   initializeTheme();
   bootstrapSession();
 });
@@ -1121,28 +1183,12 @@ let mockCycles = [
 
 const organizerAccount = { bankName: "Guaranty Trust Bank", accountName: "Aminah Yusuf", accountNumber: "0123456789" };
 
-/* Programs — the umbrella above Circles. Program Type → Program →
-   Circle. Programs reference the SAME circles My Circles lists; they
-   organize them, they don't duplicate or replace them. Every count is
-   computed from circle data below, never hand-typed, so nothing drifts. */
-const PROGRAM_TYPES = [
-  { key: "welfare", name: "Welfare", icon: "fa-shield-heart" },
-  { key: "rosca", name: "ROSCA Savings", icon: "fa-rotate" },
-  { key: "cooperative", name: "Cooperative", icon: "fa-handshake" },
-];
-
-let mockPrograms = [
-  { program_id: 1, type: "rosca", name: "Staff Monthly Ajo", circleIds: [1] },
-  { program_id: 2, type: "rosca", name: "Market Traders Esusu", circleIds: [2] },
-  { program_id: 3, type: "welfare", name: "Staff Welfare", circleIds: [3] },
-  { program_id: 4, type: "cooperative", name: "Neighbourhood Cooperative", circleIds: [4] },
-];
-
 let circlesData = [];
 let organizerUserId = null;
 let currentUser = null;
 let activityData = [];
 let totalContributionsValue = 0;
+let todayContributionsValue = 0;
 let membersPageFilter = null;
 let expandedMemberGroups = new Set();
 let circlesSegment = "active";
@@ -1212,15 +1258,11 @@ function switchPage(pageId) {
   const target = document.getElementById("page-" + pageId);
   if (target) target.classList.add("active");
 
-  // Sub-pages keep their parent destination highlighted.
-  const navParent = { "program-type": "programs", "program-detail": "programs" };
-  const sidebarActive = navParent[pageId] || pageId;
-  document.querySelectorAll(".sidebar nav a[data-page]").forEach((a) => a.classList.toggle("active", a.dataset.page === sidebarActive));
+  document.querySelectorAll(".sidebar nav a[data-page], .mobile-drawer a[data-page]").forEach((a) => a.classList.toggle("active", a.dataset.page === pageId));
 
   // Circles is no longer a bottom-nav tab: it's reachable via the drawer's
-  // My Circles link and via Programs. Programs' own sub-pages keep the
-  // Programs tab highlighted, the same way the sidebar does.
-  const navMap = { dashboard: "home", programs: "programs", "program-type": "programs", "program-detail": "programs", members: "members", me: "me" };
+  // My Circles link and via Programs.
+  const navMap = { dashboard: "home", programs: "programs", members: "members", me: "me" };
   document.querySelectorAll(".bottom-nav-item[data-nav]").forEach((btn) => btn.classList.toggle("active", navMap[pageId] === btn.dataset.nav));
 
   const contextTitle = document.getElementById("topbar-context-title");
@@ -1240,7 +1282,7 @@ function switchPage(pageId) {
 }
 
 function initializePageNav() {
-  document.querySelectorAll(".sidebar nav a[data-page]").forEach((link) => {
+  document.querySelectorAll(".sidebar nav a[data-page], .mobile-drawer a[data-page]").forEach((link) => {
     link.addEventListener("click", (e) => {
       e.preventDefault();
       switchPage(link.dataset.page);
@@ -1257,6 +1299,8 @@ function initializePageNav() {
   if (circleDetailBack) circleDetailBack.addEventListener("click", (e) => { e.preventDefault(); switchPage("circles"); });
   const backToWebsite = document.getElementById("sidebar-back-website");
   if (backToWebsite) backToWebsite.addEventListener("click", (e) => { e.preventDefault(); showToast("This returns to the public KUNTRIBUTE website in production."); });
+  const mobileBackToWebsite = document.getElementById("mobile-drawer-back-website");
+  if (mobileBackToWebsite) mobileBackToWebsite.addEventListener("click", (e) => { e.preventDefault(); showToast("This returns to the public KUNTRIBUTE website in production."); });
 }
 
 /* ==========================================================
@@ -1293,7 +1337,9 @@ function unlockBodyScroll() {
 // Guarded: switchPage() calls this on every navigation, so it must be
 // a no-op (and must not touch the scroll lock) when already closed.
 function closeDrawer() {
-  const sidebar = document.querySelector(".sidebar");
+  // Targets the mobile-only #mobile-drawer; the desktop .sidebar is a
+  // separate, always-visible element with no "showSidebar" state.
+  const sidebar = document.getElementById("mobile-drawer");
   if (!sidebar || !sidebar.classList.contains("showSidebar")) return;
   const overlay = document.querySelector(".overlay");
   const menuIcon = document.querySelector(".mobile-menu i");
@@ -1305,7 +1351,7 @@ function closeDrawer() {
 
 function initializeSidebar() {
   const menu = document.querySelector(".mobile-menu");
-  const sidebar = document.querySelector(".sidebar");
+  const sidebar = document.getElementById("mobile-drawer");
   const overlay = document.querySelector(".overlay");
   if (!menu || !sidebar || !overlay) return;
   const icon = menu.querySelector("i");
@@ -1386,7 +1432,8 @@ function loadDashboardData() {
 
   totalContributionsValue = confirmed.reduce((t, i) => t + Number(i.amount), 0);
   renderTotalContributionsValue();
-  setText("today-contributions", formatNaira(todays.reduce((t, i) => t + Number(i.amount), 0)));
+  todayContributionsValue = todays.reduce((t, i) => t + Number(i.amount), 0);
+  renderTodayContributionsValue();
   setText("active-circles-count", activeCircles.length);
   setText("total-members-count", activeCircles.reduce((t, c) => t + c.membersJoined, 0));
   setText("pending-payments-count", pending.length);
@@ -1403,7 +1450,7 @@ function loadDashboardData() {
   renderCirclesPage();
   renderMembersPage();
   renderActivityFeed();
-  renderProgramTypes();
+  renderProgramsPage();
 }
 
 function renderTotalContributionsValue() {
@@ -1411,6 +1458,10 @@ function renderTotalContributionsValue() {
   if (!el) return;
   el.textContent = window.innerWidth <= 600 ? formatCompactNaira(totalContributionsValue) : formatNaira(totalContributionsValue);
   el.dataset.exact = formatNaira(totalContributionsValue);
+}
+
+function renderTodayContributionsValue() {
+  setText("today-contributions", formatNaira(todayContributionsValue));
 }
 
 function renderActivityList(id, limit) {
@@ -1426,25 +1477,11 @@ function renderActivityList(id, limit) {
       </div>`).join("")
     : `<div class="empty-state compact"><i class="fa-regular fa-clock"></i><p>No recorded activity yet.</p></div>`;
 }
-// Plain date-granularity relative time — mock data only carries a
-// date, not a time-of-day, so "3 days ago" is honest; a fake "10 min
-// ago" would be manufactured precision the data doesn't support.
-function formatRelativeTime(dateStr) {
-  if (!dateStr) return "Date not recorded";
-  const date = new Date(dateStr);
-  if (Number.isNaN(date.getTime())) return "Date not recorded";
-  const diffDays = Math.floor((TODAY - date) / 86400000);
-  if (diffDays <= 0) return "Today";
-  if (diffDays === 1) return "Yesterday";
-  if (diffDays < 7) return `${diffDays} days ago`;
-  return formatActivityDate(dateStr);
-}
-
-// Mobile-only compact Recent Activity row (title + one context line,
-// no separate right-hand amount/date column) — the Organization
-// prototype's restrained treatment. Desktop keeps the original
-// detailed row via renderActivityList; so do Notifications and
-// Transaction History, which are full ledgers, not quick-glance UI.
+// Mobile-only compact Recent Activity row: three deliberate lines —
+// name + purpose, circle name, full date — no separate right-hand
+// amount/status column. Enclosing row/container is the same
+// .activity-row used by renderActivityList (Notifications/History,
+// desktop, untouched); only the body's internal arrangement differs.
 function renderRecentActivityCompact(id, limit) {
   const items = limit ? activityData.slice(0, limit) : activityData;
   const el = document.getElementById(id);
@@ -1454,7 +1491,7 @@ function renderRecentActivityCompact(id, limit) {
         const verb = item.kind === "payout" ? "received a payout" : "recorded a contribution";
         return `<div class="activity-row">
         <div class="activity-row-icon ${item.kind}"><i class="fa-solid ${item.kind === "payout" ? "fa-money-bill-transfer" : "fa-money-check-dollar"}"></i></div>
-        <div class="activity-row-body"><h4>${item.title.replace(/ (contribution|payout)$/, "")} ${verb}</h4><p>${item.circleName} · ${formatRelativeTime(item.date)}</p></div>
+        <div class="activity-row-body"><h4>${item.title.replace(/ (contribution|payout)$/, "")} ${verb}</h4><p>${item.circleName}</p><p>${formatActivityDate(item.date)}</p></div>
       </div>`;
       }).join("")
     : `<div class="empty-state compact"><i class="fa-regular fa-clock"></i><p>No recorded activity yet.</p></div>`;
@@ -1523,116 +1560,37 @@ function renderCirclesPage(searchTerm = "") {
 }
 
 /* ==========================================================
-   PROGRAMS (Program Type → Program → Circle)
+   PROGRAMS — simplified MVP: Programs -> My Circles -> Circle
+   Snapshot -> View Full Detail. No Program Type / Program layer;
+   reuses the same circlesData as My Circles, presented as a
+   lighter-weight snapshot. "View Full Detail" opens the existing
+   Circle Detail page — no competing circle experience.
 ========================================================== */
-let activeProgramTypeKey = null;
+function renderProgramsPage() {
+  const container = document.getElementById("programs-page-list");
+  if (!container) return;
 
-function programCircles(program) {
-  return program.circleIds.map((id) => circlesData.find((c) => c.id === id)).filter(Boolean);
-}
-
-function programStats(program) {
-  const circles = programCircles(program);
-  const members = circles.reduce((t, c) => t + c.membersJoined, 0);
-  const contributions = circles.reduce((t, c) => t + c.contributions.filter((x) => x.status === "confirmed").reduce((s, x) => s + Number(x.amount), 0), 0);
-  return { circles, members, contributions };
-}
-
-// Derived from the circles beneath it, so a program can never claim a
-// status its circles contradict.
-function programStatus(program) {
-  const circles = programCircles(program);
-  if (!circles.length) return "active";
-  if (circles.some((c) => c.status === "active")) return "active";
-  if (circles.every((c) => c.status === "cancelled")) return "cancelled";
-  return "completed";
-}
-
-function plural(n, word) { return `${n} ${word}${n === 1 ? "" : "s"}`; }
-
-function entityRowHTML(icon, title, note, dataAttr) {
-  return `<button type="button" class="entity-row" ${dataAttr}>
-    <div class="member-row-left"><div class="entity-icon"><i class="fa-solid ${icon}"></i></div><div><h4>${title}</h4><p class="member-row-note">${note}</p></div></div>
-    <i class="fa-solid fa-chevron-right member-chevron"></i>
-  </button>`;
-}
-
-function renderProgramTypes() {
-  const el = document.getElementById("program-types-list");
-  if (!el) return;
-  el.innerHTML = PROGRAM_TYPES.map((type) => {
-    const programs = mockPrograms.filter((p) => p.type === type.key);
-    const circleCount = programs.reduce((t, p) => t + programStats(p).circles.length, 0);
-    const memberCount = programs.reduce((t, p) => t + programStats(p).members, 0);
-    const note = `${plural(programs.length, "Program")} · ${plural(circleCount, "Circle")} · ${plural(memberCount, "Member")}`;
-    return entityRowHTML(type.icon, type.name, note, `data-program-type="${type.key}"`);
-  }).join("");
-  el.querySelectorAll("[data-program-type]").forEach((row) => row.addEventListener("click", () => openProgramType(row.dataset.programType)));
-}
-
-function openProgramType(typeKey) {
-  const type = PROGRAM_TYPES.find((t) => t.key === typeKey);
-  if (!type) return;
-  activeProgramTypeKey = typeKey;
-  const programs = mockPrograms.filter((p) => p.type === typeKey);
-  const circleCount = programs.reduce((t, p) => t + programStats(p).circles.length, 0);
-  const memberCount = programs.reduce((t, p) => t + programStats(p).members, 0);
-
-  setText("program-type-name", type.name);
-  setText("program-type-meta", `${plural(programs.length, "Program")} · ${plural(circleCount, "Circle")} · ${plural(memberCount, "Member")}`);
-
-  const el = document.getElementById("program-type-list");
-  if (el) {
-    el.innerHTML = programs.length
-      ? programs.map((program) => {
-          const stats = programStats(program);
-          const note = `${plural(stats.circles.length, "Circle")} · ${plural(stats.members, "Member")} · ${membershipStatusLabel(programStatus(program))}`;
-          return entityRowHTML("fa-layer-group", program.name, note, `data-program-id="${program.program_id}"`);
-        }).join("")
-      : `<div class="empty-state compact"><i class="fa-solid fa-sitemap"></i><p>No programs of this type yet.</p></div>`;
-    el.querySelectorAll("[data-program-id]").forEach((row) => row.addEventListener("click", () => openProgramDetail(Number(row.dataset.programId))));
+  if (!circlesData.length) {
+    container.innerHTML = `<div class="empty-state compact"><i class="fa-solid fa-sitemap"></i><p>No circles yet. Create one from My Circles to see it here.</p></div>`;
+    return;
   }
 
-  const page = document.getElementById("page-program-type");
-  if (page) page.dataset.title = type.name;
-  switchPage("program-type");
-}
+  container.innerHTML = circlesData
+    .map(
+      (circle) => `
+    <div class="program-snapshot-card">
+      <div class="program-snapshot-top">
+        <h3>${circle.name}</h3>
+        <p>${circle.membersJoined} Member${circle.membersJoined === 1 ? "" : "s"} · ${circle.frequency}</p>
+      </div>
+      <div class="program-snapshot-meta"><span class="badge-amount">${formatNaira(circle.amount)}</span></div>
+      <button type="button" class="text-action" data-view-detail="${circle.id}">View Full Detail <i class="fa-solid fa-chevron-right"></i></button>
+    </div>`,
+    )
+    .join("");
 
-function openProgramDetail(programId) {
-  const program = mockPrograms.find((p) => p.program_id === programId);
-  if (!program) return;
-  const type = PROGRAM_TYPES.find((t) => t.key === program.type);
-  const stats = programStats(program);
-  const status = programStatus(program);
-
-  setText("program-detail-name", program.name);
-  setText("program-detail-type", `${type ? type.name : "Program"} Program`);
-  const statusEl = document.getElementById("program-detail-status");
-  if (statusEl) { statusEl.textContent = status; statusEl.className = "cd-status status-" + status; }
-  setText("program-detail-circle-count", stats.circles.length);
-  setText("program-detail-member-count", stats.members);
-  setText("program-detail-contributions", formatNaira(stats.contributions));
-  setText("program-detail-back-label", type ? type.name : "Programs");
-
-  const el = document.getElementById("program-detail-circles");
-  if (el) {
-    el.innerHTML = stats.circles.length
-      ? stats.circles.map((circle) => entityRowHTML("fa-circle-nodes", circle.name, `${plural(circle.membersJoined, "Member")} · ${formatNaira(circle.amount)} ${circle.frequency}`, `data-circle-id="${circle.id}"`)).join("")
-      : `<div class="empty-state compact"><i class="fa-solid fa-circle-nodes"></i><p>No circles in this program yet.</p></div>`;
-    // Circles open the existing Circle Detail — one circle experience.
-    el.querySelectorAll("[data-circle-id]").forEach((row) => row.addEventListener("click", () => openCircleDetail(Number(row.dataset.circleId))));
-  }
-
-  const page = document.getElementById("page-program-detail");
-  if (page) page.dataset.title = program.name;
-  switchPage("program-detail");
-}
-
-function initializeProgramsNav() {
-  document.getElementById("program-type-back")?.addEventListener("click", (e) => { e.preventDefault(); switchPage("programs"); });
-  document.getElementById("program-detail-back")?.addEventListener("click", (e) => {
-    e.preventDefault();
-    if (activeProgramTypeKey) openProgramType(activeProgramTypeKey); else switchPage("programs");
+  container.querySelectorAll("[data-view-detail]").forEach((btn) => {
+    btn.addEventListener("click", () => openCircleDetail(Number(btn.dataset.viewDetail)));
   });
 }
 
@@ -2245,11 +2203,19 @@ function initializeStartDate() {
 function initializeBalanceToggle() {
   const toggleBtn = document.querySelector(".toggle-balance");
   const balanceEl = document.getElementById("wallet-balance");
+  const todayEl = document.getElementById("today-contributions");
   if (!toggleBtn || !balanceEl) return;
+  const maskedValue = "₦ • • • • • •";
   let hidden = false;
   toggleBtn.addEventListener("click", () => {
     hidden = !hidden;
-    balanceEl.textContent = hidden ? "₦ • • • • • •" : (window.innerWidth <= 600 ? formatCompactNaira(totalContributionsValue) : formatNaira(totalContributionsValue));
+    if (hidden) {
+      balanceEl.textContent = maskedValue;
+      if (todayEl) todayEl.textContent = maskedValue;
+    } else {
+      renderTotalContributionsValue();
+      renderTodayContributionsValue();
+    }
     toggleBtn.innerHTML = hidden ? '<i class="fa-solid fa-eye-slash"></i>' : '<i class="fa-solid fa-eye"></i>';
   });
 }
