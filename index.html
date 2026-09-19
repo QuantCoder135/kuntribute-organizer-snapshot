@@ -1,0 +1,2315 @@
+<!doctype html>
+<!--
+  KUNTRIBUTE ORGANIZER -- CODEPEN DESIGN-LAB PROTOTYPE
+  ---------------------------------------------------------------
+  STANDALONE, self-contained, MOCK-DATA prototype for UX/UI review.
+  NOT connected to any backend, database, or network request of any
+  kind. NOT the production source of truth (dashboard.html /
+  css/dashboard.css / js/dashboard.js are untouched by this file).
+
+  This is a design laboratory: the redesigned mobile top bar, drawer,
+  Circle Detail, Create Circle wizard, and login flow explored here
+  are NOT yet in production. They get migrated selectively after
+  review.
+
+  Login: ANY email + ANY password signs in (no real accounts, nothing
+  stored beyond this browser tab's sessionStorage for convenience).
+
+  Primary review viewport: ~374px mobile width.
+  Regenerated: 2026-09-12
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+    <title>Kuntribute | Organizer Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+    <style>
+/* ===========================
+   CONTRIB ORGANIZER DASHBOARD (prototype base — same tokens as production)
+=============================*/
+* { margin:0; padding:0; box-sizing:border-box; font-family:"Inter",sans-serif; }
+html,body { overflow-x:hidden; width:100%; }
+:root {
+  --bg:#071019; --sidebar:#0b1623; --card:#111827; --card2:#1e293b; --surface:#111827;
+  --text:#f8fafc; --muted:#94a3b8; --green:#22c55e; --green-dark:#16a34a; --green-border:rgba(34,197,94,0.5);
+  --success:#10b981; --warning:#f59e0b; --danger:#ef4444; --info:#3b82f6;
+  --border:rgba(255,255,255,0.08); --button-bg:#ffffff; --button-text:#111827;
+  --hero-start:#1db954; --hero-end:#0f9d58; --nav-text:#cbd5e1;
+  --scrollbar:#1e293b; --scrollbar-hover:#334155; --notification:#ef4444;
+  --overlay:rgba(0,0,0,0.55); --shadow:0 8px 30px rgba(0,0,0,0.18); --toggle-bg:#334155;
+  --topbar-h:60px;
+}
+body.light-theme {
+  --bg:#f1f5f9; --card:#ffffff; --card2:#f1f5f9; --text:#0f172a; --muted:#64748b;
+  --hero-start:#22c55e; --hero-end:#16a34a; --nav-text:#475569; --scrollbar:#cbd5e1;
+  --scrollbar-hover:#94a3b8; --notification:#dc2626; --overlay:rgba(15,23,42,0.18);
+  --shadow:0 10px 30px rgba(15,23,42,0.06); --border:rgba(15,23,42,0.08); --sidebar:#ffffff;
+}
+body { background:var(--bg); color:var(--text); }
+a { text-decoration:none; color:inherit; }
+button { font-family:inherit; }
+.overlay { position:fixed; inset:0; background:var(--overlay); opacity:0; visibility:hidden; pointer-events:none; transition:.3s; z-index:999; }
+.overlay.show { opacity:1; visibility:visible; pointer-events:auto; }
+
+.dashboard { display:grid; grid-template-columns:260px 1fr; min-height:100vh; }
+.sidebar { background:var(--sidebar); padding:26px 20px; border-right:1px solid var(--border); display:flex; flex-direction:column; }
+.logo { margin-bottom:36px; cursor:pointer; }
+.logo-row { display:flex; align-items:center; gap:10px; }
+.logo-mark { width:34px; height:34px; display:grid; place-items:center; border-radius:10px; color:#fff; background:linear-gradient(135deg,var(--green),var(--green-dark)); font-size:.95rem; flex-shrink:0; }
+.logo h2 { font-size:1.4rem; font-weight:800; }
+.logo p { color:var(--muted); margin-top:5px; font-size:.82rem; }
+.sidebar nav { display:flex; flex-direction:column; gap:6px; flex:1; }
+.nav-group-label { color:var(--muted); font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:.07em; margin:16px 6px 6px; }
+.nav-group-label:first-child { margin-top:0; }
+.sidebar nav a { display:flex; align-items:center; gap:13px; padding:12px 14px; border-radius:12px; transition:.2s; color:var(--nav-text); font-size:.92rem; }
+.sidebar nav a i { width:18px; text-align:center; }
+.sidebar nav a:hover { background:rgba(34,197,94,.12); color:var(--text); }
+.sidebar nav a.active { background:linear-gradient(135deg,var(--green),var(--green-dark)); color:#fff; }
+.sidebar nav a.planned-nav { opacity:.5; cursor:not-allowed; }
+.sidebar nav a.planned-nav:hover { background:transparent; color:var(--nav-text); }
+.planned-nav .pill, .planned-action .pill { margin-left:auto; padding:2px 7px; border-radius:999px; background:var(--card2); color:var(--muted); font-size:.6rem; font-weight:700; text-transform:uppercase; }
+.sidebar-divider { height:1px; background:var(--border); margin:14px 4px; }
+.sidebar-bottom { display:flex; flex-direction:column; gap:10px; padding-bottom:env(safe-area-inset-bottom); }
+.theme-toggle { display:flex; justify-content:space-between; align-items:center; padding:12px 14px; border-radius:12px; background:var(--card); border:1px solid var(--border); }
+.theme-label { display:flex; align-items:center; gap:9px; color:var(--nav-text); font-size:.88rem; font-weight:500; }
+.theme-label i { color:var(--green); }
+.switch { position:relative; display:inline-block; width:46px; height:25px; flex-shrink:0; }
+.switch input { opacity:0; width:0; height:0; }
+.slider { position:absolute; inset:0; cursor:pointer; background:var(--toggle-bg); border-radius:50px; transition:.3s; }
+.slider::before { content:""; position:absolute; width:19px; height:19px; left:3px; top:3px; background:#fff; border-radius:50%; transition:.3s; }
+.switch input:checked + .slider { background:var(--green); }
+.switch input:checked + .slider::before { transform:translateX(21px); }
+
+.main { padding:26px 28px; min-width:0; }
+.topbar { display:flex; align-items:center; gap:16px; margin-bottom:24px; padding:0 2px; }
+.mobile-menu { display:none; align-items:center; justify-content:center; width:40px; height:40px; border-radius:11px; background:var(--card); border:1px solid var(--border); cursor:pointer; flex-shrink:0; color:var(--text); font-size:16px; touch-action:manipulation; -webkit-tap-highlight-color:transparent; }
+.mobile-menu i { pointer-events:none; }
+.topbar-context { display:none; flex:1; min-width:0; }
+.topbar-context h3 { font-size:.95rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.topbar-user { display:flex; align-items:center; gap:10px; padding:6px 12px 6px 6px; border-radius:13px; background:var(--card); border:1px solid var(--border); cursor:pointer; transition:.2s; }
+.topbar-user:hover { border-color:var(--green-border); }
+.topbar-user[hidden] { display:none !important; }
+.topbar-user img { width:34px; height:34px; border-radius:50%; object-fit:cover; }
+.topbar-user-info h4 { font-size:.84rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:110px; }
+.topbar-user-info p { display:flex; align-items:center; gap:4px; color:var(--muted); margin-top:1px; font-size:.7rem; }
+.topbar-user-info p i { color:var(--green); }
+.profile { display:flex; align-items:center; gap:14px; margin-left:auto; }
+.topbar-icon-btn { border:1px solid var(--border); background:var(--card); color:var(--text); width:38px; height:38px; border-radius:11px; font-size:.95rem; flex-shrink:0; }
+.notify { position:relative; width:38px; height:38px; border-radius:11px; background:var(--card); border:1px solid var(--border); display:grid; place-items:center; font-size:16px; cursor:pointer; flex-shrink:0; }
+.notify[hidden] { display:none !important; }
+.notify .dot { position:absolute; top:8px; right:9px; width:7px; height:7px; border-radius:50%; background:var(--danger); }
+
+/* ---- FIXED MOBILE APP SHELL ----
+   Fixed top bar + fixed bottom nav, with the content between them
+   doing the scrolling. The shell stays stationary; only the middle
+   moves. .main carries matching top/bottom padding so content can
+   never slide under either bar. */
+@media (max-width:992px) {
+  .topbar {
+    position:fixed; top:0; left:0; right:0; z-index:950;
+    height:var(--topbar-h);
+    margin:0; padding:0 16px; gap:12px;
+    background:var(--sidebar); border-bottom:1px solid var(--border);
+  }
+  @supports (padding-top: env(safe-area-inset-top)) {
+    .topbar { height:calc(var(--topbar-h) + env(safe-area-inset-top)); padding-top:env(safe-area-inset-top); }
+  }
+  .mobile-menu { display:flex; }
+  .topbar-context { display:block; }
+}
+
+/* summary + stats (unchanged core, fixed mobile truncation below) */
+.summary { margin-bottom:28px; }
+.summary-card { background:linear-gradient(135deg,rgba(255,255,255,.08),rgba(255,255,255,.02)),var(--card); border:1px solid rgba(255,255,255,.12); box-shadow:0 12px 35px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.06); border-radius:20px; padding:22px; }
+.wallet-top { display:flex; flex-direction:column; gap:10px; }
+.wallet-label-row { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.wallet-label { display:flex; align-items:center; gap:7px; color:var(--muted); font-size:.86rem; min-width:0; }
+.wallet-label span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.wallet-utility { display:flex; align-items:center; gap:2px; flex-shrink:0; }
+.metric-info, .toggle-balance { background:none; border:none; color:var(--muted); font-size:14px; cursor:pointer; width:28px; height:28px; border-radius:8px; display:grid; place-items:center; flex-shrink:0; }
+.metric-info:hover, .toggle-balance:hover { color:var(--green); background:rgba(34,197,94,.1); }
+.wallet-balance-row { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:nowrap; }
+.wallet-balance-row h1 { font-size:clamp(20px,7vw,32px); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; }
+.add-money { border:none; background:var(--green); color:#fff; padding:10px 15px; border-radius:11px; font-weight:700; cursor:pointer; white-space:nowrap; flex-shrink:0; font-size:.8rem; display:flex; align-items:center; gap:6px; }
+.add-money:hover { background:var(--green-dark); }
+.wallet-context { color:var(--muted); font-size:.78rem; margin-top:2px; }
+.contrib-strip { display:flex; align-items:center; justify-content:space-between; gap:10px; background:rgba(34,197,94,.1); border:1px solid rgba(34,197,94,.16); border-radius:14px; padding:12px 15px; margin-top:12px; color:var(--muted); font-size:.85rem; }
+.contrib-strip-left { display:flex; align-items:center; gap:9px; min-width:0; overflow:hidden; }
+.contrib-strip-left i { color:var(--green); flex-shrink:0; }
+.contrib-strip strong { color:var(--green); }
+
+.stats { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:28px; }
+/* Mobile-only alternate presentation of the same four metrics as
+   compact full-width rows (see the "FIXED MOBILE APP SHELL" media
+   query for the ≤992px swap). Desktop grid above is untouched. */
+.stats-mobile-list { display:none; }
+.entity-row.static { cursor:default; }
+.metric-value { color:var(--green); }
+.stat-card { background:var(--card); border:1px solid var(--border); padding:18px 14px; border-radius:16px; }
+/* Quick Metrics treatment borrowed from the Organization prototype's
+   .mini-stat: a neutral icon badge (not colored per-metric) so the
+   green number stays the only accent — quieter than a green badge
+   on every card. */
+.stat-icon { width:34px; height:34px; border-radius:10px; background:var(--card2); color:var(--muted); display:grid; place-items:center; margin-bottom:10px; font-size:14px; }
+.stat-card h2 { font-size:1.5rem; color:var(--green); }
+.stat-card p { color:var(--muted); margin-top:4px; font-size:.76rem; }
+
+.title { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; gap:10px; }
+.title h2 { font-size:1.02rem; }
+.title a { color:var(--green); font-size:.82rem; font-weight:700; }
+
+.quick-actions-section { margin-bottom:28px; }
+.actions { display:grid; grid-template-columns:repeat(6,1fr); gap:14px; }
+.action { background:var(--card); border-radius:15px; padding:16px 10px; text-align:center; border:1px solid var(--border); cursor:pointer; }
+.action:hover { border-color:var(--green); }
+.action.planned-action { cursor:not-allowed; opacity:.55; }
+.action i { font-size:20px; color:var(--green); margin-bottom:10px; display:block; }
+.action p { font-size:.72rem; }
+.action p span { display:block; font-size:.6rem; color:var(--muted); text-transform:uppercase; margin-top:2px; }
+
+.panel { width:100%; background:var(--card); border-radius:18px; padding:20px; border:1px solid var(--border); }
+.dashboard-section { margin-bottom:24px; }
+
+.badge { padding:4px 10px; border-radius:999px; font-size:.68rem; font-weight:700; white-space:nowrap; }
+.page { display:none; }
+.page.active { display:block; }
+.page-header { display:flex; justify-content:space-between; align-items:center; gap:14px; margin-bottom:20px; flex-wrap:wrap; }
+.page-header h1 { font-size:1.4rem; margin-bottom:3px; }
+.page-header p { color:var(--muted); font-size:.85rem; }
+
+.create-circle-btn { display:flex; align-items:center; gap:7px; border:none; background:var(--green); color:#fff; padding:11px 17px; border-radius:11px; font-weight:700; cursor:pointer; font-size:.85rem; }
+.create-circle-btn:hover { background:var(--green-dark); }
+.search { flex:1; min-width:120px; position:relative; }
+.search input { width:100%; background:var(--card); border:1px solid var(--border); color:var(--text); padding:12px 14px; border-radius:13px; outline:none; font-size:.88rem; }
+.search input::placeholder { color:var(--muted); }
+.search-row { display:flex; gap:10px; margin-bottom:16px; align-items:center; }
+.filter-btn { display:flex; align-items:center; gap:7px; border:1px solid var(--border); background:var(--card); color:var(--text); padding:12px 15px; border-radius:13px; font-size:.85rem; font-weight:600; cursor:pointer; flex-shrink:0; }
+.filter-btn.has-filters { border-color:var(--green-border); color:var(--green); }
+.filter-btn .count { background:var(--green); color:#fff; border-radius:50%; width:16px; height:16px; font-size:.6rem; display:grid; place-items:center; }
+
+/* ---- segmented lifecycle tabs (My Circles) ---- */
+.segmented { display:flex; gap:6px; background:var(--card2); padding:5px; border-radius:13px; margin-bottom:18px; }
+.segmented button { flex:1; border:none; background:transparent; color:var(--muted); font-weight:700; font-size:.8rem; padding:9px 6px; border-radius:9px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; }
+.segmented button.active { background:var(--card); color:var(--text); box-shadow:0 2px 8px rgba(0,0,0,.15); }
+.segmented button .n { font-size:.68rem; color:var(--muted); }
+
+.circles-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:14px; }
+.circle-card { background:var(--card); border:1px solid var(--border); border-radius:17px; padding:18px; cursor:pointer; display:flex; flex-direction:column; gap:12px; }
+.circle-card:hover { border-color:var(--green-border); }
+.circle-card-top { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
+.circle-card-top h3 { font-size:.98rem; margin-bottom:3px; }
+.circle-card-top p { color:var(--muted); font-size:.78rem; }
+.circle-card-avatar { width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg,var(--green),var(--green-dark)); display:grid; place-items:center; font-weight:700; color:#fff; flex-shrink:0; font-size:.85rem; }
+.circle-card-badges { display:flex; flex-wrap:wrap; gap:7px; }
+.circle-card-badges span { padding:5px 11px; border-radius:999px; font-size:.72rem; font-weight:600; }
+.badge-amount { background:rgba(34,197,94,.14); color:var(--green); }
+.badge-frequency { background:var(--card2); color:var(--muted); }
+.badge-status.status-completed { background:rgba(59,130,246,.14); color:var(--info); }
+.badge-status.status-cancelled { background:rgba(239,68,68,.14); color:var(--danger); }
+
+/* ---- toast ---- */
+.toast-stack { position:fixed; left:50%; bottom:96px; transform:translateX(-50%); z-index:2000; display:flex; flex-direction:column; gap:8px; width:min(90vw,340px); }
+.toast { background:var(--card); border:1px solid var(--border); color:var(--text); padding:12px 16px; border-radius:12px; font-size:.82rem; display:flex; align-items:center; gap:10px; box-shadow:var(--shadow); opacity:0; transform:translateY(8px); transition:.25s; }
+.toast.show { opacity:1; transform:translateY(0); }
+.toast i { color:var(--green); }
+
+/* ==========================================================
+   CIRCLE DETAIL — redesign
+========================================================== */
+.cd-header { background:var(--card); border:1px solid var(--border); border-radius:20px; padding:20px; margin-bottom:16px; }
+.cd-header-top { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
+.cd-identity h1 { font-size:1.28rem; margin-bottom:6px; }
+.cd-identity-meta { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.cd-identity-meta .dot { color:var(--muted); font-size:.7rem; }
+.cd-status { font-size:.72rem; font-weight:700; padding:3px 10px; border-radius:999px; }
+.cd-status.status-active { background:rgba(34,197,94,.14); color:var(--green); }
+.cd-status.status-completed { background:rgba(59,130,246,.14); color:var(--info); }
+.cd-status.status-cancelled { background:rgba(239,68,68,.14); color:var(--danger); }
+.cd-type { color:var(--muted); font-size:.82rem; }
+.cd-header-actions { display:flex; gap:8px; flex-shrink:0; }
+.cd-gear, .cd-info-btn { width:38px; height:38px; border-radius:11px; background:var(--card2); border:1px solid var(--border); color:var(--muted); display:grid; place-items:center; flex-shrink:0; cursor:pointer; }
+.cd-gear:hover, .cd-info-btn:hover { color:var(--text); border-color:var(--green-border); }
+.cd-status.status-suspended { background:rgba(245,158,11,.14); color:var(--warning); }
+.cd-status.status-removed { background:rgba(148,163,184,.14); color:var(--muted); }
+
+.cd-stats { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-top:16px; }
+.cd-stat { background:var(--card2); border-radius:13px; padding:12px 14px; }
+.cd-stat span { display:block; color:var(--muted); font-size:.68rem; text-transform:uppercase; letter-spacing:.04em; margin-bottom:4px; }
+.cd-stat strong { font-size:.94rem; }
+.cd-stat.cd-stat-cycle strong { color:var(--green); }
+
+.cd-tabs { display:flex; gap:6px; overflow-x:auto; padding-bottom:2px; margin-bottom:16px; scrollbar-width:none; }
+.cd-tabs::-webkit-scrollbar { display:none; }
+.cd-tab { flex-shrink:0; border:1px solid var(--border); background:var(--card); color:var(--muted); font-weight:700; font-size:.82rem; padding:9px 16px; border-radius:999px; cursor:pointer; }
+.cd-tab.active { background:linear-gradient(135deg,var(--green),var(--green-dark)); color:#fff; border-color:transparent; }
+
+.cd-tabpanel { display:none; }
+.cd-tabpanel.active { display:block; }
+.cd-section { background:var(--card); border:1px solid var(--border); border-radius:17px; padding:18px; margin-bottom:14px; }
+.cd-section-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+.cd-section-head h3 { font-size:.92rem; }
+.cd-section-head a { color:var(--green); font-size:.78rem; font-weight:700; display:flex; align-items:center; gap:4px; }
+
+.cd-insight { background:var(--card2); border:1px solid var(--border); border-radius:17px; padding:18px; }
+.cd-insight-eyebrow { display:flex; align-items:center; gap:7px; color:var(--info); font-weight:700; font-size:.78rem; margin-bottom:10px; }
+.cd-insight-row { display:flex; align-items:baseline; gap:8px; margin-bottom:4px; }
+.cd-insight-row strong { font-size:1.15rem; }
+.cd-insight-row span { color:var(--muted); font-size:.82rem; }
+.cd-insight p.note { color:var(--muted); font-size:.8rem; line-height:1.5; margin-top:6px; }
+
+.mini-list { display:flex; flex-direction:column; gap:9px; }
+.mini-row { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+/* Insight facts are full sentences, not short numbers — stack label
+   over value so nothing gets squeezed on a narrow screen. */
+.insight-fact-row { display:flex; flex-direction:column; gap:3px; padding:9px 0; border-bottom:1px solid var(--border); }
+.insight-fact-row:last-child { border-bottom:none; padding-bottom:0; }
+.insight-fact-row:first-child { padding-top:0; }
+.insight-fact-row span { color:var(--muted); font-size:.72rem; text-transform:uppercase; letter-spacing:.04em; font-weight:700; }
+.insight-fact-row strong { font-size:.86rem; font-weight:600; line-height:1.4; }
+
+/* ==========================================================
+   CREATE CIRCLE WIZARD
+========================================================== */
+.wizard-page { min-height:100%; }
+/* Bounded workflow surface, matching ktb/prototypes/organizer's
+   .workflow-container: on desktop the wizard reads as one contained
+   card, not fields floating on the page background. Mobile collapses
+   the card chrome (border/background/padding) and relies on .main's
+   own side padding plus each field's own spacing for rhythm. */
+.wizard-shell { max-width:560px; margin:0 auto; background:var(--card); border:1px solid var(--border); border-radius:22px; padding:28px; }
+.wizard-top { display:flex; align-items:center; gap:12px; margin-bottom:18px; }
+@media (max-width:700px) {
+  .wizard-shell { border:0; border-radius:0; padding:0; background:transparent; }
+}
+.wizard-close { width:36px; height:36px; border-radius:50%; background:var(--card2); border:none; color:var(--text); display:grid; place-items:center; cursor:pointer; margin-left:auto; }
+.wizard-steps { display:flex; align-items:center; gap:6px; margin-bottom:22px; }
+.wizard-steps .seg { flex:1; height:4px; border-radius:999px; background:var(--card2); }
+.wizard-steps .seg.done, .wizard-steps .seg.current { background:var(--green); }
+.wizard-eyebrow { color:var(--green); font-weight:700; font-size:.74rem; text-transform:uppercase; letter-spacing:.06em; margin-bottom:6px; }
+.wizard-title { font-size:1.35rem; margin-bottom:6px; }
+.wizard-subtext { color:var(--muted); font-size:.86rem; margin-bottom:22px; }
+.wizard-step { display:none; }
+.wizard-step.active { display:block; }
+.wizard-actions { display:flex; gap:10px; margin-top:8px; }
+.wizard-actions .modal-secondary, .wizard-actions .modal-submit { margin-top:0; }
+
+.type-card { display:flex; gap:13px; align-items:flex-start; padding:15px; border-radius:15px; border:1px solid var(--border); background:var(--card2); margin-bottom:10px; cursor:pointer; }
+.type-card:hover { border-color:var(--green-border); }
+.type-card.disabled { opacity:.5; cursor:not-allowed; }
+.type-icon { width:40px; height:40px; border-radius:11px; background:linear-gradient(135deg,var(--green),var(--green-dark)); color:#fff; display:grid; place-items:center; font-size:16px; flex-shrink:0; }
+.type-card.disabled .type-icon { background:var(--card); border:1px solid var(--border); color:var(--muted); }
+.type-name { font-weight:700; font-size:.94rem; margin-bottom:3px; display:flex; align-items:center; gap:7px; flex-wrap:wrap; }
+.type-badge { font-size:.6rem; font-weight:700; padding:2px 7px; border-radius:999px; background:rgba(148,163,184,.15); color:var(--muted); text-transform:uppercase; }
+.type-desc { color:var(--muted); font-size:.8rem; line-height:1.45; margin-bottom:5px; }
+.type-examples { font-size:.72rem; color:var(--green); font-weight:600; }
+
+.form-field { display:flex; flex-direction:column; gap:7px; margin-bottom:16px; }
+.form-field span { font-size:.82rem; color:var(--muted); font-weight:600; }
+.field-hint { color:var(--muted); font-size:.73rem; margin-top:-2px; }
+.field-warning { font-size:.75rem; color:var(--danger); margin-top:4px; min-height:16px; }
+.input-error { border:1px solid var(--danger) !important; box-shadow:0 0 0 2px rgba(239,68,68,.08); }
+.form-field input, .form-field select { background:var(--card2); border:1px solid var(--border); color:var(--text); padding:13px 15px; border-radius:12px; font-size:.94rem; font-family:inherit; outline:none; width:100%; }
+.form-field input:focus, .form-field select:focus { border-color:var(--green); }
+
+.modal-submit { width:100%; border:none; background:var(--green); color:#fff; padding:15px; border-radius:13px; font-weight:700; font-size:.95rem; cursor:pointer; }
+.modal-submit:hover { background:var(--green-dark); }
+.modal-submit:disabled { opacity:.6; cursor:default; }
+.modal-secondary { flex:1; display:flex; align-items:center; justify-content:center; gap:8px; background:var(--card2); border:1px solid var(--border); color:var(--text); padding:15px; border-radius:13px; font-weight:700; cursor:pointer; }
+.modal-secondary:hover { border-color:var(--green); }
+.modal-secondary.warn { border-color:rgba(245,158,11,.4); color:var(--warning); }
+.modal-secondary.danger { border-color:rgba(239,68,68,.4); color:var(--danger); }
+
+.review-hero { margin:0 0 20px; padding:22px; border-radius:16px; text-align:center; background:linear-gradient(135deg,rgba(59,130,246,.15),rgba(16,185,129,.1)); border:1px solid rgba(255,255,255,.08); }
+.review-hero p { font-size:.8rem; color:var(--muted); margin-bottom:7px; }
+.review-hero h1 { font-size:1.9rem; margin-bottom:5px; }
+.review-hero small { color:var(--muted); font-size:.78rem; }
+.review-section { margin-bottom:18px; }
+.review-section h3 { margin-bottom:12px; font-size:.92rem; }
+.review-row { display:flex; justify-content:space-between; align-items:center; padding:11px 0; border-bottom:1px solid rgba(255,255,255,.06); font-size:.86rem; }
+.review-row:last-child { border-bottom:none; }
+.review-row span { color:var(--muted); }
+.review-row strong { text-align:right; }
+.review-row a.detail-link { color:var(--text); font-weight:700; }
+.review-row a.detail-link:hover { color:var(--green); }
+.review-row-copy { display:flex; align-items:center; gap:8px; }
+.copy-btn { background:none; border:none; color:var(--green); font-size:.78rem; cursor:pointer; padding:2px; }
+.copy-btn:hover { color:var(--green-dark); }
+
+.success-page-body { text-align:center; padding:20px 0; }
+.success-icon { width:64px; height:64px; border-radius:50%; background:rgba(34,197,94,.15); color:var(--green); display:grid; place-items:center; font-size:26px; margin:0 auto 18px; }
+.success-title { font-size:1.25rem; margin-bottom:6px; }
+.success-actions { display:flex; flex-direction:column; gap:10px; margin-top:22px; }
+.success-actions-row { display:flex; gap:10px; }
+.success-actions-row .modal-secondary { flex:1; }
+
+/* ==========================================================
+   PROTOTYPE NOTICE — Login is explicitly out of scope for this pass;
+   the prototype opens directly on the Dashboard, exactly like
+   ktb/prototypes/organizer. This banner is that reference's own
+   convention for flagging a page as sample data.
+========================================================== */
+.prototype-notice { display:flex; align-items:center; gap:9px; background:rgba(245,158,11,.1); border:1px solid rgba(245,158,11,.22); border-radius:12px; padding:10px 14px; margin-bottom:18px; color:var(--muted); font-size:.78rem; font-weight:600; }
+.prototype-notice i { color:var(--warning); flex-shrink:0; }
+
+/* Base (desktop-default) rule for .bottom-nav must come BEFORE the
+   mobile media query below. Both this rule and the media query's
+   `.bottom-nav { display:block; }` have equal specificity, so when
+   this base rule sat AFTER the media query in the stylesheet it won
+   the cascade unconditionally — hiding the bottom nav on every mobile
+   viewport regardless of width. Moving it here (source order, not a
+   !important hack) is the actual fix. */
+.bottom-nav { display:none; position:fixed; left:0; right:0; bottom:0; background:var(--sidebar); border-top:1px solid var(--border); padding:8px 6px calc(8px + env(safe-area-inset-bottom)); z-index:900; box-shadow:0 -6px 20px rgba(0,0,0,.18); }
+
+/* ==========================================================
+   MOBILE DRAWER (redesign)
+========================================================== */
+@media (max-width:992px) {
+  .dashboard { grid-template-columns:1fr; }
+  .sidebar { position:fixed; top:0; left:-300px; width:280px; max-width:84vw; height:100vh; z-index:1000; box-shadow:var(--shadow); transition:left .32s cubic-bezier(.22,.61,.36,1); overflow-y:auto; -webkit-overflow-scrolling:touch; padding:0; }
+  .sidebar.showSidebar { left:0; }
+  .sidebar-head { padding:22px 20px 16px; border-bottom:1px solid var(--border); }
+  .sidebar-scroll { padding:14px 16px 10px; flex:1; }
+  .sidebar-bottom { padding:12px 16px calc(18px + env(safe-area-inset-bottom)); border-top:1px solid var(--border); }
+  .bottom-nav { display:block; }
+  /* Scroll region between the two fixed bars. */
+  .main { padding:calc(var(--topbar-h) + 18px) 16px 124px; }
+  @supports (padding-top: env(safe-area-inset-top)) {
+    .main { padding-top:calc(var(--topbar-h) + 18px + env(safe-area-inset-top)); }
+  }
+  @supports (padding-bottom: env(safe-area-inset-bottom)) {
+    .main { padding-bottom:calc(124px + env(safe-area-inset-bottom)); }
+  }
+  /* Quick Actions is a desktop convenience; mobile already has the
+     bottom nav + per-page primary actions, so it stays out of the way. */
+  .quick-actions-section { display:none; }
+  /* Quick Metrics: boxed 2x2 grid on desktop, compact full-width rows
+     on mobile — same data, same order, different presentation. */
+  .stats { display:none; }
+  .stats-mobile-list { display:block; margin-bottom:28px; }
+  .topbar-user { display:none; }
+}
+.sidebar-head { display:none; }
+@media (min-width:993px) { .sidebar-head { display:none; } }
+
+.bottom-nav-inner { display:flex; justify-content:space-between; }
+.bottom-nav-item { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; padding:7px 4px; border:none; background:none; color:var(--muted); font-size:.66rem; font-weight:600; }
+.bottom-nav-item i { font-size:18px; width:32px; height:32px; display:flex; align-items:center; justify-content:center; border-radius:11px; }
+.bottom-nav-item.active { color:var(--green); }
+.bottom-nav-item.active i { background:rgba(34,197,94,.15); }
+.bottom-nav-item[disabled], .bottom-nav-item[aria-disabled="true"] { opacity:.5; }
+
+/* ==========================================================
+   FILTER DRAWER (Members)
+========================================================== */
+.filter-sheet { max-width:420px; }
+.filter-group { margin-bottom:18px; }
+.filter-group h4 { font-size:.8rem; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; margin-bottom:10px; }
+.filter-chip-row { display:flex; flex-wrap:wrap; gap:8px; }
+.filter-chip { border:1px solid var(--border); background:var(--card2); color:var(--nav-text); padding:8px 14px; border-radius:999px; font-size:.8rem; font-weight:600; cursor:pointer; }
+.filter-chip.active { background:linear-gradient(135deg,var(--green),var(--green-dark)); color:#fff; border-color:transparent; }
+.filter-custom-date { margin-top:10px; width:100%; background:var(--card2); border:1px solid var(--border); color:var(--text); padding:11px 13px; border-radius:11px; font-size:.86rem; font-family:inherit; }
+
+/* member rows — .entity-row is the same component under a neutral
+   name, reused by Programs so no new row/card system is introduced. */
+.member-list, .entity-list { display:flex; flex-direction:column; gap:9px; }
+.member-row, .entity-row { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:13px 15px; background:var(--card2); border:1px solid var(--border); border-radius:13px; width:100%; color:var(--text); text-align:left; cursor:pointer; }
+.member-row:hover, .entity-row:hover { border-color:var(--green-border); }
+.member-row-left { display:flex; align-items:center; gap:11px; min-width:0; }
+.member-avatar { width:36px; height:36px; border-radius:50%; background:var(--card); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:.8rem; color:var(--muted); flex-shrink:0; }
+.member-row h4 { font-size:.88rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.member-row p { font-size:.72rem; color:var(--muted); }
+.member-status { font-size:.7rem; font-weight:700; padding:4px 11px; border-radius:999px; flex-shrink:0; }
+.member-status.paid, .member-status.confirmed { background:rgba(34,197,94,.14); color:var(--green); }
+.member-status.pending { background:rgba(245,158,11,.14); color:var(--warning); }
+.member-status.suspended { background:rgba(245,158,11,.14); color:var(--warning); }
+.member-status.removed { background:rgba(148,163,184,.14); color:var(--muted); }
+.member-row-note { font-size:.72rem; color:var(--muted); }
+.member-chevron { color:var(--muted); font-size:.8rem; flex-shrink:0; }
+
+/* activity + cycle rows (reused) */
+.activity-feed-list, .cycle-list { display:flex; flex-direction:column; gap:9px; }
+.activity-row { display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid var(--border); }
+.activity-row:last-child { border:0; padding-bottom:0; }
+.activity-row-icon { width:36px; height:36px; display:flex; align-items:center; justify-content:center; border-radius:11px; background:var(--card2); color:var(--green); flex-shrink:0; }
+.activity-row-icon.payout { color:#8b5cf6; }
+.activity-row-body { flex:1; min-width:0; }
+.activity-row-body h4 { font-size:.86rem; margin-bottom:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.activity-row-body p { color:var(--muted); font-size:.74rem; }
+.activity-row-right { text-align:right; flex-shrink:0; }
+.activity-row-right strong { display:block; font-size:.84rem; }
+.activity-row-right small { color:var(--muted); font-size:.68rem; }
+.activity-status { padding:3px 8px; border-radius:999px; font-size:.62rem; text-transform:capitalize; background:var(--card2); color:var(--muted); }
+.activity-status.confirmed,.activity-status.paid,.activity-status.completed { color:var(--success); background:rgba(16,185,129,.12); }
+.activity-status.pending,.activity-status.open { color:var(--warning); background:rgba(245,158,11,.12); }
+.activity-status.scheduled { color:var(--info); background:rgba(59,130,246,.12); }
+.activity-status.cancelled { color:var(--danger); background:rgba(239,68,68,.12); }
+
+.cycle-row { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:13px 14px; border:1px solid var(--border); border-radius:13px; background:var(--card2); }
+.cycle-row-left { display:flex; align-items:center; gap:11px; min-width:0; }
+.cycle-number { display:grid; place-items:center; width:32px; height:32px; border-radius:9px; background:var(--card); color:var(--muted); font-weight:700; font-size:.76rem; flex-shrink:0; }
+.cycle-row-body h4 { font-size:.84rem; margin-bottom:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.cycle-row-body p { color:var(--muted); font-size:.72rem; }
+.cycle-row-right { display:flex; flex-direction:column; align-items:flex-end; gap:5px; flex-shrink:0; }
+.cycle-row-right strong { font-size:.82rem; }
+.cycle-status-group { display:flex; gap:5px; align-items:center; }
+.empty-state { text-align:center; padding:28px 14px; color:var(--muted); }
+.empty-state i { margin-bottom:9px; font-size:1.3rem; color:var(--green); }
+.empty-state.compact { padding:16px 10px; }
+.detail-caption { color:var(--muted); font-size:.76rem; }
+
+/* modal / bottom sheet (reused for Manage Circle + filter + member detail + share) */
+.modal-overlay { position:fixed; inset:0; background:var(--overlay); display:flex; align-items:flex-end; justify-content:center; opacity:0; visibility:hidden; transition:.3s; z-index:1100; }
+.modal-overlay.show { opacity:1; visibility:visible; }
+.modal-sheet { background:var(--card); width:100%; max-width:480px; max-height:85vh; overflow-y:auto; border-radius:22px 22px 0 0; padding:14px 22px 26px; transform:translateY(100%); transition:.32s cubic-bezier(.22,.61,.36,1); }
+.modal-overlay.show .modal-sheet { transform:translateY(0); }
+.modal-handle { width:40px; height:4px; background:var(--border); border-radius:999px; margin:0 auto 16px; }
+.modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+.modal-header h2 { font-size:1.1rem; }
+.modal-close { background:var(--card2); border:none; width:34px; height:34px; border-radius:50%; color:var(--text); cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.modal-subtext { color:var(--muted); font-size:.86rem; margin-bottom:14px; }
+
+/* Me page */
+.me-eyebrow { color:var(--muted); font-size:.76rem; text-transform:uppercase; letter-spacing:.05em; margin-bottom:16px; }
+.me-profile-header { display:flex; flex-direction:column; align-items:center; gap:9px; padding:24px 20px; border-radius:18px; background:var(--card); border:1px solid var(--border); margin-bottom:22px; }
+.me-profile-header .member-avatar { width:60px; height:60px; font-size:1.2rem; }
+.me-profile-header h2 { font-size:1.1rem; }
+.me-id-line { display:flex; align-items:center; justify-content:center; gap:6px; color:var(--muted); font-size:.8rem; }
+.me-tier-badge { display:inline-flex; padding:3px 10px; border-radius:999px; background:rgba(34,197,94,.14); color:var(--green); font-size:.72rem; font-weight:700; }
+.me-section-label { color:var(--muted); font-size:.74rem; text-transform:uppercase; letter-spacing:.07em; font-weight:700; margin:18px 0 9px; }
+.me-list { display:flex; flex-direction:column; border-radius:18px; overflow:hidden; border:1px solid var(--border); background:var(--card); margin-bottom:6px; }
+.me-list-item { display:grid; grid-template-columns:38px 1fr auto; align-items:center; gap:12px; padding:14px 15px; border-bottom:1px solid var(--border); cursor:not-allowed; }
+.me-list-item:last-child { border-bottom:0; }
+.me-list-item.enabled { cursor:pointer; }
+.me-list-item.enabled:hover { background:var(--card2); }
+.me-list-item > i { color:var(--muted); font-size:.75rem; }
+.me-list-item h4 { font-size:.88rem; margin-bottom:2px; }
+.me-list-item p { font-size:.75rem; color:var(--muted); }
+.me-list-icon, .entity-icon { display:grid; place-items:center; width:34px; height:34px; border-radius:10px; background:rgba(34,197,94,.12); color:var(--green); flex-shrink:0; }
+
+/* responsive tightening at ~374px */
+@media (max-width:400px) {
+  /* Horizontal only — the vertical padding is what keeps content clear
+     of the fixed top bar and bottom nav, so it must not be reset here. */
+  .main { padding-left:14px; padding-right:14px; }
+  .stats { gap:9px; grid-template-columns:repeat(2,1fr); }
+  .actions { grid-template-columns:repeat(3,1fr); }
+  .cd-stats { grid-template-columns:1fr 1fr; }
+  .wallet-balance-row h1 { font-size:clamp(19px,7.5vw,26px); }
+  .cycle-row { flex-wrap:wrap; }
+  .cycle-row-right { flex-direction:row; align-items:center; justify-content:space-between; width:100%; margin-top:8px; }
+}
+
+    </style>
+  </head>
+  <body>
+    <div class="dashboard">
+      <div class="overlay"></div>
+
+      <!-- ================= APP SHELL ================= -->
+      <aside class="sidebar">
+        <div class="sidebar-head">
+          <div class="logo-row"><span class="logo-mark"><i class="fa-solid fa-people-arrows"></i></span><h2>Kuntribute</h2></div>
+        </div>
+        <div class="sidebar-scroll">
+          <div class="logo" data-goto="dashboard">
+            <div class="logo-row"><span class="logo-mark"><i class="fa-solid fa-people-arrows"></i></span><h2>Kuntribute</h2></div>
+            <p>Smarter Contributions, Stronger Communities</p>
+          </div>
+          <nav>
+            <a href="#" class="active" data-page="dashboard"><i class="fa-solid fa-house"></i>Dashboard</a>
+            <a href="#" data-page="circles"><i class="fa-solid fa-layer-group"></i>My Circles</a>
+            <a href="#" data-page="programs"><i class="fa-solid fa-sitemap"></i>Programs</a>
+            <a href="#" class="planned-nav" aria-disabled="true"><i class="fa-solid fa-wallet"></i>Payments<span class="pill">Planned</span></a>
+            <a href="#" data-page="members"><i class="fa-solid fa-users"></i>Members</a>
+            <div class="nav-group-label">More</div>
+            <a href="#" class="planned-nav" aria-disabled="true"><i class="fa-solid fa-chart-line"></i>Reports<span class="pill">Planned</span></a>
+            <a href="#" class="planned-nav" aria-disabled="true"><i class="fa-solid fa-star"></i>Reviews<span class="pill">Planned</span></a>
+          </nav>
+        </div>
+        <div class="sidebar-bottom">
+          <a href="#" id="sidebar-back-website" style="display:flex;align-items:center;gap:13px;padding:12px 14px;border-radius:12px;color:var(--nav-text);font-size:.92rem;"><i class="fa-solid fa-arrow-right-from-bracket" style="width:18px;text-align:center;"></i>Back to Website</a>
+          <div class="theme-toggle">
+            <span class="theme-label"><i class="fa-solid fa-moon"></i>Theme</span>
+            <label class="switch"><input type="checkbox" id="theme-switch" /><span class="slider"></span></label>
+          </div>
+        </div>
+      </aside>
+
+      <main class="main">
+        <p class="prototype-notice"><i class="fa-solid fa-flask"></i> Organizer prototype: sample data only. Changes reset when you leave this page.</p>
+        <header class="topbar">
+          <button class="mobile-menu" type="button" aria-label="Open menu"><i class="fa-solid fa-bars"></i></button>
+          <div class="topbar-context"><h3 id="topbar-context-title">Dashboard</h3></div>
+          <div class="topbar-user" id="topbar-user-card" data-goto="me">
+            <img src="https://i.pravatar.cc/100" alt="Organizer profile" />
+            <div class="topbar-user-info"><h4 id="topbar-user-name">Loading…</h4><p><i class="fa-solid fa-circle-user"></i> Organizer</p></div>
+          </div>
+          <div class="profile">
+            <button id="topbar-help" type="button" class="topbar-icon-btn planned-action" aria-label="Help" title="Help & support is planned"><i class="fa-regular fa-circle-question"></i></button>
+            <div class="notify" id="topbar-notifications" data-goto="notifications" role="button" tabindex="0" aria-label="Notifications"><i class="fa-solid fa-bell"></i><span class="dot"></span></div>
+          </div>
+        </header>
+
+        <!-- ================= DASHBOARD ================= -->
+        <div id="page-dashboard" class="page" data-title="Dashboard">
+          <section class="summary">
+            <div class="summary-card">
+              <div class="wallet-top">
+                <div class="wallet-label-row">
+                  <div class="wallet-label"><i class="fa-solid fa-shield-halved"></i><span>Total Contributions</span></div>
+                  <div class="wallet-utility">
+                    <button class="metric-info" id="total-contributions-info" type="button" aria-label="Details"><i class="fa-solid fa-circle-info"></i></button>
+                    <button class="toggle-balance" type="button" aria-label="Toggle balance visibility" aria-pressed="false"><i class="fa-solid fa-eye"></i></button>
+                  </div>
+                </div>
+                <div class="wallet-balance-row">
+                  <h1 id="wallet-balance">Loading…</h1>
+                  <button class="add-money" type="button"><i class="fa-solid fa-plus"></i>New Circle</button>
+                </div>
+                <p class="wallet-context">Across all active circles</p>
+              </div>
+              <div class="contrib-strip">
+                <div class="contrib-strip-left"><i class="fa-solid fa-store"></i><span>Today's Contributions: <strong id="today-contributions">Loading…</strong></span></div>
+                <i class="fa-solid fa-chevron-right"></i>
+              </div>
+            </div>
+          </section>
+
+          <section class="stats">
+            <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-layer-group"></i></div><h2 id="active-circles-count">—</h2><p>Active Circles</p></div>
+            <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-users"></i></div><h2 id="total-members-count">—</h2><p>Total Members</p></div>
+            <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-clock"></i></div><h2 id="pending-payments-count">—</h2><p>Pending Confirmations</p></div>
+            <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-money-bill-transfer"></i></div><h2 id="upcoming-payouts-count">—</h2><p>Upcoming Payouts</p></div>
+          </section>
+
+          <!-- Same four metrics, same data, as compact full-width rows for
+               mobile quick-glance — desktop keeps the .stats grid above
+               untouched; this list is hidden on desktop via CSS and shown
+               only ≤992px. Built from the same row component already used
+               by Members/Programs (.entity-row), not a new component. -->
+          <section class="stats-mobile-list">
+            <p class="section-label">Quick Metrics</p>
+            <div class="entity-list">
+              <div class="entity-row static"><div class="member-row-left"><div class="entity-icon"><i class="fa-solid fa-layer-group"></i></div><div><h4 class="metric-value" id="active-circles-count-mobile">—</h4><p class="member-row-note">Active Circles</p></div></div><i class="fa-solid fa-chevron-right member-chevron"></i></div>
+              <div class="entity-row static"><div class="member-row-left"><div class="entity-icon"><i class="fa-solid fa-users"></i></div><div><h4 class="metric-value" id="total-members-count-mobile">—</h4><p class="member-row-note">Total Members</p></div></div><i class="fa-solid fa-chevron-right member-chevron"></i></div>
+              <div class="entity-row static"><div class="member-row-left"><div class="entity-icon"><i class="fa-solid fa-clock"></i></div><div><h4 class="metric-value" id="pending-payments-count-mobile">—</h4><p class="member-row-note">Pending Confirmations</p></div></div><i class="fa-solid fa-chevron-right member-chevron"></i></div>
+              <div class="entity-row static"><div class="member-row-left"><div class="entity-icon"><i class="fa-solid fa-money-bill-transfer"></i></div><div><h4 class="metric-value" id="upcoming-payouts-count-mobile">—</h4><p class="member-row-note">Upcoming Payouts</p></div></div><i class="fa-solid fa-chevron-right member-chevron"></i></div>
+            </div>
+          </section>
+
+          <section class="quick-actions-section">
+            <div class="title"><h2>Quick Actions</h2></div>
+            <div class="actions">
+              <div class="action" data-action="create-circle"><i class="fa-solid fa-plus"></i><p>Create Circle</p></div>
+              <div class="action planned-action" aria-disabled="true"><i class="fa-solid fa-money-check-dollar"></i><p>Payment Queue<span>Planned</span></p></div>
+              <div class="action" data-goto="members"><i class="fa-solid fa-users"></i><p>Members</p></div>
+              <div class="action planned-action" aria-disabled="true"><i class="fa-solid fa-chart-simple"></i><p>Reports<span>Planned</span></p></div>
+              <div class="action planned-action" aria-disabled="true"><i class="fa-solid fa-file-export"></i><p>Export<span>Planned</span></p></div>
+              <div class="action planned-action" aria-disabled="true"><i class="fa-solid fa-envelope"></i><p>Invite<span>Planned</span></p></div>
+            </div>
+          </section>
+
+          <section class="dashboard-section">
+            <div class="panel">
+              <div class="title"><h2>Recent Activity</h2><a href="#" data-goto="notifications">View All <i class="fa-solid fa-chevron-right"></i></a></div>
+              <div class="activity-feed-list" id="activity-feed"></div>
+            </div>
+          </section>
+        </div>
+
+        <!-- ================= MY CIRCLES ================= -->
+        <div id="page-circles" class="page" data-title="My Circles">
+          <div class="page-header"><div><h1>My Circles</h1><p>Manage every contribution circle you organize</p></div>
+            <button class="create-circle-btn" type="button" id="open-create-circle"><i class="fa-solid fa-plus"></i>Create Circle</button>
+          </div>
+          <div class="search-row"><div class="search"><input type="text" id="circles-search-input" placeholder="Search circles..." /></div></div>
+          <div class="segmented" id="circles-segmented">
+            <button data-status="active" class="active">Active <span class="n" id="seg-count-active"></span></button>
+            <button data-status="completed">Completed <span class="n" id="seg-count-completed"></span></button>
+            <button data-status="cancelled">Cancelled <span class="n" id="seg-count-cancelled"></span></button>
+          </div>
+          <div class="circles-grid" id="circles-page-list"></div>
+        </div>
+
+        <!-- ================= CIRCLE DETAIL ================= -->
+        <div id="page-circle-detail" class="page" data-title="Circle">
+          <a href="#" id="circle-detail-back" class="workflow-back" style="display:inline-flex;align-items:center;gap:8px;color:var(--green);font-size:.86rem;font-weight:700;margin-bottom:12px;"><i class="fa-solid fa-arrow-left"></i> My Circles</a>
+
+          <div class="cd-header">
+            <div class="cd-header-top">
+              <div class="cd-identity">
+                <h1 id="cd-name">Circle</h1>
+                <div class="cd-identity-meta"><span class="cd-type" id="cd-type">Rotational Savings</span><span class="dot">·</span><span class="cd-status status-active" id="cd-status">Active</span></div>
+              </div>
+              <div class="cd-header-actions">
+                <button class="cd-info-btn" id="cd-insights-btn" type="button" aria-label="Circle insights"><i class="fa-solid fa-circle-info"></i></button>
+                <button class="cd-gear" id="cd-manage-btn" type="button" aria-label="Manage circle"><i class="fa-solid fa-gear"></i></button>
+              </div>
+            </div>
+            <div class="cd-stats">
+              <div class="cd-stat"><span>Contribution</span><strong id="cd-amount">—</strong></div>
+              <div class="cd-stat"><span>Frequency</span><strong id="cd-frequency">—</strong></div>
+              <div class="cd-stat"><span>Members</span><strong id="cd-member-count">0</strong></div>
+              <div class="cd-stat"><span>Start Date</span><strong id="cd-start-date">—</strong></div>
+              <div class="cd-stat cd-stat-cycle" style="grid-column:1/-1;"><span>Current Cycle</span><strong id="cd-current-cycle">—</strong></div>
+            </div>
+          </div>
+
+          <div class="cd-tabs" id="cd-tabs">
+            <button class="cd-tab active" data-tab="overview">Overview</button>
+            <button class="cd-tab" data-tab="members">Members</button>
+            <button class="cd-tab" data-tab="contributions">Contributions</button>
+            <button class="cd-tab" data-tab="cycles">Cycles</button>
+            <button class="cd-tab" data-tab="payouts">Payouts</button>
+          </div>
+
+          <div class="cd-tabpanel active" data-panel="overview">
+            <div class="cd-section">
+              <div class="cd-section-head"><h3>Members</h3><a href="#" id="cd-view-all-members">View all <i class="fa-solid fa-chevron-right"></i></a></div>
+              <div class="mini-list" id="cd-members-preview"></div>
+            </div>
+            <div class="cd-section">
+              <div class="cd-section-head"><h3>Recent Activity</h3><a href="#" id="cd-view-all-activity">View all <i class="fa-solid fa-chevron-right"></i></a></div>
+              <div class="activity-feed-list" id="cd-activity-preview"></div>
+            </div>
+          </div>
+
+          <div class="cd-tabpanel" data-panel="members">
+            <div class="cd-section"><div class="member-list" id="cd-members-full"></div></div>
+          </div>
+          <div class="cd-tabpanel" data-panel="contributions">
+            <div class="cd-section"><div class="activity-feed-list" id="cd-contributions-full"></div></div>
+          </div>
+          <div class="cd-tabpanel" data-panel="cycles">
+            <div class="cd-section"><div class="cycle-list" id="cd-cycles-full"></div></div>
+          </div>
+          <div class="cd-tabpanel" data-panel="payouts">
+            <div class="cd-section"><div class="activity-feed-list" id="cd-payouts-full"></div></div>
+          </div>
+        </div>
+
+        <!-- ================= MEMBERS ================= -->
+        <div id="page-members" class="page" data-title="Members">
+          <div class="page-header"><div><h1 id="members-page-title">Members</h1><p id="members-page-subtitle">Everyone across your contribution circles</p></div></div>
+          <a href="#" id="members-back-link" class="workflow-back" hidden style="display:inline-flex;align-items:center;gap:8px;color:var(--green);font-size:.86rem;font-weight:700;margin-bottom:12px;"><i class="fa-solid fa-arrow-left"></i> All Members</a>
+          <div class="search-row">
+            <div class="search"><input type="text" id="members-search-input" placeholder="Search members..." /></div>
+            <button class="filter-btn" id="members-filter-btn" type="button"><i class="fa-solid fa-sliders"></i>Filter</button>
+          </div>
+          <div class="panel"><div class="member-list" id="members-page-list"></div></div>
+        </div>
+
+        <!-- ================= PROGRAMS =================
+             Programs are the organizational umbrella above Circles:
+             Program Type → Program → Circle. Separate from My Circles,
+             which stays the organizer's flat working list. Tapping a
+             circle here opens the same Circle Detail, not a new one. -->
+        <div id="page-programs" class="page" data-title="Programs">
+          <div class="page-header"><div><h1>Programs</h1><p>The organizational umbrella your circles run under</p></div></div>
+          <div class="entity-list" id="program-types-list"></div>
+        </div>
+
+        <div id="page-program-type" class="page" data-title="Programs">
+          <a href="#" id="program-type-back" class="workflow-back" style="display:inline-flex;align-items:center;gap:8px;color:var(--green);font-size:.86rem;font-weight:700;margin-bottom:12px;"><i class="fa-solid fa-arrow-left"></i> Programs</a>
+          <div class="page-header"><div><h1 id="program-type-name">Program Type</h1><p id="program-type-meta">—</p></div></div>
+          <div class="entity-list" id="program-type-list"></div>
+        </div>
+
+        <div id="page-program-detail" class="page" data-title="Programs">
+          <a href="#" id="program-detail-back" class="workflow-back" style="display:inline-flex;align-items:center;gap:8px;color:var(--green);font-size:.86rem;font-weight:700;margin-bottom:12px;"><i class="fa-solid fa-arrow-left"></i> <span id="program-detail-back-label">Programs</span></a>
+          <div class="cd-header">
+            <div class="cd-header-top">
+              <div class="cd-identity">
+                <h1 id="program-detail-name">Program</h1>
+                <div class="cd-identity-meta"><span class="cd-type" id="program-detail-type">Program</span><span class="dot">·</span><span class="cd-status status-active" id="program-detail-status">Active</span></div>
+              </div>
+            </div>
+            <div class="cd-stats">
+              <div class="cd-stat"><span>Circles</span><strong id="program-detail-circle-count">0</strong></div>
+              <div class="cd-stat"><span>Members</span><strong id="program-detail-member-count">0</strong></div>
+              <div class="cd-stat" style="grid-column:1/-1;"><span>Contributions</span><strong id="program-detail-contributions">₦0</strong></div>
+            </div>
+          </div>
+          <div class="cd-section">
+            <div class="cd-section-head"><h3>Circles in this program</h3></div>
+            <div class="entity-list" id="program-detail-circles"></div>
+          </div>
+        </div>
+
+        <div id="page-notifications" class="page" data-title="Notifications">
+          <div class="page-header"><div><h1>Notifications</h1><p>Recent activity across your circles</p></div></div>
+          <div class="panel"><div class="activity-feed-list" id="notifications-feed"></div></div>
+        </div>
+
+        <div id="page-history" class="page" data-title="Transaction History">
+          <div class="page-header"><div><h1>Transaction History</h1><p>Contributions and payouts recorded across your circles</p></div></div>
+          <div class="panel"><div class="activity-feed-list" id="history-feed"></div></div>
+        </div>
+
+        <!-- ================= ME ================= -->
+        <div id="page-me" class="page" data-title="Me">
+          <p class="me-eyebrow">Account &amp; Settings</p>
+          <div class="me-profile-header">
+            <div class="member-avatar" id="me-avatar">—</div>
+            <h2 id="me-page-name">Loading…</h2>
+            <p class="me-id-line"><span id="me-page-email">—</span> · <span class="me-tier-badge">Free Plan</span></p>
+          </div>
+          <p class="me-section-label">Account</p>
+          <div class="me-list">
+            <div class="me-list-item"><div class="me-list-icon"><i class="fa-solid fa-building-columns"></i></div><div><h4>Bank Details <span class="type-badge">Planned</span></h4><p>Guaranty Trust Bank •••• 6789</p></div><i class="fa-solid fa-chevron-right"></i></div>
+            <div class="me-list-item"><div class="me-list-icon"><i class="fa-regular fa-envelope"></i></div><div><h4>Email <span class="type-badge">Planned</span></h4><p id="me-list-email">amina.yusuf@example.com</p></div><i class="fa-solid fa-chevron-right"></i></div>
+            <div class="me-list-item"><div class="me-list-icon"><i class="fa-solid fa-lock"></i></div><div><h4>Security</h4><p>Password, PIN, and login activity <span class="type-badge">Planned</span></p></div><i class="fa-solid fa-chevron-right"></i></div>
+            <div class="me-list-item enabled" data-goto="history"><div class="me-list-icon"><i class="fa-solid fa-receipt"></i></div><div><h4>Transaction History</h4><p>Every contribution and payout on record</p></div><i class="fa-solid fa-chevron-right"></i></div>
+          </div>
+          <!-- Personal settings live here, not in the hamburger drawer.
+               Appearance is the same toggle as the drawer's Theme control
+               (kept in sync); Notification Preferences is Planned. -->
+          <p class="me-section-label">Preferences</p>
+          <div class="me-list">
+            <div class="me-list-item enabled"><div class="me-list-icon"><i class="fa-solid fa-moon"></i></div><div><h4>Appearance</h4><p>Switch between the dark and light theme</p></div>
+              <label class="switch"><input type="checkbox" id="me-theme-switch" /><span class="slider"></span></label>
+            </div>
+            <div class="me-list-item"><div class="me-list-icon"><i class="fa-regular fa-bell"></i></div><div><h4>Notification Preferences <span class="type-badge">Planned</span></h4><p>Choose what you get notified about</p></div><i class="fa-solid fa-chevron-right"></i></div>
+          </div>
+          <p class="me-section-label">General</p>
+          <div class="me-list">
+            <div class="me-list-item"><div class="me-list-icon"><i class="fa-solid fa-arrow-up-right-dots"></i></div><div><h4>Upgrade to Pro <span class="type-badge">Planned</span></h4><p>More circles, more members, priority support</p></div><i class="fa-solid fa-chevron-right"></i></div>
+            <div class="me-list-item"><div class="me-list-icon"><i class="fa-solid fa-user-plus"></i></div><div><h4>Invite Organizers <span class="type-badge">Planned</span></h4><p>Bring other organizers onto KUNTRIBUTE</p></div><i class="fa-solid fa-chevron-right"></i></div>
+            <div class="me-list-item"><div class="me-list-icon"><i class="fa-regular fa-circle-question"></i></div><div><h4>Help &amp; support</h4><p>Support centre is planned</p></div><i class="fa-solid fa-chevron-right"></i></div>
+          </div>
+        </div>
+
+        <!-- ================= CREATE CIRCLE WIZARD ================= -->
+        <div id="page-create-circle" class="page wizard-page" data-title="Create Circle">
+          <div class="wizard-shell">
+            <div class="wizard-top"><a href="#" class="workflow-back" id="wizard-back" style="display:inline-flex;align-items:center;gap:8px;color:var(--green);font-size:.86rem;font-weight:700;"><i class="fa-solid fa-arrow-left"></i> Back</a><button class="wizard-close" id="wizard-close" aria-label="Close"><i class="fa-solid fa-xmark"></i></button></div>
+            <div class="wizard-steps" id="wizard-steps"></div>
+
+            <!-- Step 1: name + members -->
+            <div class="wizard-step active" data-step="1">
+              <p class="wizard-eyebrow">Step 1 of 5 · Create Circle</p>
+              <h1 class="wizard-title">Name your circle</h1>
+              <p class="wizard-subtext">Keep it focused — you can refine details later.</p>
+              <label class="form-field"><span>Circle Name</span><input type="text" id="circle-name" placeholder="e.g. IFFM Staff Savings Circle" /><p id="name-warning" class="field-warning"></p></label>
+              <label class="form-field"><span>Estimated Members</span><input type="text" id="circle-members" placeholder="e.g. 20" inputmode="numeric" /><small class="field-hint">Minimum 5 · Maximum 300</small><p id="member-warning" class="field-warning"></p></label>
+              <div class="wizard-actions"><button type="button" class="modal-submit" id="step1-next">Continue →</button></div>
+            </div>
+
+            <!-- Step 2: contribution -->
+            <div class="wizard-step" data-step="2">
+              <p class="wizard-eyebrow">Step 2 of 5 · Contribution</p>
+              <h1 class="wizard-title">Set the contribution terms</h1>
+              <p class="wizard-subtext">This determines how much each member pays, and how often.</p>
+              <label class="form-field"><span>Contribution Amount</span><input type="text" id="circle-amount" placeholder="₦10,000" inputmode="numeric" /><small class="field-hint">Minimum ₦2,000</small><p id="amount-warning" class="field-warning"></p></label>
+              <label class="form-field"><span>Contribution Frequency</span><select id="circle-frequency"><option value="Daily">Daily</option><option value="Weekly">Weekly</option><option value="Monthly">Monthly</option></select></label>
+              <label class="form-field"><span>Start Date</span><input type="date" id="circle-start-date" /></label>
+              <label class="form-field"><span>Payout Frequency <em>(estimate)</em></span><select id="payout-frequency"><option value="Weekly">Weekly</option><option value="Monthly">Monthly</option></select><small class="field-hint">Used only to estimate the proposed payout schedule.</small></label>
+              <div class="wizard-actions"><button type="button" class="modal-secondary" id="step2-back">← Back</button><button type="button" class="modal-submit" id="step2-next">Continue →</button></div>
+            </div>
+
+            <!-- Step 3: summary -->
+            <div class="wizard-step" data-step="3">
+              <p class="wizard-eyebrow">Step 3 of 5 · Circle Summary</p>
+              <h1 class="wizard-title">Review your circle</h1>
+              <div class="review-section"><h3>Circle</h3>
+                <div class="review-row"><span>Circle Type</span><strong id="review-circle-type">-</strong></div>
+                <div class="review-row"><span>Circle Name</span><strong id="review-name">-</strong></div>
+                <div class="review-row"><span>Contribution Amount</span><strong id="review-contribution">-</strong></div>
+              </div>
+              <div class="review-section"><h3>Contribution Terms</h3>
+                <div class="review-row"><span>Contribution Frequency</span><strong id="review-frequency">-</strong></div>
+                <div class="review-row"><span>Payout Frequency</span><strong id="review-payout-frequency">-</strong></div>
+                <div class="review-row"><span>Number of Members</span><strong id="review-members">-</strong></div>
+              </div>
+              <div class="review-section"><h3>Schedule</h3>
+                <div class="review-row"><span>Start Date</span><strong id="review-start-date">-</strong></div>
+                <div class="review-row"><span>First Payout</span><strong id="review-first-payout">-</strong></div>
+                <div class="review-row"><span>Estimated End Date</span><strong id="review-end-date">-</strong></div>
+              </div>
+              <div class="review-section"><h3>Estimated Duration</h3>
+                <div class="review-row"><span>Duration</span><strong id="review-duration">-</strong></div>
+              </div>
+              <div class="review-hero"><p>Estimated pooled amount</p><h1 id="review-pool">₦0</h1><small id="review-pool-breakdown">Based on 0 members × ₦0</small></div>
+              <div class="wizard-actions"><button type="button" class="modal-secondary" id="step3-back">← Back</button><button type="button" class="modal-submit" id="step3-next">Continue →</button></div>
+            </div>
+
+            <!-- Step 4: payment account + insights -->
+            <div class="wizard-step" data-step="4">
+              <p class="wizard-eyebrow">Step 4 of 5 · Payment Account</p>
+              <h1 class="wizard-title">Payment account &amp; insights</h1>
+              <p class="wizard-subtext">Where members will send contributions, for cross-reference.</p>
+              <div class="review-section"><h3><i class="fa-solid fa-lock" style="font-size:.7rem;color:var(--muted);margin-right:5px;"></i>Payment Account <span class="type-badge">Example · Planned</span></h3>
+                <div class="review-row"><span>Bank Name</span><strong id="review-bank-name">-</strong></div>
+                <div class="review-row"><span>Account Name</span><strong id="review-account-name">-</strong></div>
+                <div class="review-row"><span>Account Number</span><strong id="review-account-number">-</strong></div>
+              </div>
+              <div class="cd-insight">
+                <div class="cd-insight-eyebrow"><i class="fa-solid fa-lightbulb"></i>Circle Insights</div>
+                <div class="cd-insight-row"><strong id="wizard-insight-days">7 days</strong><span>of contribution activity per cycle</span></div>
+                <div class="cd-insight-row"><strong id="wizard-insight-amount">₦0</strong><span>expected contribution activity</span></div>
+                <p class="note" id="wizard-insight-note"></p>
+              </div>
+              <div class="wizard-actions"><button type="button" class="modal-secondary" id="step4-back">← Back</button><button type="button" class="modal-submit" id="step4-next">Continue →</button></div>
+            </div>
+
+            <!-- Step 6: success -->
+            <div class="wizard-step" data-step="6">
+              <div class="success-page-body">
+                <div class="success-icon"><i class="fa-solid fa-check"></i></div>
+                <h2 class="success-title">Circle created successfully</h2>
+                <p class="modal-subtext" id="success-circle-name">Your circle record is saved.</p>
+                <div class="review-section" style="text-align:left;">
+                  <h3>Invitation Link</h3>
+                  <div class="review-row"><span>Share to invite members</span></div>
+                  <p id="success-invite-link" style="font-size:.86rem;color:var(--green);word-break:break-all;">https://kuntribute.com/join/abc123</p>
+                  <p class="field-hint">Prototype representation only — invitations are not sent.</p>
+                </div>
+                <div class="success-actions">
+                  <button type="button" class="modal-submit" id="view-created-circle">View Circle</button>
+                  <div class="success-actions-row">
+                    <button type="button" class="modal-secondary" id="share-circle-btn"><i class="fa-solid fa-share-nodes"></i> Share Link</button>
+                    <button type="button" class="modal-secondary" id="download-circle-btn"><i class="fa-solid fa-download"></i> Download</button>
+                  </div>
+                  <button type="button" class="modal-secondary" id="close-success" style="background:transparent;border-color:transparent;color:var(--muted);">Done</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- ================= NEW CIRCLE — TYPE SELECTOR SHEET =================
+           Matches ktb/prototypes/organizer: tapping New Circle opens this
+           sheet first. Type selection is a decision, not a form. Only
+           after picking a type does the Create Circle wizard open. -->
+      <div class="modal-overlay" id="select-circle-type-overlay">
+        <div class="modal-sheet"><div class="modal-handle"></div>
+          <div class="modal-header"><h2>New Circle</h2><button type="button" class="modal-close" id="close-select-type" aria-label="Close"><i class="fa-solid fa-xmark"></i></button></div>
+          <p class="modal-subtext" style="text-align:left;">Choose the kind of circle you want to create.</p>
+          <div class="type-card" id="type-rotational" data-type="Rotational Savings">
+            <div class="type-icon"><i class="fa-solid fa-rotate"></i></div>
+            <div><div class="type-name">Rotational Savings</div><div class="type-desc">Members contribute regularly and take turns receiving the collected funds. Ajo / Esusu / Adashe.</div><div class="type-examples">Friends · Family · Market groups</div></div>
+          </div>
+          <div class="type-card disabled"><div class="type-icon"><i class="fa-solid fa-shield-heart"></i></div><div><div class="type-name">Welfare Fund <span class="type-badge">Coming soon</span></div><div class="type-desc">Members contribute into a shared fund used for approved needs and emergencies.</div><div class="type-examples">Medical · Burial · Community support</div></div></div>
+          <div class="type-card disabled"><div class="type-icon"><i class="fa-solid fa-handshake"></i></div><div><div class="type-name">Cooperative Savings <span class="type-badge">Coming soon</span></div><div class="type-desc">Members save together toward a shared financial goal.</div><div class="type-examples">Business · Equipment · Housing</div></div></div>
+        </div>
+      </div>
+
+      <!-- ================= CREATE CIRCLE CONFIRMATION SHEET ================= -->
+      <div class="modal-overlay" id="confirm-create-overlay">
+        <div class="modal-sheet"><div class="modal-handle"></div>
+          <div class="modal-header"><h2>You're about to create this circle</h2><button type="button" class="modal-close" id="close-confirm-create" aria-label="Close"><i class="fa-solid fa-xmark"></i></button></div>
+          <p class="modal-subtext" id="confirm-summary-line">-</p>
+          <p id="confirm-create-error" class="field-warning" role="alert"></p>
+          <div class="wizard-actions"><button type="button" class="modal-secondary" id="confirm-back-btn">← Back</button><button type="button" class="modal-submit" id="confirm-create-btn">Confirm &amp; Create</button></div>
+        </div>
+      </div>
+
+      <!-- ================= MANAGE CIRCLE SHEET ================= -->
+      <div class="modal-overlay" id="manage-circle-overlay">
+        <div class="modal-sheet"><div class="modal-handle"></div>
+          <div class="modal-header"><h2>Manage Circle</h2><button type="button" class="modal-close" id="close-manage-circle" aria-label="Close"><i class="fa-solid fa-xmark"></i></button></div>
+          <p class="modal-subtext">Circle settings, member invitations, and lifecycle controls will be available here as these workflows are introduced. <span class="type-badge">Planned</span></p>
+        </div>
+      </div>
+
+      <!-- ================= CIRCLE INSIGHTS SHEET ================= -->
+      <div class="modal-overlay" id="circle-insights-overlay">
+        <div class="modal-sheet"><div class="modal-handle"></div>
+          <div class="modal-header"><h2>Circle Insights</h2><button type="button" class="modal-close" id="close-circle-insights" aria-label="Close"><i class="fa-solid fa-xmark"></i></button></div>
+          <div class="cd-insight">
+            <div class="mini-list" id="circle-insights-body"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= MEMBER FILTER SHEET ================= -->
+      <div class="modal-overlay" id="member-filter-overlay">
+        <div class="modal-sheet filter-sheet"><div class="modal-handle"></div>
+          <div class="modal-header"><h2>Filter Members</h2><button type="button" class="modal-close" id="close-member-filter" aria-label="Close"><i class="fa-solid fa-xmark"></i></button></div>
+          <div class="filter-group"><h4>Circle</h4><div class="filter-chip-row" id="filter-circle-chips"></div></div>
+          <div class="filter-group"><h4>Membership Status</h4><div class="filter-chip-row" id="filter-status-chips"></div></div>
+          <div class="filter-group"><h4>Date Joined</h4><div class="filter-chip-row" id="filter-joined-chips"></div>
+            <input type="date" id="filter-joined-custom-date" class="filter-custom-date" hidden />
+          </div>
+          <div class="wizard-actions"><button type="button" class="modal-secondary" id="clear-filters-btn">Clear</button><button type="button" class="modal-submit" id="apply-filters-btn">Show Results</button></div>
+        </div>
+      </div>
+
+      <!-- ================= MEMBER DETAIL (operational record) ================= -->
+      <div class="modal-overlay" id="member-detail-overlay">
+        <div class="modal-sheet"><div class="modal-handle"></div>
+          <div class="modal-header"><h2>Member Record</h2><button type="button" class="modal-close" id="close-member-detail" aria-label="Close"><i class="fa-solid fa-xmark"></i></button></div>
+          <div style="display:flex;align-items:center;gap:14px;padding:4px 0 16px;">
+            <div class="member-avatar" id="member-detail-avatar" style="width:52px;height:52px;font-size:1.1rem;">AY</div>
+            <div><h3 id="member-detail-name" style="margin-bottom:4px;">Member</h3><span class="cd-status status-active" id="member-detail-status-pill">Active</span></div>
+          </div>
+
+          <p class="me-section-label">Identity</p>
+          <div class="review-section">
+            <div class="review-row"><span>Full Name</span><strong id="member-detail-fullname">-</strong></div>
+            <div class="review-row"><span>Email</span><a class="detail-link" id="member-detail-email" href="#">-</a></div>
+            <div class="review-row"><span>Phone Number</span><a class="detail-link" id="member-detail-phone" href="#">-</a></div>
+            <div class="review-row"><span>KUNTRIBUTE ID</span><strong id="member-detail-ktb">-</strong></div>
+          </div>
+
+          <p class="me-section-label">Account / Payout Details</p>
+          <div class="review-section">
+            <div class="review-row"><span>Bank Name</span><strong id="member-detail-bank">-</strong></div>
+            <div class="review-row"><span>Account Name</span><strong id="member-detail-account-name">-</strong></div>
+            <div class="review-row"><span>Account Number</span>
+              <div class="review-row-copy"><strong id="member-detail-account-number">-</strong><button type="button" class="copy-btn" id="member-detail-copy-account" aria-label="Copy account number"><i class="fa-regular fa-copy"></i></button></div>
+            </div>
+          </div>
+
+          <!-- A member can belong to more than one circle (e.g. David
+               Okoro is in two circles in this mock data), so the global
+               Member Detail shows a count, not one circle's specifics
+               as though it were universal. Per-circle position/amount
+               still live in that circle's own Members tab. -->
+          <p class="me-section-label">Circle Participation</p>
+          <div class="review-section">
+            <div class="review-row"><span>Number of Circles</span><strong id="member-detail-circle-count">-</strong></div>
+          </div>
+
+          <p class="me-section-label">Actions</p>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <button type="button" class="modal-secondary warn" id="member-suspend-btn">Suspend Member</button>
+            <button type="button" class="modal-secondary danger" id="member-remove-btn">Remove Member</button>
+            <button type="button" class="modal-secondary" id="member-download-btn"><i class="fa-solid fa-download"></i> Download Member Details</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= SUSPEND MEMBER CONFIRMATION ================= -->
+      <div class="modal-overlay" id="suspend-member-overlay">
+        <div class="modal-sheet"><div class="modal-handle"></div>
+          <div class="modal-header"><h2>Suspend Member</h2><button type="button" class="modal-close" id="close-suspend-member" aria-label="Close"><i class="fa-solid fa-xmark"></i></button></div>
+          <p class="modal-subtext" id="suspend-member-copy">Suspending this member pauses their standing in the circle. They will not appear as an active contributor or be assigned an upcoming payout until reactivated.</p>
+          <div class="wizard-actions"><button type="button" class="modal-secondary" id="suspend-cancel-btn">Cancel</button><button type="button" class="modal-secondary warn" id="suspend-confirm-btn">Suspend Member</button></div>
+        </div>
+      </div>
+
+      <!-- ================= REMOVE MEMBER CONFIRMATION ================= -->
+      <div class="modal-overlay" id="remove-member-overlay">
+        <div class="modal-sheet"><div class="modal-handle"></div>
+          <div class="modal-header"><h2>Remove Member</h2><button type="button" class="modal-close" id="close-remove-member" aria-label="Close"><i class="fa-solid fa-xmark"></i></button></div>
+          <p class="modal-subtext" id="remove-member-copy">Removing this member ends their participation and access in this circle. Their historical contribution and payout records are preserved and will not disappear.</p>
+          <div class="wizard-actions"><button type="button" class="modal-secondary" id="remove-cancel-btn">Cancel</button><button type="button" class="modal-secondary danger" id="remove-confirm-btn">Remove Member</button></div>
+        </div>
+      </div>
+
+      <div class="modal-overlay metric-overlay" id="total-contributions-overlay">
+        <div class="modal-sheet" role="dialog" aria-modal="true"><div class="modal-handle"></div>
+          <div class="modal-header"><h2>Total Contributions</h2><button type="button" class="modal-close" id="close-total-contributions" aria-label="Close"><i class="fa-solid fa-xmark"></i></button></div>
+          <p style="font-size:1.6rem;font-weight:700;margin-bottom:8px;" id="total-contributions-title">₦0</p>
+          <p class="modal-subtext">Contributions collected across all active circles.</p>
+          <div class="review-row"><span>Active Circles</span><strong id="metric-active-circles">0</strong></div>
+          <div class="review-row"><span>Today's Contributions</span><strong id="metric-today-contributions">₦0</strong></div>
+          <p style="display:flex;gap:8px;color:var(--muted);font-size:.76rem;line-height:1.5;margin-top:14px;"><i class="fa-solid fa-shield-halved" style="color:var(--green);margin-top:2px;"></i> KUNTRIBUTE does not hold funds; members pay organizers directly.</p>
+        </div>
+      </div>
+
+      <div class="toast-stack" id="toast-stack"></div>
+
+      <nav class="bottom-nav">
+        <div class="bottom-nav-inner">
+          <button class="bottom-nav-item active" type="button" data-nav="home"><i class="fa-solid fa-house"></i>Home</button>
+          <button class="bottom-nav-item" type="button" data-nav="programs"><i class="fa-solid fa-sitemap"></i>Programs</button>
+          <button class="bottom-nav-item" type="button" data-nav="members"><i class="fa-solid fa-users"></i>Members</button>
+          <button class="bottom-nav-item" type="button" data-nav="me"><i class="fa-solid fa-circle-user"></i>Me</button>
+        </div>
+      </nav>
+    </div>
+  </body>
+
+  <script>
+/* ==========================================================
+   KUNTRIBUTE ORGANIZER — CODEPEN PROTOTYPE (mock data, no backend)
+========================================================== */
+
+document.addEventListener("DOMContentLoaded", () => {
+  initializeSidebar();
+  initializeBottomNav();
+  initializePageNav();
+  initializeModals();
+  initializeCircleTypeSelect();
+  initializeWizard();
+  initializeAmountFormatting();
+  initializeMemberFormatting();
+  initializeStartDate();
+  initializeBalanceToggle();
+  initializeTotalContributionsDetails();
+  initializeMemberDetail();
+  initializeMemberActions();
+  initializeSearch();
+  initializeCirclesSegments();
+  initializeMemberFilters();
+  initializeCircleDetailTabs();
+  initializeProgramsNav();
+  initializeTheme();
+  bootstrapSession();
+});
+
+/* ==========================================================
+   MOCK DATA
+========================================================== */
+const TODAY = new Date("2026-09-12");
+
+let nextMockUserId = 9;
+let mockUsers = [
+  { user_id: 1, full_name: "Aminah Yusuf", email: "demo@kuntribute.test", phone: "08030001001" },
+  { user_id: 2, full_name: "David Okoro", email: "david@kuntribute.test", phone: "08030001002" },
+  { user_id: 3, full_name: "Chidinma Okafor", email: "chidinma@kuntribute.test", phone: "08030001003" },
+];
+
+let nextMockCircleId = 5;
+let mockCircles = [
+  { circle_id: 1, organizer_user_id: 1, circle_name: "KUNTRIBUTE Development Circle", contribution_amount: 10000, frequency: "Weekly", start_date: "2026-08-24", status: "active" },
+  { circle_id: 2, organizer_user_id: 1, circle_name: "Market Women Savings", contribution_amount: 5000, frequency: "Monthly", start_date: "2026-07-01", status: "active" },
+  { circle_id: 3, organizer_user_id: 1, circle_name: "Staff End of Year Circle", contribution_amount: 15000, frequency: "Monthly", start_date: "2025-12-01", status: "completed" },
+  { circle_id: 4, organizer_user_id: 1, circle_name: "Old Neighbourhood Circle", contribution_amount: 8000, frequency: "Weekly", start_date: "2026-05-01", status: "cancelled" },
+];
+
+let mockCircleMembers = [
+  { circle_member_id: 1, circle_id: 1, user_id: 1, full_name: "Aminah Yusuf", email: "demo@kuntribute.test", phone: "08030001001", payout_position: 1, joined_at: "2026-08-18", membership_status: "active", ktb_id: "KTB-000101", bank_name: "Guaranty Trust Bank", account_number: "0123456789" },
+  { circle_member_id: 2, circle_id: 1, user_id: 2, full_name: "David Okoro", email: "david@kuntribute.test", phone: "08030001002", payout_position: 2, joined_at: "2026-08-18", membership_status: "active", ktb_id: "KTB-000102", bank_name: "Zenith Bank", account_number: "2034567891" },
+  { circle_member_id: 3, circle_id: 1, user_id: 3, full_name: "Chidinma Okafor", email: "chidinma@kuntribute.test", phone: "08030001003", payout_position: 3, joined_at: "2026-08-18", membership_status: "active", ktb_id: "KTB-000103", bank_name: "Access Bank", account_number: "0056781234" },
+  { circle_member_id: 4, circle_id: 2, user_id: 2, full_name: "David Okoro", email: "david@kuntribute.test", phone: "08030001002", payout_position: 1, joined_at: "2026-07-01", membership_status: "active", ktb_id: "KTB-000102", bank_name: "Zenith Bank", account_number: "2034567891" },
+  { circle_member_id: 5, circle_id: 2, user_id: 6, full_name: "Ngozi Bello", email: "ngozi@example.test", phone: "08030002002", payout_position: 2, joined_at: "2026-07-01", membership_status: "active", ktb_id: "KTB-000106", bank_name: "First Bank of Nigeria", account_number: "3098761234" },
+  { circle_member_id: 6, circle_id: 2, user_id: 7, full_name: "Tunde Bakare", email: "tunde@example.test", phone: "08030002003", payout_position: 3, joined_at: "2026-08-20", membership_status: "active", ktb_id: "KTB-000107", bank_name: "UBA", account_number: "2011223344" },
+  { circle_member_id: 7, circle_id: 2, user_id: 8, full_name: "Ifeoma Nwosu", email: "ifeoma@example.test", phone: "08030002004", payout_position: 4, joined_at: "2026-07-01", membership_status: "inactive", ktb_id: "KTB-000108", bank_name: "Fidelity Bank", account_number: "5602345671" },
+  { circle_member_id: 8, circle_id: 3, user_id: 9, full_name: "Bola Adekunle", email: "bola@example.test", phone: "08030003001", payout_position: 1, joined_at: "2025-11-20", membership_status: "active", ktb_id: "KTB-000109", bank_name: "Guaranty Trust Bank", account_number: "0145678923" },
+  { circle_member_id: 9, circle_id: 3, user_id: 10, full_name: "Grace Effiong", email: "grace@example.test", phone: "08030003002", payout_position: 2, joined_at: "2025-11-20", membership_status: "active", ktb_id: "KTB-000110", bank_name: "Zenith Bank", account_number: "2078123456" },
+  { circle_member_id: 10, circle_id: 4, user_id: 11, full_name: "Emeka Chukwu", email: "emeka@example.test", phone: "08030004001", payout_position: 1, joined_at: "2026-05-01", membership_status: "inactive", ktb_id: "KTB-000111", bank_name: "Access Bank", account_number: "0067891234" },
+];
+
+let mockContributions = [
+  { contribution_id: 1, circle_id: 1, user_id: 3, full_name: "Chidinma Okafor", amount: 10000, payment_date: "2026-08-25", status: "confirmed" },
+  { contribution_id: 2, circle_id: 1, user_id: 2, full_name: "David Okoro", amount: 10000, payment_date: "2026-08-24", status: "confirmed" },
+  { contribution_id: 3, circle_id: 1, user_id: 1, full_name: "Aminah Yusuf", amount: 10000, payment_date: "2026-08-23", status: "confirmed" },
+  { contribution_id: 4, circle_id: 1, user_id: 3, full_name: "Chidinma Okafor", amount: 10000, payment_date: null, status: "pending" },
+  { contribution_id: 5, circle_id: 1, user_id: 2, full_name: "David Okoro", amount: 10000, payment_date: null, status: "pending" },
+  { contribution_id: 6, circle_id: 1, user_id: 1, full_name: "Aminah Yusuf", amount: 10000, payment_date: "2026-08-30", status: "confirmed" },
+  { contribution_id: 7, circle_id: 2, user_id: 2, full_name: "David Okoro", amount: 5000, payment_date: "2026-07-05", status: "confirmed" },
+  { contribution_id: 8, circle_id: 2, user_id: 6, full_name: "Ngozi Bello", amount: 5000, payment_date: "2026-07-06", status: "confirmed" },
+  { contribution_id: 9, circle_id: 2, user_id: 7, full_name: "Tunde Bakare", amount: 5000, payment_date: null, status: "pending" },
+  { contribution_id: 10, circle_id: 2, user_id: 8, full_name: "Ifeoma Nwosu", amount: 5000, payment_date: "2026-08-04", status: "confirmed" },
+  { contribution_id: 11, circle_id: 3, user_id: 9, full_name: "Bola Adekunle", amount: 15000, payment_date: "2025-12-05", status: "confirmed" },
+  { contribution_id: 12, circle_id: 3, user_id: 10, full_name: "Grace Effiong", amount: 15000, payment_date: "2025-12-06", status: "confirmed" },
+];
+
+let mockPayouts = [
+  { payout_id: 1, circle_id: 1, circle_member_id: 1, user_id: 1, full_name: "Aminah Yusuf", amount: 30000, payout_date: "2026-08-29", status: "paid" },
+  { payout_id: 2, circle_id: 1, circle_member_id: 2, user_id: 2, full_name: "David Okoro", amount: 30000, payout_date: "2026-09-05", status: "pending" },
+  { payout_id: 3, circle_id: 2, circle_member_id: 4, user_id: 2, full_name: "David Okoro", amount: 20000, payout_date: "2026-07-31", status: "paid" },
+  { payout_id: 4, circle_id: 3, circle_member_id: 8, user_id: 9, full_name: "Bola Adekunle", amount: 30000, payout_date: "2025-12-31", status: "paid" },
+];
+
+let mockCycles = [
+  { cycle_id: 1, circle_id: 1, cycle_number: 1, start_date: "2026-08-24", end_date: "2026-08-30", status: "completed", recipient_full_name: "Aminah Yusuf", payout_id: 1, payout_amount: 30000, payout_status: "paid" },
+  { cycle_id: 2, circle_id: 1, cycle_number: 2, start_date: "2026-08-31", end_date: "2026-09-06", status: "open", recipient_full_name: "David Okoro", payout_id: 2, payout_amount: 30000, payout_status: "pending" },
+  { cycle_id: 3, circle_id: 1, cycle_number: 3, start_date: "2026-09-07", end_date: "2026-09-13", status: "scheduled", recipient_full_name: "Chidinma Okafor", payout_id: null, payout_amount: null, payout_status: null },
+  { cycle_id: 4, circle_id: 2, cycle_number: 1, start_date: "2026-07-01", end_date: "2026-07-31", status: "completed", recipient_full_name: "David Okoro", payout_id: 3, payout_amount: 20000, payout_status: "paid" },
+  { cycle_id: 5, circle_id: 2, cycle_number: 2, start_date: "2026-08-01", end_date: "2026-08-31", status: "open", recipient_full_name: "Ngozi Bello", payout_id: null, payout_amount: null, payout_status: null },
+  { cycle_id: 6, circle_id: 3, cycle_number: 1, start_date: "2025-12-01", end_date: "2025-12-31", status: "completed", recipient_full_name: "Bola Adekunle", payout_id: 4, payout_amount: 30000, payout_status: "paid" },
+];
+
+const organizerAccount = { bankName: "Guaranty Trust Bank", accountName: "Aminah Yusuf", accountNumber: "0123456789" };
+
+/* Programs — the umbrella above Circles. Program Type → Program →
+   Circle. Programs reference the SAME circles My Circles lists; they
+   organize them, they don't duplicate or replace them. Every count is
+   computed from circle data below, never hand-typed, so nothing drifts. */
+const PROGRAM_TYPES = [
+  { key: "welfare", name: "Welfare", icon: "fa-shield-heart" },
+  { key: "rosca", name: "ROSCA Savings", icon: "fa-rotate" },
+  { key: "cooperative", name: "Cooperative", icon: "fa-handshake" },
+];
+
+let mockPrograms = [
+  { program_id: 1, type: "rosca", name: "Staff Monthly Ajo", circleIds: [1] },
+  { program_id: 2, type: "rosca", name: "Market Traders Esusu", circleIds: [2] },
+  { program_id: 3, type: "welfare", name: "Staff Welfare", circleIds: [3] },
+  { program_id: 4, type: "cooperative", name: "Neighbourhood Cooperative", circleIds: [4] },
+];
+
+let circlesData = [];
+let organizerUserId = null;
+let currentUser = null;
+let activityData = [];
+let totalContributionsValue = 0;
+let membersPageFilter = null;
+let expandedMemberGroups = new Set();
+let circlesSegment = "active";
+let memberFilters = { circle: "all", status: "all", joined: "all", joinedCustomDate: "" };
+let pendingCircle = null;
+let createdCircleId = null;
+let activeMemberDetail = null;
+let wizardStep = 1;
+
+/* ==========================================================
+   BOOT — Login is out of scope for this pass (see file header).
+   The prototype opens directly on the Dashboard with a fixed demo
+   identity, exactly like ktb/prototypes/organizer.
+========================================================== */
+const demoUser = { user_id: 1, full_name: "Aminah Yusuf", email: "amina.yusuf@example.com" };
+
+function bootstrapSession() {
+  currentUser = demoUser;
+  organizerUserId = demoUser.user_id;
+  setText("topbar-user-name", demoUser.full_name);
+  setText("me-page-name", demoUser.full_name);
+  setText("me-page-email", demoUser.email);
+  setText("me-list-email", demoUser.email);
+  const avatar = document.getElementById("me-avatar");
+  if (avatar) avatar.textContent = getInitials(demoUser.full_name);
+  switchPage("dashboard");
+  loadDashboardData();
+}
+
+/* ==========================================================
+   HELPERS
+========================================================== */
+function formatNaira(amount) { return "₦" + Number(amount).toLocaleString("en-NG"); }
+function formatCompactNaira(amount) {
+  const value = Number(amount) || 0;
+  if (value < 100000) return formatNaira(value);
+  const units = [[1e9, "B"], [1e6, "M"], [1e3, "K"]];
+  const unit = units.find(([t]) => value >= t);
+  if (!unit) return formatNaira(value);
+  const scaled = value / unit[0];
+  return `₦${scaled.toLocaleString("en-NG", { maximumFractionDigits: scaled >= 10 ? 1 : 2 })}${unit[1]}`;
+}
+function setText(id, value) { const el = document.getElementById(id); if (el) el.textContent = value; }
+function formatActivityDate(value) {
+  if (!value) return "Date not recorded";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "Date not recorded" : date.toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" });
+}
+function getInitials(name) { return (name || "").split(" ").filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase() || "?"; }
+
+function showToast(message, icon = "fa-solid fa-circle-check") {
+  const stack = document.getElementById("toast-stack");
+  if (!stack) return;
+  const el = document.createElement("div");
+  el.className = "toast";
+  el.innerHTML = `<i class="${icon}"></i><span>${message}</span>`;
+  stack.appendChild(el);
+  requestAnimationFrame(() => el.classList.add("show"));
+  setTimeout(() => { el.classList.remove("show"); setTimeout(() => el.remove(), 250); }, 2600);
+}
+
+/* ==========================================================
+   PAGE SWITCHING
+========================================================== */
+function switchPage(pageId) {
+  document.querySelectorAll(".page").forEach((p) => p.classList.remove("active"));
+  const target = document.getElementById("page-" + pageId);
+  if (target) target.classList.add("active");
+
+  // Sub-pages keep their parent destination highlighted.
+  const navParent = { "program-type": "programs", "program-detail": "programs" };
+  const sidebarActive = navParent[pageId] || pageId;
+  document.querySelectorAll(".sidebar nav a[data-page]").forEach((a) => a.classList.toggle("active", a.dataset.page === sidebarActive));
+
+  // Circles is no longer a bottom-nav tab: it's reachable via the drawer's
+  // My Circles link and via Programs. Programs' own sub-pages keep the
+  // Programs tab highlighted, the same way the sidebar does.
+  const navMap = { dashboard: "home", programs: "programs", "program-type": "programs", "program-detail": "programs", members: "members", me: "me" };
+  document.querySelectorAll(".bottom-nav-item[data-nav]").forEach((btn) => btn.classList.toggle("active", navMap[pageId] === btn.dataset.nav));
+
+  const contextTitle = document.getElementById("topbar-context-title");
+  if (contextTitle && target) contextTitle.textContent = target.dataset.title || "";
+
+  // Page-specific top controls: notifications only make sense on the
+  // dashboard; everywhere else it's redundant chrome (esp. "Me", which
+  // is itself a destination, and "Notifications", which IS the feed).
+  const notifications = document.getElementById("topbar-notifications");
+  if (notifications) notifications.hidden = pageId !== "dashboard";
+
+  const userCard = document.getElementById("topbar-user-card");
+  if (userCard) userCard.hidden = pageId === "me";
+
+  closeDrawer();
+  window.scrollTo(0, 0);
+}
+
+function initializePageNav() {
+  document.querySelectorAll(".sidebar nav a[data-page]").forEach((link) => {
+    link.addEventListener("click", (e) => {
+      e.preventDefault();
+      switchPage(link.dataset.page);
+      if (link.dataset.page === "members") renderMembersPage(null);
+    });
+  });
+  document.querySelectorAll("[data-goto]").forEach((el) => {
+    el.addEventListener("click", (e) => { e.preventDefault(); switchPage(el.dataset.goto); });
+  });
+  document.querySelectorAll(".planned-nav, .planned-action").forEach((link) => {
+    link.addEventListener("click", (e) => { e.preventDefault(); showToast("This is planned for a future release.", "fa-solid fa-hourglass-half"); });
+  });
+  const circleDetailBack = document.getElementById("circle-detail-back");
+  if (circleDetailBack) circleDetailBack.addEventListener("click", (e) => { e.preventDefault(); switchPage("circles"); });
+  const backToWebsite = document.getElementById("sidebar-back-website");
+  if (backToWebsite) backToWebsite.addEventListener("click", (e) => { e.preventDefault(); showToast("This returns to the public KUNTRIBUTE website in production."); });
+}
+
+/* ==========================================================
+   MOBILE DRAWER + BOTTOM NAV
+========================================================== */
+// Background scroll lock for the drawer. `overflow:hidden` on <body>
+// is unreliable on mobile Safari, so the page is pinned with its
+// scroll position preserved and restored on close.
+let scrollLockCount = 0;
+let lockedScrollY = 0;
+function lockBodyScroll() {
+  if (scrollLockCount === 0) {
+    lockedScrollY = window.scrollY || 0;
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${lockedScrollY}px`;
+    document.body.style.left = "0";
+    document.body.style.right = "0";
+    document.body.style.width = "100%";
+  }
+  scrollLockCount++;
+}
+function unlockBodyScroll() {
+  scrollLockCount = Math.max(0, scrollLockCount - 1);
+  if (scrollLockCount === 0) {
+    document.body.style.position = "";
+    document.body.style.top = "";
+    document.body.style.left = "";
+    document.body.style.right = "";
+    document.body.style.width = "";
+    window.scrollTo(0, lockedScrollY);
+  }
+}
+
+// Guarded: switchPage() calls this on every navigation, so it must be
+// a no-op (and must not touch the scroll lock) when already closed.
+function closeDrawer() {
+  const sidebar = document.querySelector(".sidebar");
+  if (!sidebar || !sidebar.classList.contains("showSidebar")) return;
+  const overlay = document.querySelector(".overlay");
+  const menuIcon = document.querySelector(".mobile-menu i");
+  sidebar.classList.remove("showSidebar");
+  if (overlay) overlay.classList.remove("show");
+  if (menuIcon) { menuIcon.classList.remove("fa-xmark"); menuIcon.classList.add("fa-bars"); }
+  unlockBodyScroll();
+}
+
+function initializeSidebar() {
+  const menu = document.querySelector(".mobile-menu");
+  const sidebar = document.querySelector(".sidebar");
+  const overlay = document.querySelector(".overlay");
+  if (!menu || !sidebar || !overlay) return;
+  const icon = menu.querySelector("i");
+
+  function openDrawer() {
+    sidebar.classList.add("showSidebar");
+    overlay.classList.add("show");
+    icon.classList.remove("fa-bars");
+    icon.classList.add("fa-xmark");
+    lockBodyScroll();
+  }
+
+  menu.addEventListener("click", (e) => { e.preventDefault(); sidebar.classList.contains("showSidebar") ? closeDrawer() : openDrawer(); });
+  overlay.addEventListener("click", closeDrawer);
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeDrawer(); });
+  window.addEventListener("resize", () => { if (window.innerWidth > 992) closeDrawer(); });
+}
+
+function initializeBottomNav() {
+  const items = document.querySelectorAll(".bottom-nav-item[data-nav]");
+  const navToPage = { home: "dashboard", programs: "programs", members: "members", me: "me" };
+  items.forEach((item) => {
+    // aria-disabled rather than the `disabled` attribute: a disabled
+    // <button> fires no click, so the Planned message never surfaced.
+    if (item.getAttribute("aria-disabled") === "true") {
+      item.addEventListener("click", () => showToast("Payments is planned for a future release.", "fa-solid fa-hourglass-half"));
+      return;
+    }
+    item.addEventListener("click", () => {
+      items.forEach((i) => i.classList.remove("active"));
+      item.classList.add("active");
+      const pageId = navToPage[item.dataset.nav];
+      if (pageId) switchPage(pageId);
+      if (pageId === "members") renderMembersPage(null);
+    });
+  });
+}
+
+/* ==========================================================
+   DASHBOARD DATA
+========================================================== */
+function loadDashboardData() {
+  circlesData = mockCircles.map((circle) => {
+    const id = circle.circle_id;
+    const members = mockCircleMembers.filter((m) => m.circle_id === id);
+    const contributions = mockContributions.filter((c) => c.circle_id === id);
+    const payouts = mockPayouts.filter((p) => p.circle_id === id);
+    const cycles = mockCycles.filter((c) => c.circle_id === id);
+    const latestStatusByUser = new Map();
+    contributions.forEach((c) => { if (!latestStatusByUser.has(c.user_id)) latestStatusByUser.set(c.user_id, c.status); });
+    return {
+      id, name: circle.circle_name, amount: Number(circle.contribution_amount), frequency: circle.frequency,
+      startDate: circle.start_date, status: circle.status, membersJoined: members.length,
+      members: members.map((m) => ({
+        circleMemberId: m.circle_member_id, userId: m.user_id, name: m.full_name, email: m.email, phone: m.phone,
+        ktbId: m.ktb_id, bankName: m.bank_name, accountNumber: m.account_number,
+        payoutPosition: m.payout_position, membershipStatus: m.membership_status, joinedAt: m.joined_at,
+        status: latestStatusByUser.get(m.user_id) || "pending",
+      })),
+      contributions, payouts, cycles,
+    };
+  });
+
+  if (!organizerUserId) organizerUserId = mockCircles[0]?.organizer_user_id || null;
+
+  const activeCircles = circlesData.filter((c) => c.status === "active");
+  const allContributions = circlesData.flatMap((circle) => circle.contributions.map((c) => ({ ...c, circle_name: circle.name })));
+  const allPayouts = circlesData.flatMap((circle) => circle.payouts);
+  activityData = [
+    ...allContributions.map((c) => ({ kind: "contribution", title: `${c.full_name || "Member"} contribution`, circleName: c.circle_name, amount: c.amount, status: c.status, date: c.payment_date })),
+    ...circlesData.flatMap((circle) => circle.payouts.map((p) => ({ kind: "payout", title: `${p.full_name || "Member"} payout`, circleName: circle.name, amount: p.amount, status: p.status, date: p.payout_date }))),
+  ].sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+
+  const todayISO = TODAY.toISOString().slice(0, 10);
+  const confirmed = allContributions.filter((c) => c.status === "confirmed");
+  const todays = confirmed.filter((c) => String(c.payment_date || "").slice(0, 10) === todayISO);
+  const pending = allContributions.filter((c) => c.status === "pending");
+
+  totalContributionsValue = confirmed.reduce((t, i) => t + Number(i.amount), 0);
+  renderTotalContributionsValue();
+  setText("today-contributions", formatNaira(todays.reduce((t, i) => t + Number(i.amount), 0)));
+  setText("active-circles-count", activeCircles.length);
+  setText("total-members-count", activeCircles.reduce((t, c) => t + c.membersJoined, 0));
+  setText("pending-payments-count", pending.length);
+  setText("upcoming-payouts-count", allPayouts.filter((p) => p.status === "pending").length);
+  // Same four values, mirrored into the mobile row presentation.
+  setText("active-circles-count-mobile", activeCircles.length);
+  setText("total-members-count-mobile", activeCircles.reduce((t, c) => t + c.membersJoined, 0));
+  setText("pending-payments-count-mobile", pending.length);
+  setText("upcoming-payouts-count-mobile", allPayouts.filter((p) => p.status === "pending").length);
+  setText("metric-active-circles", activeCircles.length);
+  setText("metric-today-contributions", formatNaira(todays.reduce((t, i) => t + Number(i.amount), 0)));
+  setText("total-contributions-title", formatNaira(totalContributionsValue));
+
+  renderCirclesPage();
+  renderMembersPage();
+  renderActivityFeed();
+  renderProgramTypes();
+}
+
+function renderTotalContributionsValue() {
+  const el = document.getElementById("wallet-balance");
+  if (!el) return;
+  el.textContent = window.innerWidth <= 600 ? formatCompactNaira(totalContributionsValue) : formatNaira(totalContributionsValue);
+  el.dataset.exact = formatNaira(totalContributionsValue);
+}
+
+function renderActivityList(id, limit) {
+  const items = limit ? activityData.slice(0, limit) : activityData;
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.innerHTML = items.length
+    ? items.map((item) => `
+      <div class="activity-row">
+        <div class="activity-row-icon ${item.kind}"><i class="fa-solid ${item.kind === "payout" ? "fa-money-bill-transfer" : "fa-money-check-dollar"}"></i></div>
+        <div class="activity-row-body"><h4>${item.title}</h4><p>${item.circleName}</p></div>
+        <div class="activity-row-right"><strong>${formatNaira(item.amount)}</strong><small>${formatActivityDate(item.date)} · ${item.status}</small></div>
+      </div>`).join("")
+    : `<div class="empty-state compact"><i class="fa-regular fa-clock"></i><p>No recorded activity yet.</p></div>`;
+}
+// Plain date-granularity relative time — mock data only carries a
+// date, not a time-of-day, so "3 days ago" is honest; a fake "10 min
+// ago" would be manufactured precision the data doesn't support.
+function formatRelativeTime(dateStr) {
+  if (!dateStr) return "Date not recorded";
+  const date = new Date(dateStr);
+  if (Number.isNaN(date.getTime())) return "Date not recorded";
+  const diffDays = Math.floor((TODAY - date) / 86400000);
+  if (diffDays <= 0) return "Today";
+  if (diffDays === 1) return "Yesterday";
+  if (diffDays < 7) return `${diffDays} days ago`;
+  return formatActivityDate(dateStr);
+}
+
+// Mobile-only compact Recent Activity row (title + one context line,
+// no separate right-hand amount/date column) — the Organization
+// prototype's restrained treatment. Desktop keeps the original
+// detailed row via renderActivityList; so do Notifications and
+// Transaction History, which are full ledgers, not quick-glance UI.
+function renderRecentActivityCompact(id, limit) {
+  const items = limit ? activityData.slice(0, limit) : activityData;
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.innerHTML = items.length
+    ? items.map((item) => {
+        const verb = item.kind === "payout" ? "received a payout" : "recorded a contribution";
+        return `<div class="activity-row">
+        <div class="activity-row-icon ${item.kind}"><i class="fa-solid ${item.kind === "payout" ? "fa-money-bill-transfer" : "fa-money-check-dollar"}"></i></div>
+        <div class="activity-row-body"><h4>${item.title.replace(/ (contribution|payout)$/, "")} ${verb}</h4><p>${item.circleName} · ${formatRelativeTime(item.date)}</p></div>
+      </div>`;
+      }).join("")
+    : `<div class="empty-state compact"><i class="fa-regular fa-clock"></i><p>No recorded activity yet.</p></div>`;
+}
+
+// The dashboard's own Recent Activity panel switches between the two
+// row treatments by viewport; every other feed always uses the
+// detailed row and is untouched by this.
+function renderDashboardActivity() {
+  if (window.innerWidth <= 992) renderRecentActivityCompact("activity-feed", 5);
+  else renderActivityList("activity-feed", 5);
+}
+
+function renderActivityFeed() {
+  renderDashboardActivity();
+  renderActivityList("notifications-feed");
+  renderActivityList("history-feed");
+}
+window.addEventListener("resize", renderDashboardActivity);
+
+/* ==========================================================
+   MY CIRCLES (segmented Active / Completed / Cancelled)
+========================================================== */
+function initializeCirclesSegments() {
+  document.querySelectorAll("#circles-segmented button[data-status]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      circlesSegment = btn.dataset.status;
+      document.querySelectorAll("#circles-segmented button").forEach((b) => b.classList.toggle("active", b === btn));
+      renderCirclesPage(document.getElementById("circles-search-input")?.value || "");
+    });
+  });
+}
+
+function renderCirclesPage(searchTerm = "") {
+  const container = document.getElementById("circles-page-list");
+  if (!container) return;
+  const term = searchTerm.trim().toLowerCase();
+
+  ["active", "completed", "cancelled"].forEach((status) => {
+    const count = circlesData.filter((c) => c.status === status).length;
+    setText("seg-count-" + status, count ? String(count) : "");
+  });
+
+  const scoped = circlesData.filter((c) => c.status === circlesSegment);
+  const filtered = term ? scoped.filter((c) => c.name.toLowerCase().includes(term)) : scoped;
+
+  if (!filtered.length) {
+    container.innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><i class="fa-solid fa-layer-group"></i><h3>No ${circlesSegment} circles</h3><p>${circlesSegment === "active" ? "Create your first circle to begin organizing contributions." : `Circles you mark as ${circlesSegment} will appear here.`}</p></div>`;
+    return;
+  }
+
+  container.innerHTML = filtered.map((circle) => `
+    <div class="circle-card" data-circle-id="${circle.id}">
+      <div class="circle-card-top">
+        <div><h3>${circle.name}</h3><p>${circle.membersJoined} Member${circle.membersJoined === 1 ? "" : "s"}</p></div>
+        <div class="circle-card-avatar">${getInitials(circle.name)}</div>
+      </div>
+      <div class="circle-card-badges">
+        <span class="badge-amount">${formatNaira(circle.amount)}</span>
+        <span class="badge-frequency">${circle.frequency}</span>
+        ${circle.status !== "active" ? `<span class="badge-status status-${circle.status}">${circle.status}</span>` : ""}
+      </div>
+    </div>`).join("");
+
+  container.querySelectorAll(".circle-card").forEach((el) => el.addEventListener("click", () => openCircleDetail(Number(el.dataset.circleId))));
+}
+
+/* ==========================================================
+   PROGRAMS (Program Type → Program → Circle)
+========================================================== */
+let activeProgramTypeKey = null;
+
+function programCircles(program) {
+  return program.circleIds.map((id) => circlesData.find((c) => c.id === id)).filter(Boolean);
+}
+
+function programStats(program) {
+  const circles = programCircles(program);
+  const members = circles.reduce((t, c) => t + c.membersJoined, 0);
+  const contributions = circles.reduce((t, c) => t + c.contributions.filter((x) => x.status === "confirmed").reduce((s, x) => s + Number(x.amount), 0), 0);
+  return { circles, members, contributions };
+}
+
+// Derived from the circles beneath it, so a program can never claim a
+// status its circles contradict.
+function programStatus(program) {
+  const circles = programCircles(program);
+  if (!circles.length) return "active";
+  if (circles.some((c) => c.status === "active")) return "active";
+  if (circles.every((c) => c.status === "cancelled")) return "cancelled";
+  return "completed";
+}
+
+function plural(n, word) { return `${n} ${word}${n === 1 ? "" : "s"}`; }
+
+function entityRowHTML(icon, title, note, dataAttr) {
+  return `<button type="button" class="entity-row" ${dataAttr}>
+    <div class="member-row-left"><div class="entity-icon"><i class="fa-solid ${icon}"></i></div><div><h4>${title}</h4><p class="member-row-note">${note}</p></div></div>
+    <i class="fa-solid fa-chevron-right member-chevron"></i>
+  </button>`;
+}
+
+function renderProgramTypes() {
+  const el = document.getElementById("program-types-list");
+  if (!el) return;
+  el.innerHTML = PROGRAM_TYPES.map((type) => {
+    const programs = mockPrograms.filter((p) => p.type === type.key);
+    const circleCount = programs.reduce((t, p) => t + programStats(p).circles.length, 0);
+    const memberCount = programs.reduce((t, p) => t + programStats(p).members, 0);
+    const note = `${plural(programs.length, "Program")} · ${plural(circleCount, "Circle")} · ${plural(memberCount, "Member")}`;
+    return entityRowHTML(type.icon, type.name, note, `data-program-type="${type.key}"`);
+  }).join("");
+  el.querySelectorAll("[data-program-type]").forEach((row) => row.addEventListener("click", () => openProgramType(row.dataset.programType)));
+}
+
+function openProgramType(typeKey) {
+  const type = PROGRAM_TYPES.find((t) => t.key === typeKey);
+  if (!type) return;
+  activeProgramTypeKey = typeKey;
+  const programs = mockPrograms.filter((p) => p.type === typeKey);
+  const circleCount = programs.reduce((t, p) => t + programStats(p).circles.length, 0);
+  const memberCount = programs.reduce((t, p) => t + programStats(p).members, 0);
+
+  setText("program-type-name", type.name);
+  setText("program-type-meta", `${plural(programs.length, "Program")} · ${plural(circleCount, "Circle")} · ${plural(memberCount, "Member")}`);
+
+  const el = document.getElementById("program-type-list");
+  if (el) {
+    el.innerHTML = programs.length
+      ? programs.map((program) => {
+          const stats = programStats(program);
+          const note = `${plural(stats.circles.length, "Circle")} · ${plural(stats.members, "Member")} · ${membershipStatusLabel(programStatus(program))}`;
+          return entityRowHTML("fa-layer-group", program.name, note, `data-program-id="${program.program_id}"`);
+        }).join("")
+      : `<div class="empty-state compact"><i class="fa-solid fa-sitemap"></i><p>No programs of this type yet.</p></div>`;
+    el.querySelectorAll("[data-program-id]").forEach((row) => row.addEventListener("click", () => openProgramDetail(Number(row.dataset.programId))));
+  }
+
+  const page = document.getElementById("page-program-type");
+  if (page) page.dataset.title = type.name;
+  switchPage("program-type");
+}
+
+function openProgramDetail(programId) {
+  const program = mockPrograms.find((p) => p.program_id === programId);
+  if (!program) return;
+  const type = PROGRAM_TYPES.find((t) => t.key === program.type);
+  const stats = programStats(program);
+  const status = programStatus(program);
+
+  setText("program-detail-name", program.name);
+  setText("program-detail-type", `${type ? type.name : "Program"} Program`);
+  const statusEl = document.getElementById("program-detail-status");
+  if (statusEl) { statusEl.textContent = status; statusEl.className = "cd-status status-" + status; }
+  setText("program-detail-circle-count", stats.circles.length);
+  setText("program-detail-member-count", stats.members);
+  setText("program-detail-contributions", formatNaira(stats.contributions));
+  setText("program-detail-back-label", type ? type.name : "Programs");
+
+  const el = document.getElementById("program-detail-circles");
+  if (el) {
+    el.innerHTML = stats.circles.length
+      ? stats.circles.map((circle) => entityRowHTML("fa-circle-nodes", circle.name, `${plural(circle.membersJoined, "Member")} · ${formatNaira(circle.amount)} ${circle.frequency}`, `data-circle-id="${circle.id}"`)).join("")
+      : `<div class="empty-state compact"><i class="fa-solid fa-circle-nodes"></i><p>No circles in this program yet.</p></div>`;
+    // Circles open the existing Circle Detail — one circle experience.
+    el.querySelectorAll("[data-circle-id]").forEach((row) => row.addEventListener("click", () => openCircleDetail(Number(row.dataset.circleId))));
+  }
+
+  const page = document.getElementById("page-program-detail");
+  if (page) page.dataset.title = program.name;
+  switchPage("program-detail");
+}
+
+function initializeProgramsNav() {
+  document.getElementById("program-type-back")?.addEventListener("click", (e) => { e.preventDefault(); switchPage("programs"); });
+  document.getElementById("program-detail-back")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    if (activeProgramTypeKey) openProgramType(activeProgramTypeKey); else switchPage("programs");
+  });
+}
+
+/* ==========================================================
+   CIRCLE DETAIL (redesigned)
+========================================================== */
+function currentCycleLabel(cycles) {
+  if (!cycles.length) return "No cycles scheduled";
+  const open = cycles.find((c) => c.status === "open") || cycles.find((c) => c.status === "scheduled");
+  const cycle = open || cycles[cycles.length - 1];
+  return `#${cycle.cycle_number} · ${cycle.status} · ends ${formatActivityDate(cycle.end_date)}`;
+}
+
+function initializeCircleDetailTabs() {
+  document.querySelectorAll("#cd-tabs .cd-tab").forEach((tab) => {
+    tab.addEventListener("click", () => setCircleDetailTab(tab.dataset.tab));
+  });
+  const viewMembers = document.getElementById("cd-view-all-members");
+  if (viewMembers) viewMembers.addEventListener("click", (e) => { e.preventDefault(); setCircleDetailTab("members"); });
+  const viewActivity = document.getElementById("cd-view-all-activity");
+  if (viewActivity) viewActivity.addEventListener("click", (e) => { e.preventDefault(); setCircleDetailTab("contributions"); });
+  const manageBtn = document.getElementById("cd-manage-btn");
+  if (manageBtn) manageBtn.addEventListener("click", () => openModal("manage-circle-overlay"));
+  const insightsBtn = document.getElementById("cd-insights-btn");
+  if (insightsBtn) insightsBtn.addEventListener("click", () => {
+    const circle = circlesData.find((c) => c.id === activeCircleId);
+    if (circle) renderCircleInsights(circle);
+    openModal("circle-insights-overlay");
+  });
+  document.getElementById("close-circle-insights")?.addEventListener("click", () => closeModal("circle-insights-overlay"));
+}
+
+function setCircleDetailTab(tabId) {
+  document.querySelectorAll("#cd-tabs .cd-tab").forEach((t) => t.classList.toggle("active", t.dataset.tab === tabId));
+  document.querySelectorAll(".cd-tabpanel").forEach((p) => p.classList.toggle("active", p.dataset.panel === tabId));
+}
+
+let activeCircleId = null;
+
+function openCircleDetail(circleId) {
+  const circle = circlesData.find((c) => c.id === circleId);
+  if (!circle) return;
+  activeCircleId = circleId;
+
+  setText("cd-name", circle.name);
+  setText("cd-type", "Rotational Savings");
+  const statusEl = document.getElementById("cd-status");
+  statusEl.textContent = circle.status;
+  statusEl.className = "cd-status status-" + circle.status;
+  setText("cd-amount", formatNaira(circle.amount));
+  setText("cd-frequency", circle.frequency);
+  setText("cd-member-count", circle.membersJoined);
+  setText("cd-start-date", circle.startDate ? formatActivityDate(circle.startDate) : "Unavailable");
+  setText("cd-current-cycle", currentCycleLabel(circle.cycles));
+
+  // Members preview (max 3) + full list
+  const preview = document.getElementById("cd-members-preview");
+  preview.innerHTML = circle.members.length
+    ? circle.members.slice(0, 3).map((m) => `<div class="mini-row"><span>${m.name}</span><span class="member-status ${m.status}">${m.status === "confirmed" ? "Confirmed" : "Pending"}</span></div>`).join("")
+    : `<div class="empty-state compact"><i class="fa-solid fa-users"></i><p>No members yet</p></div>`;
+  renderMemberListInto("cd-members-full", circle.members.map((m) => ({ ...m, circleId: circle.id })));
+
+  // Activity preview (max 3) + full contributions/payouts lists
+  const activity = [
+    ...circle.contributions.map((item) => ({ kind: "contribution", amount: item.amount, status: item.status, date: item.payment_date, title: `${item.full_name || "Member"} contribution` })),
+    ...circle.payouts.map((item) => ({ kind: "payout", amount: item.amount, status: item.status, date: item.payout_date, title: `${item.full_name || "Member"} payout` })),
+  ].sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+  renderActivityRowsInto("cd-activity-preview", activity.slice(0, 3));
+  renderActivityRowsInto("cd-contributions-full", circle.contributions.map((c) => ({ kind: "contribution", amount: c.amount, status: c.status, date: c.payment_date, title: `${c.full_name || "Member"} contribution` })));
+  renderActivityRowsInto("cd-payouts-full", circle.payouts.map((p) => ({ kind: "payout", amount: p.amount, status: p.status, date: p.payout_date, title: `${p.full_name || "Member"} payout` })));
+
+  renderCyclesList("cd-cycles-full", circle.cycles);
+  setCircleDetailTab("overview");
+  switchPage("circle-detail");
+}
+
+function renderActivityRowsInto(id, items) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.innerHTML = items.length
+    ? items.map((item) => `<div class="activity-row"><div class="activity-row-icon ${item.kind}"><i class="fa-solid ${item.kind === "payout" ? "fa-money-bill-transfer" : "fa-money-check-dollar"}"></i></div><div class="activity-row-body"><h4>${item.title}</h4><p>${formatActivityDate(item.date)}</p></div><div class="activity-row-right"><strong>${formatNaira(item.amount)}</strong><span class="activity-status ${item.status}">${item.status}</span></div></div>`).join("")
+    : `<div class="empty-state compact"><i class="fa-regular fa-clock"></i><p>No records yet.</p></div>`;
+}
+
+function renderCyclesList(id, cycles) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.innerHTML = cycles.length
+    ? cycles.map((cycle) => `
+      <div class="cycle-row">
+        <div class="cycle-row-left"><div class="cycle-number">#${cycle.cycle_number}</div>
+          <div class="cycle-row-body"><h4>${formatActivityDate(cycle.start_date)} – ${formatActivityDate(cycle.end_date)}</h4><p>Payout to ${cycle.recipient_full_name}</p></div>
+        </div>
+        <div class="cycle-row-right">
+          <span class="activity-status ${cycle.status}">${cycle.status}</span>
+          ${cycle.payout_id ? `<div class="cycle-status-group"><strong>${formatNaira(cycle.payout_amount)}</strong><span class="activity-status ${cycle.payout_status}">${cycle.payout_status}</span></div>` : `<span class="detail-caption">No payout yet</span>`}
+        </div>
+      </div>`).join("")
+    : `<div class="empty-state compact"><i class="fa-solid fa-rotate"></i><p>No cycles scheduled yet.</p></div>`;
+}
+
+/* ==========================================================
+   MEMBERS (global list + filter drawer)
+========================================================== */
+function membershipStatusLabel(status) {
+  if (status === "suspended") return "Suspended";
+  if (status === "removed") return "Removed";
+  return status === "inactive" ? "Inactive" : "Active";
+}
+
+function buildMemberRowHTML(member) {
+  const contributionNote = member.status === "confirmed" ? "Confirmed this cycle" : "Payment pending";
+  const secondary = member.circleName ? `${member.circleName} · ${contributionNote}` : contributionNote;
+  return `<button type="button" class="member-row" data-member-id="${member.userId}" data-member-circle-id="${member.circleId}">
+    <div class="member-row-left"><div class="member-avatar">${getInitials(member.name)}</div><div><h4>${member.name}</h4><p class="member-row-note">${secondary}</p></div></div>
+    <i class="fa-solid fa-chevron-right member-chevron"></i>
+  </button>`;
+}
+
+function renderMemberListInto(containerId, members) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = members.length ? members.slice(0, 3).map(buildMemberRowHTML).join("") + (members.length > 3 ? `<button class="modal-secondary" type="button" style="width:100%;" data-view-all-members>View all ${members.length} members <i class="fa-solid fa-arrow-right"></i></button>` : "") : `<div class="empty-state compact"><i class="fa-solid fa-users"></i><p>No members yet</p></div>`;
+  const viewAll = el.querySelector("[data-view-all-members]");
+  if (viewAll) viewAll.addEventListener("click", () => goToCircleMembers(activeCircleId));
+  el.querySelectorAll(".member-row").forEach((row) => row.addEventListener("click", () => {
+    const member = members.find((m) => m.userId === Number(row.dataset.memberId));
+    if (member) openMemberDetail(member);
+  }));
+}
+
+function goToCircleMembers(circleId) { switchPage("members"); renderMembersPage(circleId); }
+
+function openMemberDetail(member) {
+  activeMemberDetail = member;
+
+  setText("member-detail-avatar", getInitials(member.name));
+  setText("member-detail-name", member.name);
+  const statusPill = document.getElementById("member-detail-status-pill");
+  if (statusPill) { statusPill.textContent = membershipStatusLabel(member.membershipStatus); statusPill.className = "cd-status status-" + (member.membershipStatus || "active"); }
+
+  setText("member-detail-fullname", member.name);
+  const emailLink = document.getElementById("member-detail-email");
+  if (emailLink) { emailLink.textContent = member.email || "Unavailable"; emailLink.href = member.email ? `mailto:${member.email}` : "#"; }
+  const phoneLink = document.getElementById("member-detail-phone");
+  if (phoneLink) { phoneLink.textContent = member.phone || "Unavailable"; phoneLink.href = member.phone ? `tel:${member.phone}` : "#"; }
+  setText("member-detail-ktb", member.ktbId || "Unavailable");
+
+  setText("member-detail-bank", member.bankName || "Unavailable");
+  setText("member-detail-account-name", member.name);
+  setText("member-detail-account-number", member.accountNumber || "Unavailable");
+
+  const circleCount = new Set(mockCircleMembers.filter((m) => m.user_id === member.userId).map((m) => m.circle_id)).size;
+  setText("member-detail-circle-count", circleCount);
+
+  openModal("member-detail-overlay");
+}
+
+function updateMemberMembershipStatus(member, newStatus) {
+  const record = mockCircleMembers.find((m) => m.circle_member_id === member.circleMemberId);
+  if (record) record.membership_status = newStatus;
+  loadDashboardData();
+  if (activeCircleId) openCircleDetail(activeCircleId);
+}
+
+function initializeMemberActions() {
+  document.getElementById("member-suspend-btn")?.addEventListener("click", () => { closeModal("member-detail-overlay"); openModal("suspend-member-overlay"); });
+  document.getElementById("suspend-cancel-btn")?.addEventListener("click", () => { closeModal("suspend-member-overlay"); if (activeMemberDetail) openMemberDetail(activeMemberDetail); });
+  document.getElementById("suspend-confirm-btn")?.addEventListener("click", () => {
+    if (!activeMemberDetail) return;
+    updateMemberMembershipStatus(activeMemberDetail, "suspended");
+    closeModal("suspend-member-overlay");
+    showToast("Member suspended.", "fa-solid fa-circle-pause");
+    renderMembersPage(membersPageFilter);
+  });
+
+  document.getElementById("member-remove-btn")?.addEventListener("click", () => { closeModal("member-detail-overlay"); openModal("remove-member-overlay"); });
+  document.getElementById("remove-cancel-btn")?.addEventListener("click", () => { closeModal("remove-member-overlay"); if (activeMemberDetail) openMemberDetail(activeMemberDetail); });
+  document.getElementById("remove-confirm-btn")?.addEventListener("click", () => {
+    if (!activeMemberDetail) return;
+    updateMemberMembershipStatus(activeMemberDetail, "removed");
+    closeModal("remove-member-overlay");
+    closeModal("member-detail-overlay");
+    showToast("Member removed. Historical records are preserved.", "fa-solid fa-clock-rotate-left");
+    renderMembersPage(membersPageFilter);
+  });
+
+  document.getElementById("member-detail-copy-account")?.addEventListener("click", async () => {
+    const value = document.getElementById("member-detail-account-number")?.textContent || "";
+    try { await navigator.clipboard.writeText(value); showToast("Account number copied.", "fa-regular fa-copy"); }
+    catch (e) { showToast("Copy not supported in this browser.", "fa-solid fa-triangle-exclamation"); }
+  });
+
+  document.getElementById("member-download-btn")?.addEventListener("click", downloadMemberDetails);
+}
+
+function downloadMemberDetails() {
+  const member = activeMemberDetail;
+  if (!member) return;
+  const circleCount = new Set(mockCircleMembers.filter((m) => m.user_id === member.userId).map((m) => m.circle_id)).size;
+  const lines = [
+    "KUNTRIBUTE — Member Record (Prototype)",
+    "=========================================",
+    `Full Name: ${member.name}`,
+    `Email: ${member.email || "Unavailable"}`,
+    `Phone: ${member.phone || "Unavailable"}`,
+    `KUNTRIBUTE ID: ${member.ktbId || "Unavailable"}`,
+    `Status: ${membershipStatusLabel(member.membershipStatus)}`,
+    "",
+    `Bank Name: ${member.bankName || "Unavailable"}`,
+    `Account Name: ${member.name}`,
+    `Account Number: ${member.accountNumber || "Unavailable"}`,
+    "",
+    `Number of Circles: ${circleCount}`,
+    "",
+    "This is a prototype document generated locally. No real financial",
+    "transactions or account data are represented.",
+  ];
+  const blob = new Blob([lines.join("\n")], { type: "text/plain" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `kuntribute-member-${member.name.toLowerCase().replace(/\s+/g, "-")}.txt`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  showToast("Member details downloaded.", "fa-solid fa-download");
+}
+
+// Plain facts, not manufactured analytics. If there's nothing to
+// report, say so directly rather than showing a percentage computed
+// from zero records (e.g. a circle created moments ago via the wizard).
+function renderCircleInsights(circle) {
+  const container = document.getElementById("circle-insights-body");
+  if (!container) return;
+
+  let contributionLine;
+  let participationLine;
+  if (circle.contributions.length === 0) {
+    contributionLine = "No contribution records yet.";
+    participationLine = "No contribution records yet.";
+  } else {
+    const expected = circle.amount * circle.membersJoined;
+    const confirmedThisCycle = circle.contributions.filter((c) => c.status === "confirmed").reduce((t, c) => t + Number(c.amount), 0);
+    contributionLine = `${formatNaira(confirmedThisCycle)} confirmed of ${formatNaira(expected)} expected this cycle`;
+    const contributedMembers = new Set(circle.contributions.filter((c) => c.status === "confirmed").map((c) => c.user_id)).size;
+    participationLine = `${contributedMembers} of ${circle.membersJoined} member${circle.membersJoined === 1 ? "" : "s"} have contributed this cycle`;
+  }
+
+  let payoutLine;
+  let cycleLine;
+  if (circle.cycles.length === 0) {
+    payoutLine = "No payouts recorded yet.";
+    cycleLine = "No active cycle information yet.";
+  } else {
+    const completedCycles = circle.cycles.filter((c) => c.status === "completed").length;
+    payoutLine = `${completedCycles} of ${circle.cycles.length} cycles completed`;
+    cycleLine = currentCycleLabel(circle.cycles);
+  }
+
+  container.innerHTML = `
+    <div class="insight-fact-row"><span>Contribution Activity</span><strong>${contributionLine}</strong></div>
+    <div class="insight-fact-row"><span>Participation</span><strong>${participationLine}</strong></div>
+    <div class="insight-fact-row"><span>Payout Progress</span><strong>${payoutLine}</strong></div>
+    <div class="insight-fact-row"><span>Current Cycle</span><strong>${cycleLine}</strong></div>
+  `;
+}
+
+function allMembersFlat() {
+  return circlesData.flatMap((circle) => circle.members.map((m) => ({ ...m, circleId: circle.id, circleName: circle.name })));
+}
+
+function matchesMemberFilters(member) {
+  if (memberFilters.circle !== "all" && member.circleId !== Number(memberFilters.circle)) return false;
+  if (memberFilters.status === "suspended_removed") {
+    if (!["suspended", "removed"].includes(member.membershipStatus)) return false;
+  } else if (memberFilters.status !== "all" && member.membershipStatus !== memberFilters.status) {
+    return false;
+  }
+  if (memberFilters.joined === "recent") {
+    const days = (TODAY - new Date(member.joinedAt)) / 86400000;
+    if (days > 30) return false;
+  } else if (memberFilters.joined === "custom" && memberFilters.joinedCustomDate) {
+    if (new Date(member.joinedAt) > new Date(memberFilters.joinedCustomDate)) return false;
+  }
+  return true;
+}
+
+function matchesMemberSearch(member, term) {
+  if (!term) return true;
+  return member.name.toLowerCase().includes(term) || (member.ktbId || "").toLowerCase().includes(term);
+}
+
+function activeFilterCount() {
+  return ["circle", "status", "joined"].filter((key) => memberFilters[key] !== "all").length;
+}
+
+function renderMembersPage(circleId = membersPageFilter) {
+  const container = document.getElementById("members-page-list");
+  if (!container) return;
+  membersPageFilter = circleId;
+  const title = document.getElementById("members-page-title");
+  const subtitle = document.getElementById("members-page-subtitle");
+  const back = document.getElementById("members-back-link");
+  const searchTerm = document.getElementById("members-search-input")?.value.trim().toLowerCase() || "";
+
+  const filterBtn = document.getElementById("members-filter-btn");
+  const count = activeFilterCount();
+  if (filterBtn) {
+    filterBtn.classList.toggle("has-filters", count > 0);
+    filterBtn.innerHTML = `<i class="fa-solid fa-sliders"></i>Filter${count ? ` <span class="count">${count}</span>` : ""}`;
+  }
+
+  if (circleId) {
+    const circle = circlesData.find((c) => c.id === circleId);
+    if (!circle) return;
+    if (title) title.textContent = circle.name;
+    if (subtitle) subtitle.textContent = `${circle.membersJoined} Member${circle.membersJoined === 1 ? "" : "s"}`;
+    if (back) back.hidden = false;
+    const members = circle.members.map((m) => ({ ...m, circleId: circle.id })).filter((m) => matchesMemberFilters(m) && matchesMemberSearch(m, searchTerm));
+    container.innerHTML = members.length ? members.map(buildMemberRowHTML).join("") : `<p style="color:var(--muted);font-size:.88rem;">No members match your search/filters.</p>`;
+    wireMemberRows(container, circle.members.map((m) => ({ ...m, circleId: circle.id })));
+    return;
+  }
+
+  if (title) title.textContent = "Members";
+  if (subtitle) subtitle.textContent = "Everyone across your contribution circles";
+  if (back) back.hidden = true;
+
+  const all = allMembersFlat().filter((m) => matchesMemberFilters(m) && matchesMemberSearch(m, searchTerm));
+  const groups = circlesData.map((circle) => ({ circle, members: all.filter((m) => m.circleId === circle.id) })).filter((g) => g.members.length);
+
+  if (!groups.length) {
+    container.innerHTML = `<p style="color:var(--muted);font-size:.88rem;">No members match your search/filters.</p>`;
+    return;
+  }
+
+  container.innerHTML = groups.map(({ circle, members }) => {
+    const expanded = expandedMemberGroups.has(circle.id) || Boolean(searchTerm);
+    const visible = expanded ? members : members.slice(0, 3);
+    const remaining = members.length - visible.length;
+    return `<section style="margin-bottom:18px;"><p style="color:var(--muted);font-size:.76rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin:0 4px 8px;">${circle.name}</p>${visible.map(buildMemberRowHTML).join("")}${remaining > 0 ? `<button class="modal-secondary" type="button" style="width:100%;margin-top:8px;" data-view-more="${circle.id}">View ${remaining} more <i class="fa-solid fa-chevron-down"></i></button>` : ""}</section>`;
+  }).join("");
+
+  container.querySelectorAll("[data-view-more]").forEach((btn) => btn.addEventListener("click", () => { expandedMemberGroups.add(Number(btn.dataset.viewMore)); renderMembersPage(null); }));
+  wireMemberRows(container, all);
+}
+
+function wireMemberRows(container, memberPool) {
+  container.querySelectorAll(".member-row").forEach((row) => row.addEventListener("click", () => {
+    const member = memberPool.find((m) => m.userId === Number(row.dataset.memberId) && m.circleId === Number(row.dataset.memberCircleId));
+    if (member) openMemberDetail(member);
+  }));
+}
+
+function initializeMemberFilters() {
+  const btn = document.getElementById("members-filter-btn");
+  if (btn) btn.addEventListener("click", () => { populateFilterSheet(); openModal("member-filter-overlay"); });
+  const close = document.getElementById("close-member-filter");
+  if (close) close.addEventListener("click", () => closeModal("member-filter-overlay"));
+  const clear = document.getElementById("clear-filters-btn");
+  if (clear) clear.addEventListener("click", () => { memberFilters = { circle: "all", status: "all", joined: "all", joinedCustomDate: "" }; populateFilterSheet(); });
+  const customDate = document.getElementById("filter-joined-custom-date");
+  if (customDate) customDate.addEventListener("change", () => { memberFilters.joinedCustomDate = customDate.value; });
+  const apply = document.getElementById("apply-filters-btn");
+  if (apply) apply.addEventListener("click", () => { closeModal("member-filter-overlay"); renderMembersPage(membersPageFilter); });
+}
+
+function populateFilterSheet() {
+  const circleChips = document.getElementById("filter-circle-chips");
+  const statusChips = document.getElementById("filter-status-chips");
+  const joinedChips = document.getElementById("filter-joined-chips");
+  if (!circleChips) return;
+
+  const chip = (label, value, group) => `<button type="button" class="filter-chip${memberFilters[group] === value ? " active" : ""}" data-group="${group}" data-value="${value}">${label}</button>`;
+
+  circleChips.innerHTML = chip("All Circles", "all", "circle") + circlesData.map((c) => chip(c.name, String(c.id), "circle")).join("");
+  statusChips.innerHTML = chip("Active", "active", "status") + chip("Inactive", "inactive", "status") + chip("Suspended/Removed", "suspended_removed", "status") + chip("All", "all", "status");
+  joinedChips.innerHTML = chip("All", "all", "joined") + chip("Last 30 days", "recent", "joined") + chip("Custom", "custom", "joined");
+
+  const customDate = document.getElementById("filter-joined-custom-date");
+  if (customDate) {
+    customDate.hidden = memberFilters.joined !== "custom";
+    customDate.value = memberFilters.joinedCustomDate || "";
+  }
+
+  document.querySelectorAll(".filter-chip").forEach((c) => c.addEventListener("click", () => {
+    memberFilters[c.dataset.group] = c.dataset.value;
+    populateFilterSheet();
+  }));
+}
+
+/* ==========================================================
+   CREATE CIRCLE WIZARD
+========================================================== */
+function initializeWizard() {
+  document.getElementById("wizard-back")?.addEventListener("click", (e) => { e.preventDefault(); closeWizard(); });
+  document.getElementById("wizard-close")?.addEventListener("click", () => closeWizard());
+  document.getElementById("open-create-circle")?.addEventListener("click", () => openModal("select-circle-type-overlay"));
+  document.querySelectorAll(".action[data-action='create-circle']").forEach((el) => el.addEventListener("click", () => openModal("select-circle-type-overlay")));
+  document.querySelector(".add-money")?.addEventListener("click", () => openModal("select-circle-type-overlay"));
+
+  document.getElementById("step1-next")?.addEventListener("click", validateStep1);
+  document.getElementById("step2-back")?.addEventListener("click", () => goToWizardStep(1));
+  document.getElementById("step2-next")?.addEventListener("click", validateStep2);
+  document.getElementById("step3-back")?.addEventListener("click", () => goToWizardStep(2));
+  document.getElementById("step3-next")?.addEventListener("click", () => { populateStep4(); goToWizardStep(4); });
+  document.getElementById("step4-back")?.addEventListener("click", () => goToWizardStep(3));
+  document.getElementById("step4-next")?.addEventListener("click", () => { populateStep5(); openModal("confirm-create-overlay"); });
+  document.getElementById("confirm-back-btn")?.addEventListener("click", () => closeModal("confirm-create-overlay"));
+  document.getElementById("confirm-create-btn")?.addEventListener("click", createPendingCircle);
+
+  document.getElementById("view-created-circle")?.addEventListener("click", () => { closeWizard(); if (createdCircleId) openCircleDetail(createdCircleId); });
+  document.getElementById("close-success")?.addEventListener("click", () => { closeWizard(); switchPage("circles"); });
+  document.getElementById("share-circle-btn")?.addEventListener("click", () => showToast("Share link copied (prototype — no real link).", "fa-solid fa-share-nodes"));
+  document.getElementById("download-circle-btn")?.addEventListener("click", downloadCircleReceipt);
+}
+
+function enterWizard() {
+  pendingCircle = null;
+  goToWizardStep(1);
+  switchPage("create-circle");
+}
+function closeWizard() { switchPage("circles"); }
+
+function renderWizardSteps() {
+  const wrap = document.getElementById("wizard-steps");
+  if (!wrap) return;
+  wrap.innerHTML = Array.from({ length: 5 }).map((_, i) => `<span class="seg ${i < wizardStep ? "done" : i === wizardStep - 1 ? "current" : ""}"></span>`).join("");
+}
+
+function goToWizardStep(step) {
+  wizardStep = step;
+  document.querySelectorAll(".wizard-step").forEach((el) => el.classList.toggle("active", Number(el.dataset.step) === step));
+  const backLink = document.getElementById("wizard-back");
+  if (backLink) backLink.style.visibility = step === 1 ? "hidden" : "visible";
+  renderWizardSteps();
+  document.querySelector(".wizard-shell")?.scrollIntoView({ block: "start" });
+}
+
+function validateStep1() {
+  const name = document.getElementById("circle-name").value.trim();
+  const membersField = document.getElementById("circle-members");
+  const membersTarget = Number(membersField.value.replace(/\D/g, ""));
+  document.getElementById("name-warning").textContent = "";
+  document.getElementById("member-warning").textContent = "";
+  if (!name) { document.getElementById("name-warning").textContent = "Circle name is required."; return; }
+  if (!membersTarget || membersTarget < 5 || membersTarget > 300) { document.getElementById("member-warning").textContent = "Enter a number between 5 and 300."; return; }
+  pendingCircle = { name, membersTarget };
+  goToWizardStep(2);
+}
+
+function validateStep2() {
+  const amountField = document.getElementById("circle-amount");
+  const amount = Number(amountField.value.replace(/,/g, ""));
+  const frequency = document.getElementById("circle-frequency").value;
+  const payoutFrequency = document.getElementById("payout-frequency").value;
+  const startDate = document.getElementById("circle-start-date").value;
+  document.getElementById("amount-warning").textContent = "";
+  if (!amount || amount < 2000 || amount > 10000000) { document.getElementById("amount-warning").textContent = "Enter an amount between ₦2,000 and ₦10,000,000."; return; }
+  if (frequency === "Monthly" && payoutFrequency === "Weekly") { showToast("Monthly contributions cannot have weekly payouts.", "fa-solid fa-triangle-exclamation"); return; }
+
+  pendingCircle = { ...pendingCircle, amount, frequency, payoutFrequency, startDate };
+  populateStep3();
+  goToWizardStep(3);
+}
+
+function populateStep3() {
+  const { name, membersTarget, amount, frequency, payoutFrequency, startDate } = pendingCircle;
+  const schedule = buildPayoutSchedule(frequency, payoutFrequency, startDate, membersTarget);
+  const firstPeriod = schedule.periods[0];
+  const lastPeriod = schedule.periods[schedule.periods.length - 1];
+  const payoutPool = amount * membersTarget * firstPeriod.instalments;
+  const totalInstalments = schedule.periods.reduce((s, p) => s + p.instalments, 0);
+  pendingCircle.schedule = { firstPeriod, lastPeriod, payoutPool, totalInstalments };
+
+  setText("review-pool", formatNaira(payoutPool));
+  setText("review-pool-breakdown", `Based on ${membersTarget} members × ${formatNaira(amount)}`);
+  setText("review-circle-type", "Rotational Savings");
+  setText("review-name", name);
+  setText("review-contribution", formatNaira(amount));
+  setText("review-frequency", frequency);
+  setText("review-payout-frequency", payoutFrequency);
+  setText("review-members", membersTarget);
+  setText("review-start-date", new Date(startDate).toLocaleDateString("en-NG", { day: "numeric", month: "long", year: "numeric" }));
+  setText("review-first-payout", firstPeriod.payoutDate.toLocaleDateString("en-NG", { day: "numeric", month: "long", year: "numeric" }));
+  setText("review-end-date", lastPeriod.payoutDate.toLocaleDateString("en-NG", { day: "numeric", month: "long", year: "numeric" }));
+  const durationUnit = payoutFrequency === "Weekly" ? "Week" : "Month";
+  setText("review-duration", `${membersTarget} ${durationUnit}${membersTarget === 1 ? "" : "s"}`);
+}
+
+function populateStep4() {
+  setText("review-bank-name", organizerAccount.bankName);
+  setText("review-account-name", organizerAccount.accountName);
+  setText("review-account-number", organizerAccount.accountNumber);
+  const { amount, membersTarget, frequency } = pendingCircle;
+  const days = frequency === "Daily" ? 1 : frequency === "Weekly" ? 7 : 30;
+  setText("wizard-insight-days", `${days} day${days === 1 ? "" : "s"}`);
+  setText("wizard-insight-amount", formatNaira(amount * membersTarget));
+  setText("wizard-insight-note", `${membersTarget} members contributing ${formatNaira(amount)} every ${days} day${days === 1 ? "" : "s"} — actual totals depend on who has paid.`);
+}
+
+function populateStep5() {
+  setText("confirm-summary-line", `"${pendingCircle.name}" — ${pendingCircle.membersTarget} members × ${formatNaira(pendingCircle.amount)} ${pendingCircle.frequency.toLowerCase()}. Member setup and payout scheduling are not created at this step.`);
+}
+
+function createPendingCircle() {
+  const circle_id = nextMockCircleId++;
+  mockCircles.push({
+    circle_id, organizer_user_id: organizerUserId, circle_name: pendingCircle.name,
+    contribution_amount: pendingCircle.amount, frequency: pendingCircle.frequency, start_date: pendingCircle.startDate, status: "active",
+  });
+  createdCircleId = circle_id;
+  loadDashboardData();
+  setText("success-circle-name", `"${pendingCircle.name}" was saved successfully.`);
+  const inviteCode = "c" + circle_id + Math.random().toString(36).slice(2, 6);
+  setText("success-invite-link", `https://kuntribute.com/join/${inviteCode}`);
+  closeModal("confirm-create-overlay");
+  goToWizardStep(6);
+}
+
+function downloadCircleReceipt() {
+  const circle = mockCircles.find((c) => c.circle_id === createdCircleId) || pendingCircle;
+  const lines = [
+    "KUNTRIBUTE — Circle Summary (Prototype)",
+    "=========================================",
+    `Circle Name: ${circle.circle_name || circle.name}`,
+    `Type: Rotational Savings`,
+    `Contribution: ${formatNaira(circle.contribution_amount || pendingCircle.amount)}`,
+    `Frequency: ${circle.frequency || pendingCircle.frequency}`,
+    `Start Date: ${circle.start_date || pendingCircle.startDate}`,
+    "",
+    "This is a prototype document generated locally. No real financial",
+    "transactions or account data are represented.",
+  ];
+  const blob = new Blob([lines.join("\n")], { type: "text/plain" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `kuntribute-circle-summary-${(circle.circle_name || circle.name || "circle").toLowerCase().replace(/\s+/g, "-")}.txt`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  showToast("Circle summary downloaded.", "fa-solid fa-download");
+}
+
+/* Payout schedule math (unchanged from production — verified logic) */
+function addMonthsClamped(date, months) {
+  const d = new Date(date);
+  const originalDay = d.getDate();
+  d.setDate(1);
+  d.setMonth(d.getMonth() + months);
+  const daysInTargetMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+  d.setDate(Math.min(originalDay, daysInTargetMonth));
+  return d;
+}
+function buildPayoutSchedule(contributionFrequency, payoutFrequency, startDate, numPayouts) {
+  const anchor = new Date(startDate);
+  if (contributionFrequency === "Monthly" && payoutFrequency === "Weekly") return { valid: false, periods: [] };
+  const periods = [];
+  let previousPayoutDays = 0;
+  for (let n = 1; n <= numPayouts; n++) {
+    let payoutDate;
+    if (payoutFrequency === "Weekly") { payoutDate = new Date(anchor); payoutDate.setDate(payoutDate.getDate() + n * 7); }
+    else payoutDate = addMonthsClamped(anchor, n);
+    const payoutDays = Math.round((payoutDate - anchor) / 86400000);
+    let instalments;
+    if (contributionFrequency === "Daily") instalments = payoutDays - previousPayoutDays;
+    else if (contributionFrequency === "Weekly") instalments = Math.floor(payoutDays / 7) - Math.floor(previousPayoutDays / 7);
+    else instalments = 1;
+    periods.push({ payoutDate, instalments });
+    previousPayoutDays = payoutDays;
+  }
+  return { valid: true, periods };
+}
+
+/* ==========================================================
+   MODALS / MISC
+========================================================== */
+function openModal(id) { document.getElementById(id)?.classList.add("show"); }
+function closeModal(id) { document.getElementById(id)?.classList.remove("show"); }
+
+function initializeModals() {
+  document.getElementById("close-manage-circle")?.addEventListener("click", () => closeModal("manage-circle-overlay"));
+  document.getElementById("close-confirm-create")?.addEventListener("click", () => closeModal("confirm-create-overlay"));
+  // Every modal-overlay closes on backdrop click — one rule for the whole set,
+  // so new sheets don't need their own wiring.
+  document.querySelectorAll(".modal-overlay").forEach((overlay) => {
+    overlay.addEventListener("click", (e) => { if (e.target === overlay) closeModal(overlay.id); });
+  });
+}
+
+function initializeCircleTypeSelect() {
+  const typeRotational = document.getElementById("type-rotational");
+  if (typeRotational) typeRotational.addEventListener("click", () => { closeModal("select-circle-type-overlay"); enterWizard(); });
+  document.getElementById("close-select-type")?.addEventListener("click", () => closeModal("select-circle-type-overlay"));
+  document.querySelectorAll(".type-card.disabled").forEach((card) => card.addEventListener("click", () => showToast("Coming soon.", "fa-solid fa-hourglass-half")));
+}
+
+function initializeStartDate() {
+  const dateInput = document.getElementById("circle-start-date");
+  if (!dateInput) return;
+  const y = TODAY.getFullYear(), m = String(TODAY.getMonth() + 1).padStart(2, "0"), d = String(TODAY.getDate()).padStart(2, "0");
+  dateInput.min = `${y}-${m}-${d}`;
+  dateInput.value = `${y}-${m}-${d}`;
+}
+
+function initializeBalanceToggle() {
+  const toggleBtn = document.querySelector(".toggle-balance");
+  const balanceEl = document.getElementById("wallet-balance");
+  if (!toggleBtn || !balanceEl) return;
+  let hidden = false;
+  toggleBtn.addEventListener("click", () => {
+    hidden = !hidden;
+    balanceEl.textContent = hidden ? "₦ • • • • • •" : (window.innerWidth <= 600 ? formatCompactNaira(totalContributionsValue) : formatNaira(totalContributionsValue));
+    toggleBtn.innerHTML = hidden ? '<i class="fa-solid fa-eye-slash"></i>' : '<i class="fa-solid fa-eye"></i>';
+  });
+}
+
+function initializeTotalContributionsDetails() {
+  document.getElementById("total-contributions-info")?.addEventListener("click", () => openModal("total-contributions-overlay"));
+  document.getElementById("close-total-contributions")?.addEventListener("click", () => closeModal("total-contributions-overlay"));
+  document.getElementById("total-contributions-overlay")?.addEventListener("click", (e) => { if (e.target.id === "total-contributions-overlay") closeModal("total-contributions-overlay"); });
+  window.addEventListener("resize", renderTotalContributionsValue);
+}
+
+function initializeMemberDetail() {
+  document.getElementById("close-member-detail")?.addEventListener("click", () => closeModal("member-detail-overlay"));
+  document.getElementById("member-detail-overlay")?.addEventListener("click", (e) => { if (e.target.id === "member-detail-overlay") closeModal("member-detail-overlay"); });
+}
+
+function initializeSearch() {
+  document.getElementById("circles-search-input")?.addEventListener("input", (e) => renderCirclesPage(e.target.value));
+  document.getElementById("members-search-input")?.addEventListener("input", () => renderMembersPage(membersPageFilter));
+  document.getElementById("members-back-link")?.addEventListener("click", (e) => { e.preventDefault(); renderMembersPage(null); });
+}
+
+function initializeAmountFormatting() {
+  const input = document.getElementById("circle-amount");
+  if (!input) return;
+  input.addEventListener("input", () => {
+    let value = input.value.replace(/\D/g, "");
+    if (value === "") { input.value = ""; return; }
+    let number = parseInt(value);
+    if (number > 10000000) number = 10000000;
+    input.value = number.toLocaleString("en-NG");
+  });
+}
+function initializeMemberFormatting() {
+  const input = document.getElementById("circle-members");
+  if (!input) return;
+  input.addEventListener("input", () => {
+    let value = input.value.replace(/\D/g, "");
+    if (value === "") { input.value = ""; return; }
+    let number = parseInt(value);
+    if (number > 300) number = 300;
+    input.value = number.toLocaleString("en-NG");
+  });
+}
+
+// The drawer keeps its Theme control (unchanged); Me's Appearance row
+// exposes the same one — personal settings live on Me, not in the
+// hamburger. Both are driven through here so they can never disagree.
+function initializeTheme() {
+  const switches = ["theme-switch", "me-theme-switch"]
+    .map((id) => document.getElementById(id))
+    .filter(Boolean);
+  switches.forEach((sw) => {
+    sw.addEventListener("change", () => {
+      const light = sw.checked;
+      document.body.classList.toggle("light-theme", light);
+      switches.forEach((other) => { other.checked = light; });
+    });
+  });
+}
+
+  </script>
+</html>
