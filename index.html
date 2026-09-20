@@ -297,6 +297,7 @@ button { font-family:inherit; }
 .type-card { display:flex; gap:13px; align-items:flex-start; padding:15px; border-radius:15px; border:1px solid var(--border); background:var(--card2); margin-bottom:10px; cursor:pointer; }
 .type-card:hover { border-color:var(--green-border); }
 .type-card.disabled { opacity:.5; cursor:not-allowed; }
+.type-card.selected { border-color:var(--green); background:rgba(34,197,94,.08); }
 .type-icon { width:40px; height:40px; border-radius:11px; background:linear-gradient(135deg,var(--green),var(--green-dark)); color:#fff; display:grid; place-items:center; font-size:16px; flex-shrink:0; }
 .type-card.disabled .type-icon { background:var(--card); border:1px solid var(--border); color:var(--muted); }
 .type-name { font-weight:700; font-size:.94rem; margin-bottom:3px; display:flex; align-items:center; gap:7px; flex-wrap:wrap; }
@@ -573,6 +574,58 @@ button { font-family:inherit; }
 .cycle-progress-fill { height:100%; background:var(--green); border-radius:999px; }
 .cycle-summary-bottom { display:flex; justify-content:space-between; align-items:center; font-size:.74rem; color:var(--muted); }
 
+/* ==========================================================
+   CURRENCY-AWARE DASHBOARD — see PRODUCT RULE: one Circle = one
+   currency/asset; "All Currencies" is partitioned visibility, never
+   a converted total. Currency's own symbol/suffix (₦ / $ / " USDT")
+   is treated as sufficient labeling on its own — no extra badges.
+========================================================== */
+.wallet-context-row { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:2px; }
+.wallet-context-row .wallet-context { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-top:0; }
+.currency-select-wrap { position:relative; flex-shrink:0; }
+.currency-select { appearance:none; -webkit-appearance:none; background:var(--card2); border:1px solid var(--border); color:var(--text); font-weight:700; font-size:.74rem; font-family:inherit; padding:6px 26px 6px 12px; border-radius:999px; cursor:pointer; }
+.currency-select:focus { outline:none; border-color:var(--green); }
+.currency-select-wrap::after { content:"\f078"; font-family:"Font Awesome 6 Free"; font-weight:900; font-size:.55rem; color:var(--muted); position:absolute; right:11px; top:50%; transform:translateY(-50%); pointer-events:none; }
+
+.wallet-balance-row.partitioned { align-items:flex-start; }
+.currency-partition-list { display:flex; flex-direction:column; gap:7px; min-width:0; flex:1; }
+.currency-partition-row { display:flex; align-items:baseline; gap:10px; min-width:0; }
+.currency-partition-row .currency-tag { font-size:.66rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; width:36px; flex-shrink:0; }
+.currency-partition-row strong { font-size:clamp(15px,5vw,20px); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+.badge-status.status-scheduled { background:rgba(59,130,246,.14); color:var(--info); }
+.badge-status.status-setup { background:rgba(245,158,11,.14); color:var(--warning); }
+.cd-status.status-scheduled { background:rgba(59,130,246,.14); color:var(--info); }
+.cd-status.status-setup { background:rgba(245,158,11,.14); color:var(--warning); }
+
+/* Payment confirmation checkbox (Payment Details wizard step) */
+.confirm-checkbox-row { display:flex; align-items:flex-start; gap:10px; margin:18px 0 6px; }
+.confirm-checkbox-row input[type="checkbox"] { margin-top:3px; width:16px; height:16px; accent-color:var(--green); flex-shrink:0; cursor:pointer; }
+.confirm-checkbox-row label { font-size:.84rem; color:var(--nav-text); line-height:1.4; cursor:pointer; }
+.payment-destination-note { display:flex; gap:8px; color:var(--muted); font-size:.78rem; line-height:1.5; background:var(--card2); border:1px solid var(--border); border-radius:12px; padding:12px 14px; margin-bottom:16px; }
+.payment-destination-note i { color:var(--green); margin-top:2px; flex-shrink:0; }
+
+/* Payment Accounts (Me -> Settings concept). Mock UI only — grouped by
+   currency/asset, matches the review-section/review-row visual family. */
+.payment-account-group { margin-bottom:16px; }
+.payment-account-group:last-child { margin-bottom:0; }
+.payment-account-currency-label { color:var(--muted); font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; margin-bottom:8px; }
+.payment-account-card { background:var(--card2); border:1px solid var(--border); border-radius:14px; padding:13px 15px; margin-bottom:8px; }
+.payment-account-card:last-child { margin-bottom:0; }
+.payment-account-card-top { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:3px; }
+.payment-account-card-top strong { font-size:.9rem; }
+.payment-account-card p { color:var(--muted); font-size:.78rem; line-height:1.5; }
+.payment-account-empty { color:var(--muted); font-size:.8rem; padding:4px 0 8px; }
+
+/* Projected payout schedule (Review step). Explicitly labeled — this
+   is a client-side estimate, never a real backend schedule. */
+.projected-badge { display:inline-flex; align-items:center; gap:5px; font-size:.62rem; font-weight:700; letter-spacing:.06em; color:var(--info); background:rgba(59,130,246,.12); padding:3px 9px; border-radius:999px; margin-left:8px; }
+.projected-schedule-list { display:flex; flex-direction:column; margin-top:4px; }
+.projected-schedule-row { display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px solid rgba(255,255,255,.06); font-size:.84rem; }
+.projected-schedule-row:last-child { border-bottom:none; }
+.projected-schedule-row span:first-child { color:var(--muted); }
+.projected-schedule-row.ellipsis { justify-content:center; color:var(--muted); font-size:.78rem; letter-spacing:.1em; }
+
     </style>
   </head>
   <body>
@@ -668,11 +721,17 @@ button { font-family:inherit; }
                   <button class="toggle-balance" type="button" aria-label="Toggle balance visibility" aria-pressed="false"><i class="fa-solid fa-eye"></i></button>
                   <button class="metric-info" id="total-contributions-info" type="button" aria-label="Details"><i class="fa-solid fa-circle-info"></i></button>
                 </div>
-                <div class="wallet-balance-row">
+                <div class="wallet-balance-row" id="wallet-balance-row">
                   <h1 id="wallet-balance">Loading…</h1>
+                  <div class="currency-partition-list" id="wallet-balance-partitioned" hidden></div>
                   <button class="add-money" type="button"><i class="fa-solid fa-plus"></i>New Circle</button>
                 </div>
-                <p class="wallet-context">Across all active circles</p>
+                <div class="wallet-context-row">
+                  <p class="wallet-context" id="wallet-context-text">Across all active circles</p>
+                  <div class="currency-select-wrap">
+                    <select id="dashboard-currency-select" class="currency-select" aria-label="Currency"></select>
+                  </div>
+                </div>
               </div>
               <div class="contrib-strip">
                 <div class="contrib-strip-left"><i class="fa-solid fa-store"></i><span>Today's Contributions: <strong id="today-contributions">Loading…</strong></span></div>
@@ -855,7 +914,8 @@ button { font-family:inherit; }
           </div>
           <p class="me-section-label">Account</p>
           <div class="me-list">
-            <div class="me-list-item"><div class="me-list-icon"><i class="fa-solid fa-building-columns"></i></div><div><h4>Bank Details <span class="type-badge">Planned</span></h4><p>Guaranty Trust Bank •••• 6789</p></div><i class="fa-solid fa-chevron-right"></i></div>
+            <div class="me-list-item enabled" id="me-payment-accounts-row"><div class="me-list-icon"><i class="fa-solid fa-building-columns"></i></div><div><h4>Payment Accounts</h4><p>Reusable destinations members pay into, by currency</p></div><i class="fa-solid fa-chevron-right"></i></div>
+            <div class="me-list-item enabled" id="me-region-currency-row"><div class="me-list-icon"><i class="fa-solid fa-earth-africa"></i></div><div><h4>Region &amp; Currency</h4><p id="me-region-currency-summary">Nigeria · Preferred: NGN</p></div><i class="fa-solid fa-chevron-right"></i></div>
             <div class="me-list-item"><div class="me-list-icon"><i class="fa-regular fa-envelope"></i></div><div><h4>Email <span class="type-badge">Planned</span></h4><p id="me-list-email">amina.yusuf@example.com</p></div><i class="fa-solid fa-chevron-right"></i></div>
             <div class="me-list-item"><div class="me-list-icon"><i class="fa-solid fa-lock"></i></div><div><h4>Security</h4><p>Password, PIN, and login activity <span class="type-badge">Planned</span></p></div><i class="fa-solid fa-chevron-right"></i></div>
             <div class="me-list-item enabled" data-goto="history"><div class="me-list-icon"><i class="fa-solid fa-receipt"></i></div><div><h4>Transaction History</h4><p>Every contribution and payout on record</p></div><i class="fa-solid fa-chevron-right"></i></div>
@@ -884,63 +944,106 @@ button { font-family:inherit; }
             <div class="wizard-top"><a href="#" class="workflow-back" id="wizard-back" style="display:inline-flex;align-items:center;gap:8px;color:var(--green);font-size:.86rem;font-weight:700;"><i class="fa-solid fa-arrow-left"></i> Back</a><button class="wizard-close" id="wizard-close" aria-label="Close"><i class="fa-solid fa-xmark"></i></button></div>
             <div class="wizard-steps" id="wizard-steps"></div>
 
-            <!-- Step 1: name + members -->
+            <!-- Step 1: Program Type -->
             <div class="wizard-step active" data-step="1">
-              <p class="wizard-eyebrow">Step 1 of 5 · Create Circle</p>
+              <p class="wizard-eyebrow">Step 1 of 6 · Program Type</p>
+              <h1 class="wizard-title">What kind of circle is this?</h1>
+              <p class="wizard-subtext">This determines the rules KUNTRIBUTE applies to it.</p>
+              <div class="type-card" id="type-rotational" data-type="Rotational Savings">
+                <div class="type-icon"><i class="fa-solid fa-rotate"></i></div>
+                <div><div class="type-name">Rotational Savings</div><div class="type-desc">Members contribute regularly and take turns receiving the collected funds. Ajo / Esusu / Adashe.</div><div class="type-examples">Friends · Family · Market groups</div></div>
+              </div>
+              <div class="type-card disabled"><div class="type-icon"><i class="fa-solid fa-shield-heart"></i></div><div><div class="type-name">Welfare Fund <span class="type-badge">Coming soon</span></div><div class="type-desc">Members contribute into a shared fund used for approved needs and emergencies.</div><div class="type-examples">Medical · Burial · Community support</div></div></div>
+              <div class="type-card disabled"><div class="type-icon"><i class="fa-solid fa-handshake"></i></div><div><div class="type-name">Cooperative Savings <span class="type-badge">Coming soon</span></div><div class="type-desc">Members save together toward a shared financial goal.</div><div class="type-examples">Business · Equipment · Housing</div></div></div>
+            </div>
+
+            <!-- Step 2: Circle Details -->
+            <div class="wizard-step" data-step="2">
+              <p class="wizard-eyebrow">Step 2 of 6 · Circle Details</p>
               <h1 class="wizard-title">Name your circle</h1>
               <p class="wizard-subtext">Keep it focused — you can refine details later.</p>
               <label class="form-field"><span>Circle Name</span><input type="text" id="circle-name" placeholder="e.g. IFFM Staff Savings Circle" /><p id="name-warning" class="field-warning"></p></label>
-              <label class="form-field"><span>Estimated Members</span><input type="text" id="circle-members" placeholder="e.g. 20" inputmode="numeric" /><small class="field-hint">Minimum 5 · Maximum 300</small><p id="member-warning" class="field-warning"></p></label>
-              <div class="wizard-actions"><button type="button" class="modal-submit" id="step1-next">Continue →</button></div>
-            </div>
-
-            <!-- Step 2: contribution -->
-            <div class="wizard-step" data-step="2">
-              <p class="wizard-eyebrow">Step 2 of 5 · Contribution</p>
-              <h1 class="wizard-title">Set the contribution terms</h1>
-              <p class="wizard-subtext">This determines how much each member pays, and how often.</p>
-              <label class="form-field"><span>Contribution Amount</span><input type="text" id="circle-amount" placeholder="₦10,000" inputmode="numeric" /><small class="field-hint">Minimum ₦2,000</small><p id="amount-warning" class="field-warning"></p></label>
-              <label class="form-field"><span>Contribution Frequency</span><select id="circle-frequency"><option value="Daily">Daily</option><option value="Weekly">Weekly</option><option value="Monthly">Monthly</option></select></label>
-              <label class="form-field"><span>Start Date</span><input type="date" id="circle-start-date" /></label>
-              <label class="form-field"><span>Payout Frequency <em>(estimate)</em></span><select id="payout-frequency"><option value="Weekly">Weekly</option><option value="Monthly">Monthly</option></select><small class="field-hint">Used only to estimate the proposed payout schedule.</small></label>
+              <label class="form-field"><span>Target Members</span><input type="text" id="circle-members" placeholder="e.g. 20" inputmode="numeric" /><small class="field-hint">Minimum 5 · Maximum 300</small><p id="member-warning" class="field-warning"></p></label>
               <div class="wizard-actions"><button type="button" class="modal-secondary" id="step2-back">← Back</button><button type="button" class="modal-submit" id="step2-next">Continue →</button></div>
             </div>
 
-            <!-- Step 3: summary -->
+            <!-- Step 3: Contribution Rules -->
             <div class="wizard-step" data-step="3">
-              <p class="wizard-eyebrow">Step 3 of 5 · Circle Summary</p>
-              <h1 class="wizard-title">Review your circle</h1>
-              <div class="review-section"><h3>Circle</h3>
-                <div class="review-row"><span>Circle Type</span><strong id="review-circle-type">-</strong></div>
-                <div class="review-row"><span>Circle Name</span><strong id="review-name">-</strong></div>
-                <div class="review-row"><span>Contribution Amount</span><strong id="review-contribution">-</strong></div>
-              </div>
-              <div class="review-section"><h3>Contribution Terms</h3>
-                <div class="review-row"><span>Contribution Frequency</span><strong id="review-frequency">-</strong></div>
-                <div class="review-row"><span>Payout Frequency</span><strong id="review-payout-frequency">-</strong></div>
-                <div class="review-row"><span>Number of Members</span><strong id="review-members">-</strong></div>
-              </div>
-              <div class="review-section"><h3>Schedule</h3>
-                <div class="review-row"><span>Start Date</span><strong id="review-start-date">-</strong></div>
-                <div class="review-row"><span>First Payout</span><strong id="review-first-payout">-</strong></div>
-                <div class="review-row"><span>Estimated End Date</span><strong id="review-end-date">-</strong></div>
-              </div>
-              <div class="review-section"><h3>Estimated Duration</h3>
-                <div class="review-row"><span>Duration</span><strong id="review-duration">-</strong></div>
-              </div>
-              <div class="review-hero"><p>Estimated pooled amount</p><h1 id="review-pool">₦0</h1><small id="review-pool-breakdown">Based on 0 members × ₦0</small></div>
+              <p class="wizard-eyebrow">Step 3 of 6 · Contribution Rules</p>
+              <h1 class="wizard-title">Set the contribution terms</h1>
+              <p class="wizard-subtext">One circle uses exactly one currency or asset for its lifetime — it can't be changed later.</p>
+              <label class="form-field"><span>Currency / Asset</span>
+                <select id="circle-currency">
+                  <optgroup label="Fiat">
+                    <option value="NGN">Nigerian Naira (NGN)</option>
+                    <option value="USD">US Dollar (USD)</option>
+                  </optgroup>
+                  <optgroup label="Crypto">
+                    <option value="USDT">Tether USD (USDT)</option>
+                  </optgroup>
+                </select>
+              </label>
+              <label class="form-field"><span>Contribution Amount</span><input type="text" id="circle-amount" placeholder="10,000" inputmode="numeric" /><small class="field-hint" id="amount-hint">Minimum ₦2,000</small><p id="amount-warning" class="field-warning"></p></label>
+              <label class="form-field"><span>Contribution Frequency</span><select id="circle-frequency"><option value="Daily">Daily</option><option value="Weekly">Weekly</option><option value="Monthly">Monthly</option></select></label>
               <div class="wizard-actions"><button type="button" class="modal-secondary" id="step3-back">← Back</button><button type="button" class="modal-submit" id="step3-next">Continue →</button></div>
             </div>
 
-            <!-- Step 4: payment account + insights -->
+            <!-- Step 4: Circle Start -->
             <div class="wizard-step" data-step="4">
-              <p class="wizard-eyebrow">Step 4 of 5 · Payment Account</p>
-              <h1 class="wizard-title">Payment account &amp; insights</h1>
-              <p class="wizard-subtext">Where members will send contributions, for cross-reference.</p>
-              <div class="review-section"><h3><i class="fa-solid fa-lock" style="font-size:.7rem;color:var(--muted);margin-right:5px;"></i>Payment Account <span class="type-badge">Example · Planned</span></h3>
-                <div class="review-row"><span>Bank Name</span><strong id="review-bank-name">-</strong></div>
-                <div class="review-row"><span>Account Name</span><strong id="review-account-name">-</strong></div>
-                <div class="review-row"><span>Account Number</span><strong id="review-account-number">-</strong></div>
+              <p class="wizard-eyebrow">Step 4 of 6 · Circle Start</p>
+              <h1 class="wizard-title">When does this circle start?</h1>
+              <p class="wizard-subtext">Creating the circle and starting its first cycle are two different moments.</p>
+              <div class="type-card" id="start-option-date" data-start-mode="date">
+                <div class="type-icon"><i class="fa-solid fa-calendar-check"></i></div>
+                <div><div class="type-name">Start on a specific date</div><div class="type-desc">Members can begin contributing from that date. The circle is Scheduled until then (or Active immediately, if the date is today).</div></div>
+              </div>
+              <div class="type-card" id="start-option-manual" data-start-mode="manual">
+                <div class="type-icon"><i class="fa-solid fa-user-clock"></i></div>
+                <div><div class="type-name">I'll start it manually</div><div class="type-desc">The circle is created in Setup / Recruiting. Add members first, then start the first cycle yourself whenever you're ready.</div></div>
+              </div>
+              <label class="form-field" id="start-date-field" hidden><span>Start Date</span><input type="date" id="circle-start-date" /></label>
+              <p id="start-warning" class="field-warning"></p>
+              <div class="wizard-actions"><button type="button" class="modal-secondary" id="step4-back">← Back</button><button type="button" class="modal-submit" id="step4-next">Continue →</button></div>
+            </div>
+
+            <!-- Step 5: Payment Details -->
+            <div class="wizard-step" data-step="5">
+              <p class="wizard-eyebrow">Step 5 of 6 · Payment Details</p>
+              <h1 class="wizard-title">Where will members send their contributions?</h1>
+              <div class="payment-destination-note"><i class="fa-solid fa-circle-info"></i><span>These payment details are the destination members will be instructed to use for this Circle. This is <strong>your own</strong> payment destination — KUNTRIBUTE does not hold or move funds.</span></div>
+              <div class="segmented" id="payment-mode-segmented">
+                <button type="button" data-mode="default" class="active">Use Default</button>
+                <button type="button" data-mode="custom">Use Custom</button>
+              </div>
+              <div id="payment-default-preview"></div>
+              <div id="payment-custom-fields" hidden></div>
+              <div class="confirm-checkbox-row">
+                <input type="checkbox" id="payment-confirm-checkbox" />
+                <label for="payment-confirm-checkbox">I confirm these are the payment details members should use for this Circle.</label>
+              </div>
+              <p id="payment-warning" class="field-warning"></p>
+              <div class="wizard-actions"><button type="button" class="modal-secondary" id="step5-back">← Back</button><button type="button" class="modal-submit" id="step5-next">Continue →</button></div>
+            </div>
+
+            <!-- Step 6: Review -->
+            <div class="wizard-step" data-step="6">
+              <p class="wizard-eyebrow">Step 6 of 6 · Review</p>
+              <h1 class="wizard-title">Review your circle</h1>
+              <div class="review-section"><h3>Circle</h3>
+                <div class="review-row"><span>Program Type</span><strong id="review-circle-type">-</strong></div>
+                <div class="review-row"><span>Circle Name</span><strong id="review-name">-</strong></div>
+                <div class="review-row"><span>Target Members</span><strong id="review-members">-</strong></div>
+              </div>
+              <div class="review-section"><h3>Contribution Rules</h3>
+                <div class="review-row"><span>Currency / Asset</span><strong id="review-currency">-</strong></div>
+                <div class="review-row"><span>Contribution Amount</span><strong id="review-contribution">-</strong></div>
+                <div class="review-row"><span>Contribution Frequency</span><strong id="review-frequency">-</strong></div>
+              </div>
+              <div class="review-section"><h3>Circle Start</h3>
+                <div class="review-row"><span>Start</span><strong id="review-start-mode">-</strong></div>
+              </div>
+              <div class="review-section"><h3><i class="fa-solid fa-lock" style="font-size:.7rem;color:var(--muted);margin-right:5px;"></i>Payment Details</h3>
+                <div class="review-row"><span>Destination</span><strong id="review-payment-summary">-</strong></div>
               </div>
               <div class="cd-insight">
                 <div class="cd-insight-eyebrow"><i class="fa-solid fa-lightbulb"></i>Circle Insights</div>
@@ -948,14 +1051,21 @@ button { font-family:inherit; }
                 <div class="cd-insight-row"><strong id="wizard-insight-amount">₦0</strong><span>expected contribution activity</span></div>
                 <p class="note" id="wizard-insight-note"></p>
               </div>
-              <div class="wizard-actions"><button type="button" class="modal-secondary" id="step4-back">← Back</button><button type="button" class="modal-submit" id="step4-next">Continue →</button></div>
+              <div class="review-section">
+                <h3>Projected Schedule<span class="projected-badge"><i class="fa-solid fa-triangle-exclamation"></i>PROJECTED</span></h3>
+                <div class="projected-schedule-list" id="projected-schedule-list"></div>
+                <p class="field-hint">An estimate only, not a real backend schedule — the actual schedule is created once the circle starts.</p>
+              </div>
+              <p id="create-circle-error" class="field-warning" role="alert"></p>
+              <div class="wizard-actions"><button type="button" class="modal-secondary" id="step6-back">← Back</button><button type="button" class="modal-submit" id="step6-create">Confirm &amp; Create</button></div>
             </div>
 
-            <!-- Step 6: success -->
-            <div class="wizard-step" data-step="6">
+            <!-- Step 7: Circle Created -->
+            <div class="wizard-step" data-step="7">
               <div class="success-page-body">
-                <div class="success-icon"><i class="fa-solid fa-check"></i></div>
-                <h2 class="success-title">Circle created successfully</h2>
+                <div class="success-icon" id="success-icon"><i class="fa-solid fa-check"></i></div>
+                <h2 class="success-title" id="success-title">Circle created successfully</h2>
+                <span class="cd-status status-active" id="success-status-pill" style="display:inline-block;margin-bottom:8px;">Active</span>
                 <p class="modal-subtext" id="success-circle-name">Your circle record is saved.</p>
                 <div class="review-section" style="text-align:left;">
                   <h3>Invitation Link</h3>
@@ -976,33 +1086,6 @@ button { font-family:inherit; }
           </div>
         </div>
       </main>
-
-      <!-- ================= NEW CIRCLE — TYPE SELECTOR SHEET =================
-           Matches ktb/prototypes/organizer: tapping New Circle opens this
-           sheet first. Type selection is a decision, not a form. Only
-           after picking a type does the Create Circle wizard open. -->
-      <div class="modal-overlay" id="select-circle-type-overlay">
-        <div class="modal-sheet"><div class="modal-handle"></div>
-          <div class="modal-header"><h2>New Circle</h2><button type="button" class="modal-close" id="close-select-type" aria-label="Close"><i class="fa-solid fa-xmark"></i></button></div>
-          <p class="modal-subtext" style="text-align:left;">Choose the kind of circle you want to create.</p>
-          <div class="type-card" id="type-rotational" data-type="Rotational Savings">
-            <div class="type-icon"><i class="fa-solid fa-rotate"></i></div>
-            <div><div class="type-name">Rotational Savings</div><div class="type-desc">Members contribute regularly and take turns receiving the collected funds. Ajo / Esusu / Adashe.</div><div class="type-examples">Friends · Family · Market groups</div></div>
-          </div>
-          <div class="type-card disabled"><div class="type-icon"><i class="fa-solid fa-shield-heart"></i></div><div><div class="type-name">Welfare Fund <span class="type-badge">Coming soon</span></div><div class="type-desc">Members contribute into a shared fund used for approved needs and emergencies.</div><div class="type-examples">Medical · Burial · Community support</div></div></div>
-          <div class="type-card disabled"><div class="type-icon"><i class="fa-solid fa-handshake"></i></div><div><div class="type-name">Cooperative Savings <span class="type-badge">Coming soon</span></div><div class="type-desc">Members save together toward a shared financial goal.</div><div class="type-examples">Business · Equipment · Housing</div></div></div>
-        </div>
-      </div>
-
-      <!-- ================= CREATE CIRCLE CONFIRMATION SHEET ================= -->
-      <div class="modal-overlay" id="confirm-create-overlay">
-        <div class="modal-sheet"><div class="modal-handle"></div>
-          <div class="modal-header"><h2>You're about to create this circle</h2><button type="button" class="modal-close" id="close-confirm-create" aria-label="Close"><i class="fa-solid fa-xmark"></i></button></div>
-          <p class="modal-subtext" id="confirm-summary-line">-</p>
-          <p id="confirm-create-error" class="field-warning" role="alert"></p>
-          <div class="wizard-actions"><button type="button" class="modal-secondary" id="confirm-back-btn">← Back</button><button type="button" class="modal-submit" id="confirm-create-btn">Confirm &amp; Create</button></div>
-        </div>
-      </div>
 
       <!-- ================= MANAGE CIRCLE SHEET ================= -->
       <div class="modal-overlay" id="manage-circle-overlay">
@@ -1172,6 +1255,48 @@ button { font-family:inherit; }
         </div>
       </div>
 
+      <!-- ================= PAYMENT ACCOUNTS (Me -> Settings concept) =================
+           Mock UI only: no storage, no API. Reusable ORGANIZER-provided
+           payment destinations, grouped by currency/asset — selected
+           from, not retyped, when a Circle reaches its Payment Details
+           step (see the wizard's "Use Default" option). -->
+      <div class="modal-overlay" id="payment-accounts-overlay">
+        <div class="modal-sheet"><div class="modal-handle"></div>
+          <div class="modal-header"><h2>Payment Accounts</h2><button type="button" class="modal-close" id="close-payment-accounts" aria-label="Close"><i class="fa-solid fa-xmark"></i></button></div>
+          <p class="modal-subtext" style="text-align:left;">Your own payment destinations, grouped by currency/asset. Not a KUNTRIBUTE account — members are instructed to pay directly into whichever of these a Circle uses.</p>
+          <div id="payment-accounts-body"></div>
+          <button type="button" class="modal-secondary" id="add-payment-account-btn" style="width:100%;margin-top:6px;"><i class="fa-solid fa-plus"></i> Add Payment Account</button>
+        </div>
+      </div>
+
+      <!-- ================= REGION & CURRENCY (account preference concept) =================
+           Mock UI only. A DEFAULT / PERSONALIZATION layer: it sets which
+           currency the dashboard opens on, never which currencies this
+           Organizer may create Circles in (see the wizard's Contribution
+           Rules step, unaffected by this preference). -->
+      <div class="modal-overlay" id="region-currency-overlay">
+        <div class="modal-sheet"><div class="modal-handle"></div>
+          <div class="modal-header"><h2>Region &amp; Currency</h2><button type="button" class="modal-close" id="close-region-currency" aria-label="Close"><i class="fa-solid fa-xmark"></i></button></div>
+          <p class="modal-subtext" style="text-align:left;">Sets your default currency view and phone/account formatting. It does not limit which currencies you can create Circles in — you can still create USD or USDT Circles regardless of this setting.</p>
+          <label class="form-field"><span>Country</span>
+            <select id="preference-country">
+              <option value="Nigeria">Nigeria</option>
+              <option value="United States">United States</option>
+              <option value="United Kingdom">United Kingdom</option>
+              <option value="Ghana">Ghana</option>
+            </select>
+          </label>
+          <label class="form-field"><span>Preferred Currency</span>
+            <select id="preference-currency">
+              <option value="NGN">Nigerian Naira (NGN)</option>
+              <option value="USD">US Dollar (USD)</option>
+              <option value="USDT">Tether USD (USDT)</option>
+            </select>
+          </label>
+          <div class="wizard-actions"><button type="button" class="modal-submit" id="save-region-currency">Save</button></div>
+        </div>
+      </div>
+
       <div class="toast-stack" id="toast-stack"></div>
 
       <nav class="bottom-nav">
@@ -1195,7 +1320,6 @@ document.addEventListener("DOMContentLoaded", () => {
   initializeBottomNav();
   initializePageNav();
   initializeModals();
-  initializeCircleTypeSelect();
   initializeWizard();
   initializeAmountFormatting();
   initializeMemberFormatting();
@@ -1210,6 +1334,9 @@ document.addEventListener("DOMContentLoaded", () => {
   initializeCircleDetailTabs();
   initializeCircleWorkflows();
   initializeTheme();
+  initializeDashboardCurrencySelect();
+  initializeRegionPreference();
+  initializePaymentAccounts();
   bootstrapSession();
 });
 
@@ -1225,12 +1352,17 @@ let mockUsers = [
   { user_id: 3, full_name: "Chidinma Okafor", email: "chidinma@kuntribute.test", phone: "08030001003" },
 ];
 
-let nextMockCircleId = 5;
+let nextMockCircleId = 7;
+// currency/program_type: PRODUCT RULE — one Circle = one currency/asset,
+// set once at creation (see the wizard's Contribution Rules step) and
+// never converted or combined with another circle's currency.
 let mockCircles = [
-  { circle_id: 1, organizer_user_id: 1, circle_name: "KUNTRIBUTE Development Circle", contribution_amount: 10000, frequency: "Weekly", start_date: "2026-08-24", status: "active" },
-  { circle_id: 2, organizer_user_id: 1, circle_name: "Market Women Savings", contribution_amount: 5000, frequency: "Monthly", start_date: "2026-07-01", status: "active" },
-  { circle_id: 3, organizer_user_id: 1, circle_name: "Staff End of Year Circle", contribution_amount: 15000, frequency: "Monthly", start_date: "2025-12-01", status: "completed" },
-  { circle_id: 4, organizer_user_id: 1, circle_name: "Old Neighbourhood Circle", contribution_amount: 8000, frequency: "Weekly", start_date: "2026-05-01", status: "cancelled" },
+  { circle_id: 1, organizer_user_id: 1, circle_name: "KUNTRIBUTE Development Circle", contribution_amount: 10000, currency: "NGN", frequency: "Weekly", start_date: "2026-08-24", status: "active", program_type: "Rotational Savings" },
+  { circle_id: 2, organizer_user_id: 1, circle_name: "Market Women Savings", contribution_amount: 5000, currency: "NGN", frequency: "Monthly", start_date: "2026-07-01", status: "active", program_type: "Rotational Savings" },
+  { circle_id: 3, organizer_user_id: 1, circle_name: "Staff End of Year Circle", contribution_amount: 15000, currency: "NGN", frequency: "Monthly", start_date: "2025-12-01", status: "completed", program_type: "Rotational Savings" },
+  { circle_id: 4, organizer_user_id: 1, circle_name: "Old Neighbourhood Circle", contribution_amount: 8000, currency: "NGN", frequency: "Weekly", start_date: "2026-05-01", status: "cancelled", program_type: "Rotational Savings" },
+  { circle_id: 5, organizer_user_id: 1, circle_name: "Diaspora Dollar Circle", contribution_amount: 250, currency: "USD", frequency: "Monthly", start_date: "2026-06-01", status: "active", program_type: "Rotational Savings" },
+  { circle_id: 6, organizer_user_id: 1, circle_name: "Crypto Builders Circle", contribution_amount: 100, currency: "USDT", frequency: "Weekly", start_date: "2026-08-10", status: "active", program_type: "Rotational Savings" },
 ];
 
 let mockCircleMembers = [
@@ -1244,6 +1376,10 @@ let mockCircleMembers = [
   { circle_member_id: 8, circle_id: 3, user_id: 9, full_name: "Bola Adekunle", email: "bola@example.test", phone: "08030003001", payout_position: 1, joined_at: "2025-11-20", membership_status: "active", ktb_id: "KTB-000109", bank_name: "Guaranty Trust Bank", account_number: "0145678923" },
   { circle_member_id: 9, circle_id: 3, user_id: 10, full_name: "Grace Effiong", email: "grace@example.test", phone: "08030003002", payout_position: 2, joined_at: "2025-11-20", membership_status: "active", ktb_id: "KTB-000110", bank_name: "Zenith Bank", account_number: "2078123456" },
   { circle_member_id: 10, circle_id: 4, user_id: 11, full_name: "Emeka Chukwu", email: "emeka@example.test", phone: "08030004001", payout_position: 1, joined_at: "2026-05-01", membership_status: "inactive", ktb_id: "KTB-000111", bank_name: "Access Bank", account_number: "0067891234" },
+  { circle_member_id: 11, circle_id: 5, user_id: 12, full_name: "Grace Umeh", email: "grace.umeh@example.test", phone: "08030005001", payout_position: 1, joined_at: "2026-06-01", membership_status: "active", ktb_id: "KTB-000112", bank_name: "USD Bank Account", account_number: "0009988771" },
+  { circle_member_id: 12, circle_id: 5, user_id: 13, full_name: "Michael Obi", email: "michael.obi@example.test", phone: "08030005002", payout_position: 2, joined_at: "2026-06-01", membership_status: "active", ktb_id: "KTB-000113", bank_name: "USD Bank Account", account_number: "0009988772" },
+  { circle_member_id: 13, circle_id: 6, user_id: 14, full_name: "Kelechi Eze", email: "kelechi.eze@example.test", phone: "08030006001", payout_position: 1, joined_at: "2026-08-10", membership_status: "active", ktb_id: "KTB-000114", bank_name: "USDT Wallet", account_number: "TXn3k4pd9uJmL2qYh8FvRzC1oQ8F2" },
+  { circle_member_id: 14, circle_id: 6, user_id: 15, full_name: "Amara Nwachukwu", email: "amara.n@example.test", phone: "08030006002", payout_position: 2, joined_at: "2026-08-10", membership_status: "active", ktb_id: "KTB-000115", bank_name: "USDT Wallet", account_number: "TAy71fGh3kLp9QwXe2Zc6RvN0mK8H1" },
 ];
 
 let mockContributions = [
@@ -1259,6 +1395,10 @@ let mockContributions = [
   { contribution_id: 10, circle_id: 2, user_id: 8, full_name: "Ifeoma Nwosu", amount: 5000, payment_date: "2026-08-04", status: "confirmed" },
   { contribution_id: 11, circle_id: 3, user_id: 9, full_name: "Bola Adekunle", amount: 15000, payment_date: "2025-12-05", status: "confirmed" },
   { contribution_id: 12, circle_id: 3, user_id: 10, full_name: "Grace Effiong", amount: 15000, payment_date: "2025-12-06", status: "confirmed" },
+  { contribution_id: 13, circle_id: 5, user_id: 12, full_name: "Grace Umeh", amount: 250, payment_date: "2026-09-02", status: "confirmed" },
+  { contribution_id: 14, circle_id: 5, user_id: 13, full_name: "Michael Obi", amount: 250, payment_date: null, status: "pending" },
+  { contribution_id: 15, circle_id: 6, user_id: 14, full_name: "Kelechi Eze", amount: 100, payment_date: "2026-09-11", status: "confirmed" },
+  { contribution_id: 16, circle_id: 6, user_id: 15, full_name: "Amara Nwachukwu", amount: 100, payment_date: null, status: "pending" },
 ];
 
 let mockPayouts = [
@@ -1266,6 +1406,8 @@ let mockPayouts = [
   { payout_id: 2, circle_id: 1, circle_member_id: 2, user_id: 2, full_name: "David Okoro", amount: 30000, payout_date: "2026-09-05", status: "pending" },
   { payout_id: 3, circle_id: 2, circle_member_id: 4, user_id: 2, full_name: "David Okoro", amount: 20000, payout_date: "2026-07-31", status: "paid" },
   { payout_id: 4, circle_id: 3, circle_member_id: 8, user_id: 9, full_name: "Bola Adekunle", amount: 30000, payout_date: "2025-12-31", status: "paid" },
+  { payout_id: 5, circle_id: 5, circle_member_id: 11, user_id: 12, full_name: "Grace Umeh", amount: 500, payout_date: "2026-09-16", status: "pending" },
+  { payout_id: 6, circle_id: 6, circle_member_id: 13, user_id: 14, full_name: "Kelechi Eze", amount: 200, payout_date: "2026-09-18", status: "pending" },
 ];
 
 let mockCycles = [
@@ -1275,16 +1417,37 @@ let mockCycles = [
   { cycle_id: 4, circle_id: 2, cycle_number: 1, start_date: "2026-07-01", end_date: "2026-07-31", status: "completed", recipient_full_name: "David Okoro", payout_id: 3, payout_amount: 20000, payout_status: "paid" },
   { cycle_id: 5, circle_id: 2, cycle_number: 2, start_date: "2026-08-01", end_date: "2026-08-31", status: "open", recipient_full_name: "Ngozi Bello", payout_id: null, payout_amount: null, payout_status: null },
   { cycle_id: 6, circle_id: 3, cycle_number: 1, start_date: "2025-12-01", end_date: "2025-12-31", status: "completed", recipient_full_name: "Bola Adekunle", payout_id: 4, payout_amount: 30000, payout_status: "paid" },
+  { cycle_id: 7, circle_id: 5, cycle_number: 1, start_date: "2026-09-01", end_date: "2026-09-30", status: "open", recipient_full_name: "Grace Umeh", payout_id: 5, payout_amount: 500, payout_status: "pending" },
+  { cycle_id: 8, circle_id: 6, cycle_number: 1, start_date: "2026-09-07", end_date: "2026-09-13", status: "open", recipient_full_name: "Kelechi Eze", payout_id: 6, payout_amount: 200, payout_status: "pending" },
 ];
 
-const organizerAccount = { bankName: "Guaranty Trust Bank", accountName: "Aminah Yusuf", accountNumber: "0123456789" };
+// Payment Accounts (Me -> Settings concept, mock only): reusable
+// ORGANIZER-provided destinations, grouped by currency/asset. These
+// are never KUNTRIBUTE's own account — see the wizard's Payment
+// Details step, which selects one of these rather than retyping
+// details per Circle.
+let nextMockPaymentAccountId = 4;
+let mockPaymentAccounts = [
+  { id: 1, currency: "NGN", institution: "Guaranty Trust Bank", accountName: "Aminah Yusuf", accountNumber: "0123456789", isDefault: true },
+  { id: 2, currency: "USD", country: "United States", institution: "Chase Bank", accountName: "Aminah Yusuf", accountNumber: "0009988771", isDefault: true },
+  { id: 3, currency: "USDT", asset: "Tether USD (USDT)", network: "TRON (TRC-20)", walletAddress: "TXn3k4pd9uJmL2qYh8FvRzC1oQ8F2", isDefault: true },
+];
+
+// Account-level regional preference (signup concept). A DEFAULT /
+// PERSONALIZATION layer only — it sets which currency the dashboard
+// opens on, never which currencies the Organizer may create Circles in.
+let organizerPreference = { country: "Nigeria", preferredCurrency: "NGN" };
 
 let circlesData = [];
 let organizerUserId = null;
 let currentUser = null;
 let activityData = [];
-let totalContributionsValue = 0;
-let todayContributionsValue = 0;
+// Partitioned by currency — see CURRENCIES/formatAmount below. There is
+// deliberately no single combined total: PRODUCT RULE — no FX
+// conversion, no cross-currency monetary totals.
+let totalContributionsByCurrency = {};
+let todayContributionsByCurrency = {};
+let dashboardCurrency = "all"; // "all" | "NGN" | "USD" | "USDT" — set from organizerPreference at boot
 let membersPageFilter = null;
 let expandedMemberGroups = new Set();
 let circlesSegment = "active";
@@ -1310,6 +1473,12 @@ function bootstrapSession() {
   setText("me-list-email", demoUser.email);
   const avatar = document.getElementById("me-avatar");
   if (avatar) avatar.textContent = getInitials(demoUser.full_name);
+  // First-time personalization: the dashboard opens on the Organizer's
+  // preferred currency, not "All Currencies" — a default, not a limit
+  // (see initializeRegionPreference for where this can be changed, and
+  // the wizard's Contribution Rules step for proof it doesn't restrict
+  // which currency a new Circle can use).
+  dashboardCurrency = organizerPreference.preferredCurrency;
   switchPage("dashboard");
   loadDashboardData();
 }
@@ -1317,15 +1486,46 @@ function bootstrapSession() {
 /* ==========================================================
    HELPERS
 ========================================================== */
-function formatNaira(amount) { return "₦" + Number(amount).toLocaleString("en-NG"); }
-function formatCompactNaira(amount) {
+
+/* ==========================================================
+   CURRENCY-AWARE FORMATTING
+   PRODUCT RULE: one Circle = one currency/asset. formatAmount is the
+   single place an amount ever gets its symbol/suffix — it never
+   converts between currencies, and there is no "combined" formatter.
+========================================================== */
+const CURRENCIES = {
+  NGN: { type: "fiat", label: "Nigerian Naira", symbol: "₦", suffix: "", locale: "en-NG", minAmount: 2000, maxAmount: 10000000 },
+  USD: { type: "fiat", label: "US Dollar", symbol: "$", suffix: "", locale: "en-US", minAmount: 1, maxAmount: 1000000 },
+  USDT: { type: "crypto", label: "Tether USD", symbol: "", suffix: " USDT", locale: "en-US", minAmount: 1, maxAmount: 1000000 },
+};
+function currencyMeta(code) { return CURRENCIES[code] || CURRENCIES.NGN; }
+function formatAmount(amount, currencyCode) {
+  const meta = currencyMeta(currencyCode);
   const value = Number(amount) || 0;
-  if (value < 100000) return formatNaira(value);
+  return `${meta.symbol}${value.toLocaleString(meta.locale)}${meta.suffix}`;
+}
+function formatCompactAmount(amount, currencyCode) {
+  const meta = currencyMeta(currencyCode);
+  const value = Number(amount) || 0;
+  if (value < 100000) return formatAmount(value, currencyCode);
   const units = [[1e9, "B"], [1e6, "M"], [1e3, "K"]];
   const unit = units.find(([t]) => value >= t);
-  if (!unit) return formatNaira(value);
+  if (!unit) return formatAmount(value, currencyCode);
   const scaled = value / unit[0];
-  return `₦${scaled.toLocaleString("en-NG", { maximumFractionDigits: scaled >= 10 ? 1 : 2 })}${unit[1]}`;
+  const scaledStr = scaled.toLocaleString(meta.locale, { maximumFractionDigits: scaled >= 10 ? 1 : 2 });
+  return `${meta.symbol}${scaledStr}${unit[1]}${meta.suffix}`;
+}
+// Every currency actually in use across the Organizer's circles, in a
+// fixed, stable display order — never invents a currency with no
+// circles, never reorders as data changes.
+function activeCurrencyCodes() {
+  const order = ["NGN", "USD", "USDT"];
+  const present = new Set(circlesData.map((c) => c.currency));
+  return order.filter((code) => present.has(code));
+}
+function currencyForCircleId(circleId) {
+  const circle = circlesData.find((c) => c.id === circleId) || mockCircles.find((c) => c.circle_id === circleId);
+  return (circle && (circle.currency || circle.currency)) || "NGN";
 }
 function setText(id, value) { const el = document.getElementById(id); if (el) el.textContent = value; }
 function formatActivityDate(value) {
@@ -1502,7 +1702,8 @@ function loadDashboardData() {
     const latestStatusByUser = new Map();
     contributions.forEach((c) => { if (!latestStatusByUser.has(c.user_id)) latestStatusByUser.set(c.user_id, c.status); });
     return {
-      id, name: circle.circle_name, amount: Number(circle.contribution_amount), frequency: circle.frequency,
+      id, name: circle.circle_name, amount: Number(circle.contribution_amount),
+      currency: circle.currency || "NGN", programType: circle.program_type || "Rotational Savings", frequency: circle.frequency,
       startDate: circle.start_date, status: circle.status, membersJoined: members.length,
       members: members.map((m) => ({
         circleMemberId: m.circle_member_id, userId: m.user_id, name: m.full_name, email: m.email, phone: m.phone,
@@ -1516,35 +1717,49 @@ function loadDashboardData() {
 
   if (!organizerUserId) organizerUserId = mockCircles[0]?.organizer_user_id || null;
 
-  const activeCircles = circlesData.filter((c) => c.status === "active");
-  const allContributions = circlesData.flatMap((circle) => circle.contributions.map((c) => ({ ...c, circle_name: circle.name })));
-  const allPayouts = circlesData.flatMap((circle) => circle.payouts);
+  // PRODUCT RULE: no FX conversion, no cross-currency totals. Every
+  // monetary figure below is either scoped to one selected currency or
+  // kept partitioned by currency — never summed across currencies.
+  const inSelectedCurrency = (currency) => dashboardCurrency === "all" || currency === dashboardCurrency;
+  const activeCircles = circlesData.filter((c) => c.status === "active" && inSelectedCurrency(c.currency));
+  const allContributions = circlesData.flatMap((circle) => circle.contributions.map((c) => ({ ...c, circle_name: circle.name, currency: circle.currency })));
+  const allPayouts = circlesData.flatMap((circle) => circle.payouts.map((p) => ({ ...p, currency: circle.currency })));
   activityData = [
-    ...allContributions.map((c) => ({ kind: "contribution", title: `${c.full_name || "Member"} contribution`, circleName: c.circle_name, amount: c.amount, status: c.status, date: c.payment_date })),
-    ...circlesData.flatMap((circle) => circle.payouts.map((p) => ({ kind: "payout", title: `${p.full_name || "Member"} payout`, circleName: circle.name, amount: p.amount, status: p.status, date: p.payout_date }))),
+    ...allContributions.map((c) => ({ kind: "contribution", title: `${c.full_name || "Member"} contribution`, circleName: c.circle_name, amount: c.amount, currency: c.currency, status: c.status, date: c.payment_date })),
+    ...allPayouts.map((p) => ({ kind: "payout", title: `${p.full_name || "Member"} payout`, circleName: circlesData.find((c) => c.id === p.circle_id)?.name || "", amount: p.amount, currency: p.currency, status: p.status, date: p.payout_date })),
   ].sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
 
   const todayISO = TODAY.toISOString().slice(0, 10);
   const confirmed = allContributions.filter((c) => c.status === "confirmed");
-  const todays = confirmed.filter((c) => String(c.payment_date || "").slice(0, 10) === todayISO);
-  const pending = allContributions.filter((c) => c.status === "pending");
+  const todaysAll = confirmed.filter((c) => String(c.payment_date || "").slice(0, 10) === todayISO);
+  const pendingScoped = allContributions.filter((c) => c.status === "pending" && inSelectedCurrency(c.currency));
+  const pendingPayoutsScoped = allPayouts.filter((p) => p.status === "pending" && inSelectedCurrency(p.currency));
 
-  totalContributionsValue = confirmed.reduce((t, i) => t + Number(i.amount), 0);
+  // Partitioned-by-currency running totals — see formatAmount/CURRENCIES.
+  totalContributionsByCurrency = {};
+  todayContributionsByCurrency = {};
+  confirmed.forEach((c) => { totalContributionsByCurrency[c.currency] = (totalContributionsByCurrency[c.currency] || 0) + Number(c.amount); });
+  todaysAll.forEach((c) => { todayContributionsByCurrency[c.currency] = (todayContributionsByCurrency[c.currency] || 0) + Number(c.amount); });
+
+  renderDashboardCurrencyOptions();
   renderTotalContributionsValue();
-  todayContributionsValue = todays.reduce((t, i) => t + Number(i.amount), 0);
   renderTodayContributionsValue();
   setText("active-circles-count", activeCircles.length);
   setText("total-members-count", activeCircles.reduce((t, c) => t + c.membersJoined, 0));
-  setText("pending-payments-count", pending.length);
-  setText("upcoming-payouts-count", allPayouts.filter((p) => p.status === "pending").length);
+  setText("pending-payments-count", pendingScoped.length);
+  setText("upcoming-payouts-count", pendingPayoutsScoped.length);
   // Same four values, mirrored into the mobile row presentation.
   setText("active-circles-count-mobile", activeCircles.length);
   setText("total-members-count-mobile", activeCircles.reduce((t, c) => t + c.membersJoined, 0));
-  setText("pending-payments-count-mobile", pending.length);
-  setText("upcoming-payouts-count-mobile", allPayouts.filter((p) => p.status === "pending").length);
+  setText("pending-payments-count-mobile", pendingScoped.length);
+  setText("upcoming-payouts-count-mobile", pendingPayoutsScoped.length);
   setText("metric-active-circles", activeCircles.length);
-  setText("metric-today-contributions", formatNaira(todays.reduce((t, i) => t + Number(i.amount), 0)));
-  setText("total-contributions-title", formatNaira(totalContributionsValue));
+  setText("metric-today-contributions", dashboardCurrency === "all"
+    ? partitionedInlineText(todayContributionsByCurrency)
+    : formatAmount(todayContributionsByCurrency[dashboardCurrency] || 0, dashboardCurrency));
+  setText("total-contributions-title", dashboardCurrency === "all"
+    ? partitionedInlineText(totalContributionsByCurrency)
+    : formatAmount(totalContributionsByCurrency[dashboardCurrency] || 0, dashboardCurrency));
 
   renderCirclesPage();
   renderMembersPage();
@@ -1552,19 +1767,84 @@ function loadDashboardData() {
   renderProgramsPage();
 }
 
-function renderTotalContributionsValue() {
-  const el = document.getElementById("wallet-balance");
+// A single compact line joining each currency's own figure with " · "
+// — used only where a stacked partitioned list would be too heavy
+// (e.g. the "Today's Contributions" strip). Never a sum: each amount
+// keeps its own currency's symbol/suffix.
+function partitionedInlineText(byCurrency) {
+  const codes = activeCurrencyCodes().filter((code) => byCurrency[code]);
+  if (!codes.length) return formatAmount(0, dashboardCurrency === "all" ? "NGN" : dashboardCurrency);
+  return codes.map((code) => formatAmount(byCurrency[code] || 0, code)).join(" · ");
+}
+
+function renderDashboardCurrencyOptions() {
+  const select = document.getElementById("dashboard-currency-select");
+  if (!select) return;
+  const codes = activeCurrencyCodes();
+  // dashboardCurrency itself is the single source of truth (set by the
+  // select's own change handler, the Region & Currency preference, or
+  // bootstrapSession's initial default) — this only validates it's
+  // still a real option and keeps the <select> in sync with it, rather
+  // than re-deriving it from the <select>'s own possibly-stale value.
+  if (dashboardCurrency !== "all" && !codes.includes(dashboardCurrency)) dashboardCurrency = "all";
+  select.innerHTML = `<option value="all">All Currencies</option>` + codes.map((code) => `<option value="${code}">${code}</option>`).join("");
+  select.value = dashboardCurrency;
+}
+
+function initializeDashboardCurrencySelect() {
+  const select = document.getElementById("dashboard-currency-select");
+  if (!select) return;
+  select.addEventListener("change", () => {
+    dashboardCurrency = select.value;
+    loadDashboardData();
+  });
+}
+
+function renderWalletContextText() {
+  const el = document.getElementById("wallet-context-text");
   if (!el) return;
-  el.textContent = window.innerWidth <= 600 ? formatCompactNaira(totalContributionsValue) : formatNaira(totalContributionsValue);
-  el.dataset.exact = formatNaira(totalContributionsValue);
+  el.textContent = dashboardCurrency === "all" ? "Across all active circles, by currency" : `Across active ${dashboardCurrency} circles`;
+}
+
+function renderTotalContributionsValue() {
+  const row = document.getElementById("wallet-balance-row");
+  const single = document.getElementById("wallet-balance");
+  const partitioned = document.getElementById("wallet-balance-partitioned");
+  if (!row || !single || !partitioned) return;
+
+  if (dashboardCurrency === "all") {
+    const codes = activeCurrencyCodes();
+    row.classList.add("partitioned");
+    single.hidden = true;
+    partitioned.hidden = false;
+    partitioned.innerHTML = codes.length
+      ? codes.map((code) => `<div class="currency-partition-row"><span class="currency-tag">${code}</span><strong>${formatAmount(totalContributionsByCurrency[code] || 0, code)}</strong></div>`).join("")
+      : `<div class="currency-partition-row"><span class="currency-tag">NGN</span><strong>${formatAmount(0, "NGN")}</strong></div>`;
+  } else {
+    row.classList.remove("partitioned");
+    partitioned.hidden = true;
+    single.hidden = false;
+    const value = totalContributionsByCurrency[dashboardCurrency] || 0;
+    single.textContent = window.innerWidth <= 600 ? formatCompactAmount(value, dashboardCurrency) : formatAmount(value, dashboardCurrency);
+    single.dataset.exact = formatAmount(value, dashboardCurrency);
+  }
+  renderWalletContextText();
 }
 
 function renderTodayContributionsValue() {
-  setText("today-contributions", formatNaira(todayContributionsValue));
+  const el = document.getElementById("today-contributions");
+  if (!el) return;
+  el.textContent = dashboardCurrency === "all"
+    ? partitionedInlineText(todayContributionsByCurrency)
+    : formatAmount(todayContributionsByCurrency[dashboardCurrency] || 0, dashboardCurrency);
 }
 
-function renderActivityList(id, limit) {
-  const items = limit ? activityData.slice(0, limit) : activityData;
+// currencyFilter is only ever passed by the dashboard's own panel (see
+// renderDashboardActivity) — Notifications/History always show every
+// currency, each row self-labeled by its own amount's symbol/suffix.
+function renderActivityList(id, limit, currencyFilter) {
+  let items = currencyFilter && currencyFilter !== "all" ? activityData.filter((i) => i.currency === currencyFilter) : activityData;
+  items = limit ? items.slice(0, limit) : items;
   const el = document.getElementById(id);
   if (!el) return;
   el.innerHTML = items.length
@@ -1572,7 +1852,7 @@ function renderActivityList(id, limit) {
       <div class="activity-row">
         <div class="activity-row-icon ${item.kind}"><i class="fa-solid ${item.kind === "payout" ? "fa-money-bill-transfer" : "fa-money-check-dollar"}"></i></div>
         <div class="activity-row-body"><h4>${item.title}</h4><p>${item.circleName}</p></div>
-        <div class="activity-row-right"><strong>${formatNaira(item.amount)}</strong><small>${formatActivityDate(item.date)} · ${item.status}</small></div>
+        <div class="activity-row-right"><strong>${formatAmount(item.amount, item.currency)}</strong><small>${formatActivityDate(item.date)} · ${item.status}</small></div>
       </div>`).join("")
     : `<div class="empty-state compact"><i class="fa-regular fa-clock"></i><p>No recorded activity yet.</p></div>`;
 }
@@ -1581,8 +1861,9 @@ function renderActivityList(id, limit) {
 // amount/status column. Enclosing row/container is the same
 // .activity-row used by renderActivityList (Notifications/History,
 // desktop, untouched); only the body's internal arrangement differs.
-function renderRecentActivityCompact(id, limit) {
-  const items = limit ? activityData.slice(0, limit) : activityData;
+function renderRecentActivityCompact(id, limit, currencyFilter) {
+  let items = currencyFilter && currencyFilter !== "all" ? activityData.filter((i) => i.currency === currencyFilter) : activityData;
+  items = limit ? items.slice(0, limit) : items;
   const el = document.getElementById(id);
   if (!el) return;
   el.innerHTML = items.length
@@ -1597,11 +1878,12 @@ function renderRecentActivityCompact(id, limit) {
 }
 
 // The dashboard's own Recent Activity panel switches between the two
-// row treatments by viewport; every other feed always uses the
-// detailed row and is untouched by this.
+// row treatments by viewport, and is the one feed scoped to the
+// dashboard's currency selector; every other feed always shows every
+// currency and is untouched by this.
 function renderDashboardActivity() {
-  if (window.innerWidth <= 992) renderRecentActivityCompact("activity-feed", 5);
-  else renderActivityList("activity-feed", 5);
+  if (window.innerWidth <= 992) renderRecentActivityCompact("activity-feed", 5, dashboardCurrency);
+  else renderActivityList("activity-feed", 5, dashboardCurrency);
 }
 
 function renderActivityFeed() {
@@ -1629,12 +1911,18 @@ function renderCirclesPage(searchTerm = "") {
   if (!container) return;
   const term = searchTerm.trim().toLowerCase();
 
+  // "Active" is every circle not yet Completed/Cancelled — including
+  // ones just created via the wizard's Circle Start step that haven't
+  // begun their first Cycle yet (Scheduled / Setup-Recruiting). Each
+  // card still shows its own status badge (see below) so the
+  // difference from a truly running circle stays visible.
+  const isActiveBucket = (status) => status === "active" || status === "scheduled" || status === "setup";
   ["active", "completed", "cancelled"].forEach((status) => {
-    const count = circlesData.filter((c) => c.status === status).length;
+    const count = circlesData.filter((c) => status === "active" ? isActiveBucket(c.status) : c.status === status).length;
     setText("seg-count-" + status, count ? String(count) : "");
   });
 
-  const scoped = circlesData.filter((c) => c.status === circlesSegment);
+  const scoped = circlesData.filter((c) => circlesSegment === "active" ? isActiveBucket(c.status) : c.status === circlesSegment);
   const filtered = term ? scoped.filter((c) => c.name.toLowerCase().includes(term)) : scoped;
 
   if (!filtered.length) {
@@ -1652,9 +1940,9 @@ function renderCirclesPage(searchTerm = "") {
         </div>
       </div>
       <div class="circle-card-badges">
-        <span class="badge-amount">${formatNaira(circle.amount)}</span>
+        <span class="badge-amount">${formatAmount(circle.amount, circle.currency)}</span>
         <span class="badge-frequency">${circle.frequency}</span>
-        ${circle.status !== "active" ? `<span class="badge-status status-${circle.status}">${circle.status}</span>` : ""}
+        ${circle.status !== "active" ? `<span class="badge-status status-${circle.status}">${circle.status === "setup" ? "Setup / Recruiting" : circle.status}</span>` : ""}
       </div>
     </div>`).join("");
 
@@ -1799,14 +2087,14 @@ function openCircleDetail(circleId) {
   activeCircleId = circleId;
 
   setText("cd-name", circle.name);
-  setText("cd-type", "Rotational Savings");
+  setText("cd-type", circle.programType);
   const statusEl = document.getElementById("cd-status");
-  statusEl.textContent = circle.status;
+  statusEl.textContent = circle.status === "setup" ? "Setup / Recruiting" : circle.status;
   statusEl.className = "cd-status status-" + circle.status;
-  setText("cd-amount", formatNaira(circle.amount));
+  setText("cd-amount", formatAmount(circle.amount, circle.currency));
   setText("cd-frequency", circle.frequency);
   setText("cd-member-count", circle.membersJoined);
-  setText("cd-start-date", circle.startDate ? formatActivityDate(circle.startDate) : "Unavailable");
+  setText("cd-start-date", circle.startDate ? formatActivityDate(circle.startDate) : "Not started yet");
   setText("cd-current-cycle", currentCycleLabel(circle.cycles));
 
   renderMemberListInto("cd-members-full", circle.members.map((m) => ({ ...m, circleId: circle.id })));
@@ -1816,8 +2104,8 @@ function openCircleDetail(circleId) {
   // renderContributionsHistoryPage/renderPayoutsHistoryPage).
   const recentContributions = [...circle.contributions].sort((a, b) => new Date(b.payment_date || 0) - new Date(a.payment_date || 0));
   const recentPayouts = [...circle.payouts].sort((a, b) => new Date(b.payout_date || 0) - new Date(a.payout_date || 0));
-  renderActivityRowsInto("cd-contributions-recent", recentContributions.slice(0, 5), "contribution");
-  renderActivityRowsInto("cd-payouts-recent", recentPayouts.slice(0, 5), "payout");
+  renderActivityRowsInto("cd-contributions-recent", recentContributions.slice(0, 5), "contribution", circle.currency);
+  renderActivityRowsInto("cd-payouts-recent", recentPayouts.slice(0, 5), "payout", circle.currency);
 
   renderCyclesList("cd-cycles-full", circle.cycles);
   setCircleDetailTab("members");
@@ -1827,7 +2115,7 @@ function openCircleDetail(circleId) {
 // items are raw mockContributions/mockPayouts records (not a mapped
 // shape) so each row can carry its own id and open the matching
 // slide-up detail (openContributionDetail/openPayoutDetail).
-function renderActivityRowsInto(id, items, kind) {
+function renderActivityRowsInto(id, items, kind, currencyCode = "NGN") {
   const el = document.getElementById(id);
   if (!el) return;
   const isPayout = kind === "payout";
@@ -1836,7 +2124,7 @@ function renderActivityRowsInto(id, items, kind) {
   const title = (item) => `${item.full_name || "Member"} ${isPayout ? "payout" : "contribution"}`;
 
   el.innerHTML = items.length
-    ? items.map((item) => `<div class="activity-row" data-record-id="${recordId(item)}"><div class="activity-row-icon ${kind}"><i class="fa-solid ${isPayout ? "fa-money-bill-transfer" : "fa-money-check-dollar"}"></i></div><div class="activity-row-body"><h4>${title(item)}</h4><p>${formatActivityDate(date(item))}</p></div><div class="activity-row-right"><strong>${formatNaira(item.amount)}</strong><span class="activity-status ${item.status}">${item.status}</span></div></div>`).join("")
+    ? items.map((item) => `<div class="activity-row" data-record-id="${recordId(item)}"><div class="activity-row-icon ${kind}"><i class="fa-solid ${isPayout ? "fa-money-bill-transfer" : "fa-money-check-dollar"}"></i></div><div class="activity-row-body"><h4>${title(item)}</h4><p>${formatActivityDate(date(item))}</p></div><div class="activity-row-right"><strong>${formatAmount(item.amount, currencyCode)}</strong><span class="activity-status ${item.status}">${item.status}</span></div></div>`).join("")
     : `<div class="empty-state compact"><i class="fa-regular fa-clock"></i><p>No records yet.</p></div>`;
 
   el.querySelectorAll("[data-record-id]").forEach((row) => {
@@ -1879,10 +2167,11 @@ function renderCyclesList(id, cycles) {
         const expected = (circle ? circle.amount : 0) * totalMembers;
         const pct = expected ? Math.round((contributed / expected) * 100) : 0;
         const statusLabel = cycle.status === "open" ? "Pending" : cycle.status === "scheduled" ? "Scheduled" : "Completed";
+        const cycleCurrency = circle ? circle.currency : "NGN";
         return `
       <div class="cycle-summary-card" data-cycle-id="${cycle.cycle_id}">
         <div class="cycle-summary-top"><h4>Cycle #${cycle.cycle_number}</h4><span class="activity-status ${cycle.status}">${statusLabel}</span></div>
-        <div class="cycle-summary-amounts"><span>Contributed</span><strong>${formatNaira(contributed)} of ${formatNaira(expected)}</strong></div>
+        <div class="cycle-summary-amounts"><span>Contributed</span><strong>${formatAmount(contributed, cycleCurrency)} of ${formatAmount(expected, cycleCurrency)}</strong></div>
         <div class="cycle-progress-bar"><div class="cycle-progress-fill" style="width:${pct}%;"></div></div>
         <div class="cycle-summary-bottom"><span>${paidMembers} of ${totalMembers} members paid</span><span>${formatActivityDate(cycle.start_date)} – ${formatActivityDate(cycle.end_date)}</span></div>
       </div>`;
@@ -1908,11 +2197,11 @@ function openCircleSnapshot(circleId) {
   snapshotCircleId = circleId;
 
   setText("snapshot-circle-name", circle.name);
-  setText("snapshot-circle-type", "Rotational Savings");
+  setText("snapshot-circle-type", circle.programType);
   const statusEl = document.getElementById("snapshot-circle-status");
-  statusEl.textContent = circle.status;
+  statusEl.textContent = circle.status === "setup" ? "Setup / Recruiting" : circle.status;
   statusEl.className = "cd-status status-" + circle.status;
-  setText("snapshot-amount", formatNaira(circle.amount));
+  setText("snapshot-amount", formatAmount(circle.amount, circle.currency));
   setText("snapshot-frequency", circle.frequency);
   setText("snapshot-member-count", circle.membersJoined);
   setText("snapshot-current-cycle", currentCycleLabel(circle.cycles));
@@ -1932,7 +2221,7 @@ function openContributionDetail(contributionId) {
   if (!item) return;
 
   setText("contribution-detail-member", item.full_name || "Member");
-  setText("contribution-detail-amount", formatNaira(item.amount));
+  setText("contribution-detail-amount", formatAmount(item.amount, currencyForCircleId(item.circle_id)));
   setText("contribution-detail-date", formatActivityDate(item.payment_date));
   const statusEl = document.getElementById("contribution-detail-status");
   statusEl.textContent = item.status;
@@ -1951,7 +2240,7 @@ function openPayoutDetail(payoutId) {
   const member = mockCircleMembers.find((m) => m.circle_member_id === item.circle_member_id);
 
   setText("payout-detail-recipient", item.full_name || "Member");
-  setText("payout-detail-amount", formatNaira(item.amount));
+  setText("payout-detail-amount", formatAmount(item.amount, currencyForCircleId(item.circle_id)));
   setText("payout-detail-date", formatActivityDate(item.payout_date));
   const statusEl = document.getElementById("payout-detail-status");
   statusEl.textContent = item.status;
@@ -1974,7 +2263,7 @@ function renderContributionsHistoryPage(circleId) {
   setText("contributions-history-back-label", circle.name);
   setText("contributions-history-subtitle", `Every contribution recorded for ${circle.name}`);
   const sorted = [...circle.contributions].sort((a, b) => new Date(b.payment_date || 0) - new Date(a.payment_date || 0));
-  renderActivityRowsInto("contributions-history-list", sorted, "contribution");
+  renderActivityRowsInto("contributions-history-list", sorted, "contribution", circle.currency);
 }
 
 function renderPayoutsHistoryPage(circleId) {
@@ -1983,7 +2272,7 @@ function renderPayoutsHistoryPage(circleId) {
   setText("payouts-history-back-label", circle.name);
   setText("payouts-history-subtitle", `Every payout recorded for ${circle.name}`);
   const sorted = [...circle.payouts].sort((a, b) => new Date(b.payout_date || 0) - new Date(a.payout_date || 0));
-  renderActivityRowsInto("payouts-history-list", sorted, "payout");
+  renderActivityRowsInto("payouts-history-list", sorted, "payout", circle.currency);
 }
 
 /* ==========================================================
@@ -2006,7 +2295,7 @@ function openCycleDetailSheet(cycleId) {
 
   const paidEl = document.getElementById("cycle-detail-paid");
   const unpaidEl = document.getElementById("cycle-detail-unpaid");
-  paidEl.innerHTML = paid.length ? paid.map((m) => `<div class="mini-row"><span>${m.name}</span><span class="member-status confirmed">${formatNaira(circle.amount)}</span></div>`).join("") : `<div class="empty-state compact"><i class="fa-regular fa-circle-check"></i><p>No members have paid yet.</p></div>`;
+  paidEl.innerHTML = paid.length ? paid.map((m) => `<div class="mini-row"><span>${m.name}</span><span class="member-status confirmed">${formatAmount(circle.amount, circle.currency)}</span></div>`).join("") : `<div class="empty-state compact"><i class="fa-regular fa-circle-check"></i><p>No members have paid yet.</p></div>`;
   unpaidEl.innerHTML = unpaid.length ? unpaid.map((m) => `<div class="mini-row"><span>${m.name}</span><span class="member-status pending">Not paid</span></div>`).join("") : `<div class="empty-state compact"><i class="fa-regular fa-circle-check"></i><p>Everyone has paid.</p></div>`;
 
   openModal("cycle-detail-overlay");
@@ -2143,7 +2432,7 @@ function renderCircleInsights(circle) {
   } else {
     const expected = circle.amount * circle.membersJoined;
     const confirmedThisCycle = circle.contributions.filter((c) => c.status === "confirmed").reduce((t, c) => t + Number(c.amount), 0);
-    contributionLine = `${formatNaira(confirmedThisCycle)} confirmed of ${formatNaira(expected)} expected this cycle`;
+    contributionLine = `${formatAmount(confirmedThisCycle, circle.currency)} confirmed of ${formatAmount(expected, circle.currency)} expected this cycle`;
     const contributedMembers = new Set(circle.contributions.filter((c) => c.status === "confirmed").map((c) => c.user_id)).size;
     participationLine = `${contributedMembers} of ${circle.membersJoined} member${circle.membersJoined === 1 ? "" : "s"} have contributed this cycle`;
   }
@@ -2302,24 +2591,30 @@ function populateFilterSheet() {
 function initializeWizard() {
   document.getElementById("wizard-back")?.addEventListener("click", (e) => { e.preventDefault(); closeWizard(); });
   document.getElementById("wizard-close")?.addEventListener("click", () => closeWizard());
-  document.getElementById("open-create-circle")?.addEventListener("click", () => openModal("select-circle-type-overlay"));
-  document.querySelectorAll(".action[data-action='create-circle']").forEach((el) => el.addEventListener("click", () => openModal("select-circle-type-overlay")));
-  document.querySelector(".add-money")?.addEventListener("click", () => openModal("select-circle-type-overlay"));
+  document.getElementById("open-create-circle")?.addEventListener("click", () => enterWizard());
+  document.querySelectorAll(".action[data-action='create-circle']").forEach((el) => el.addEventListener("click", () => enterWizard()));
+  document.querySelector(".add-money")?.addEventListener("click", () => enterWizard());
 
-  document.getElementById("step1-next")?.addEventListener("click", validateStep1);
   document.getElementById("step2-back")?.addEventListener("click", () => goToWizardStep(1));
   document.getElementById("step2-next")?.addEventListener("click", validateStep2);
   document.getElementById("step3-back")?.addEventListener("click", () => goToWizardStep(2));
-  document.getElementById("step3-next")?.addEventListener("click", () => { populateStep4(); goToWizardStep(4); });
+  document.getElementById("step3-next")?.addEventListener("click", validateStep3);
   document.getElementById("step4-back")?.addEventListener("click", () => goToWizardStep(3));
-  document.getElementById("step4-next")?.addEventListener("click", () => { populateStep5(); openModal("confirm-create-overlay"); });
-  document.getElementById("confirm-back-btn")?.addEventListener("click", () => closeModal("confirm-create-overlay"));
-  document.getElementById("confirm-create-btn")?.addEventListener("click", createPendingCircle);
+  document.getElementById("step4-next")?.addEventListener("click", validateStep4);
+  document.getElementById("step5-back")?.addEventListener("click", () => goToWizardStep(4));
+  document.getElementById("step5-next")?.addEventListener("click", validateStep5);
+  document.getElementById("step6-back")?.addEventListener("click", () => goToWizardStep(5));
+  document.getElementById("step6-create")?.addEventListener("click", createPendingCircle);
 
   document.getElementById("view-created-circle")?.addEventListener("click", () => { closeWizard(); if (createdCircleId) openCircleDetail(createdCircleId); });
   document.getElementById("close-success")?.addEventListener("click", () => { closeWizard(); switchPage("circles"); });
   document.getElementById("share-circle-btn")?.addEventListener("click", () => showToast("Share link copied (prototype — no real link).", "fa-solid fa-share-nodes"));
   document.getElementById("download-circle-btn")?.addEventListener("click", downloadCircleReceipt);
+
+  initializeWizardStep1();
+  initializeWizardStep3Currency();
+  initializeWizardStep4Start();
+  initializeWizardStep5Payment();
 }
 
 function enterWizard() {
@@ -2332,7 +2627,7 @@ function closeWizard() { switchPage("circles"); }
 function renderWizardSteps() {
   const wrap = document.getElementById("wizard-steps");
   if (!wrap) return;
-  wrap.innerHTML = Array.from({ length: 5 }).map((_, i) => `<span class="seg ${i < wizardStep ? "done" : i === wizardStep - 1 ? "current" : ""}"></span>`).join("");
+  wrap.innerHTML = Array.from({ length: 6 }).map((_, i) => `<span class="seg ${i < wizardStep ? "done" : i === wizardStep - 1 ? "current" : ""}"></span>`).join("");
 }
 
 function goToWizardStep(step) {
@@ -2344,7 +2639,18 @@ function goToWizardStep(step) {
   document.querySelector(".wizard-shell")?.scrollIntoView({ block: "start" });
 }
 
-function validateStep1() {
+/* ---- Step 1: Program Type — selecting a card advances immediately,
+   same interaction as the prior pre-wizard type sheet it replaces. ---- */
+function initializeWizardStep1() {
+  document.getElementById("type-rotational")?.addEventListener("click", () => {
+    pendingCircle = { programType: "Rotational Savings" };
+    goToWizardStep(2);
+  });
+  document.querySelectorAll("#page-create-circle .type-card.disabled").forEach((card) => card.addEventListener("click", () => showToast("Coming soon.", "fa-solid fa-hourglass-half")));
+}
+
+/* ---- Step 2: Circle Details ---- */
+function validateStep2() {
   const name = document.getElementById("circle-name").value.trim();
   const membersField = document.getElementById("circle-members");
   const membersTarget = Number(membersField.value.replace(/\D/g, ""));
@@ -2352,89 +2658,270 @@ function validateStep1() {
   document.getElementById("member-warning").textContent = "";
   if (!name) { document.getElementById("name-warning").textContent = "Circle name is required."; return; }
   if (!membersTarget || membersTarget < 5 || membersTarget > 300) { document.getElementById("member-warning").textContent = "Enter a number between 5 and 300."; return; }
-  pendingCircle = { name, membersTarget };
-  goToWizardStep(2);
-}
-
-function validateStep2() {
-  const amountField = document.getElementById("circle-amount");
-  const amount = Number(amountField.value.replace(/,/g, ""));
-  const frequency = document.getElementById("circle-frequency").value;
-  const payoutFrequency = document.getElementById("payout-frequency").value;
-  const startDate = document.getElementById("circle-start-date").value;
-  document.getElementById("amount-warning").textContent = "";
-  if (!amount || amount < 2000 || amount > 10000000) { document.getElementById("amount-warning").textContent = "Enter an amount between ₦2,000 and ₦10,000,000."; return; }
-  if (frequency === "Monthly" && payoutFrequency === "Weekly") { showToast("Monthly contributions cannot have weekly payouts.", "fa-solid fa-triangle-exclamation"); return; }
-
-  pendingCircle = { ...pendingCircle, amount, frequency, payoutFrequency, startDate };
-  populateStep3();
+  pendingCircle = { ...pendingCircle, name, membersTarget };
   goToWizardStep(3);
 }
 
-function populateStep3() {
-  const { name, membersTarget, amount, frequency, payoutFrequency, startDate } = pendingCircle;
-  const schedule = buildPayoutSchedule(frequency, payoutFrequency, startDate, membersTarget);
-  const firstPeriod = schedule.periods[0];
-  const lastPeriod = schedule.periods[schedule.periods.length - 1];
-  const payoutPool = amount * membersTarget * firstPeriod.instalments;
-  const totalInstalments = schedule.periods.reduce((s, p) => s + p.instalments, 0);
-  pendingCircle.schedule = { firstPeriod, lastPeriod, payoutPool, totalInstalments };
-
-  setText("review-pool", formatNaira(payoutPool));
-  setText("review-pool-breakdown", `Based on ${membersTarget} members × ${formatNaira(amount)}`);
-  setText("review-circle-type", "Rotational Savings");
-  setText("review-name", name);
-  setText("review-contribution", formatNaira(amount));
-  setText("review-frequency", frequency);
-  setText("review-payout-frequency", payoutFrequency);
-  setText("review-members", membersTarget);
-  setText("review-start-date", new Date(startDate).toLocaleDateString("en-NG", { day: "numeric", month: "long", year: "numeric" }));
-  setText("review-first-payout", firstPeriod.payoutDate.toLocaleDateString("en-NG", { day: "numeric", month: "long", year: "numeric" }));
-  setText("review-end-date", lastPeriod.payoutDate.toLocaleDateString("en-NG", { day: "numeric", month: "long", year: "numeric" }));
-  const durationUnit = payoutFrequency === "Weekly" ? "Week" : "Month";
-  setText("review-duration", `${membersTarget} ${durationUnit}${membersTarget === 1 ? "" : "s"}`);
+/* ---- Step 3: Contribution Rules — PRODUCT RULE: one Circle = one
+   currency/asset, chosen here and never changed or converted later. ---- */
+function initializeWizardStep3Currency() {
+  document.getElementById("circle-currency")?.addEventListener("change", updateAmountHint);
+  updateAmountHint();
+}
+function updateAmountHint() {
+  const select = document.getElementById("circle-currency");
+  const hint = document.getElementById("amount-hint");
+  if (!select || !hint) return;
+  const meta = currencyMeta(select.value);
+  hint.textContent = `Minimum ${formatAmount(meta.minAmount, select.value)} · Maximum ${formatAmount(meta.maxAmount, select.value)}`;
 }
 
-function populateStep4() {
-  setText("review-bank-name", organizerAccount.bankName);
-  setText("review-account-name", organizerAccount.accountName);
-  setText("review-account-number", organizerAccount.accountNumber);
-  const { amount, membersTarget, frequency } = pendingCircle;
-  const days = frequency === "Daily" ? 1 : frequency === "Weekly" ? 7 : 30;
-  setText("wizard-insight-days", `${days} day${days === 1 ? "" : "s"}`);
-  setText("wizard-insight-amount", formatNaira(amount * membersTarget));
-  setText("wizard-insight-note", `${membersTarget} members contributing ${formatNaira(amount)} every ${days} day${days === 1 ? "" : "s"} — actual totals depend on who has paid.`);
+function validateStep3() {
+  const currency = document.getElementById("circle-currency").value;
+  const amount = Number(document.getElementById("circle-amount").value.replace(/,/g, ""));
+  const frequency = document.getElementById("circle-frequency").value;
+  const meta = currencyMeta(currency);
+  const warning = document.getElementById("amount-warning");
+  warning.textContent = "";
+  if (!amount || amount < meta.minAmount || amount > meta.maxAmount) {
+    warning.textContent = `Enter an amount between ${formatAmount(meta.minAmount, currency)} and ${formatAmount(meta.maxAmount, currency)}.`;
+    return;
+  }
+  pendingCircle = { ...pendingCircle, currency, amount, frequency };
+  goToWizardStep(4);
+}
+
+/* ---- Step 4: Circle Start — Circle creation and Cycle activation are
+   deliberately separate: choosing "manually" still creates the Circle
+   now, just without a Start Date yet. ---- */
+function initializeWizardStep4Start() {
+  const dateOption = document.getElementById("start-option-date");
+  const manualOption = document.getElementById("start-option-manual");
+  const dateField = document.getElementById("start-date-field");
+  if (!dateOption || !manualOption) return;
+  function selectStartMode(mode) {
+    pendingCircle = { ...pendingCircle, startMode: mode };
+    dateOption.classList.toggle("selected", mode === "date");
+    manualOption.classList.toggle("selected", mode === "manual");
+    if (dateField) dateField.hidden = mode !== "date";
+    document.getElementById("start-warning").textContent = "";
+  }
+  dateOption.addEventListener("click", () => selectStartMode("date"));
+  manualOption.addEventListener("click", () => selectStartMode("manual"));
+}
+
+function validateStep4() {
+  const warning = document.getElementById("start-warning");
+  warning.textContent = "";
+  if (!pendingCircle.startMode) { warning.textContent = "Choose how this circle should start."; return; }
+  if (pendingCircle.startMode === "date") {
+    const startDate = document.getElementById("circle-start-date").value;
+    if (!startDate) { warning.textContent = "Choose a start date."; return; }
+    pendingCircle = { ...pendingCircle, startDate };
+  } else {
+    pendingCircle = { ...pendingCircle, startDate: null };
+  }
+  populateStep5();
+  goToWizardStep(5);
+}
+
+/* ---- Step 5: Payment Details — ORGANIZER-provided destination, never
+   a KUNTRIBUTE account. Field set depends on the Circle's own currency
+   (set in Step 3), matching PRODUCT RULE 5. ---- */
+const PAYMENT_DETAIL_FIELDS = {
+  NGN: [
+    { key: "institution", label: "Institution", placeholder: "e.g. Guaranty Trust Bank" },
+    { key: "accountName", label: "Account Name", placeholder: "e.g. Aminah Yusuf" },
+    { key: "accountNumber", label: "Account Number", placeholder: "e.g. 0123456789" },
+  ],
+  USD: [
+    { key: "country", label: "Country", placeholder: "e.g. United States" },
+    { key: "institution", label: "Institution", placeholder: "e.g. Chase Bank" },
+    { key: "accountName", label: "Account Name", placeholder: "e.g. Aminah Yusuf" },
+    { key: "accountNumber", label: "Account Number", placeholder: "e.g. 000123456789" },
+  ],
+  USDT: [
+    { key: "asset", label: "Asset", placeholder: "Tether USD (USDT)" },
+    { key: "network", label: "Network", placeholder: "e.g. TRON (TRC-20)" },
+    { key: "walletAddress", label: "Wallet Address", placeholder: "e.g. TXn3k4…pQ8F2" },
+  ],
+};
+function defaultPaymentAccountFor(currency) {
+  return mockPaymentAccounts.find((a) => a.currency === currency && a.isDefault) || mockPaymentAccounts.find((a) => a.currency === currency) || null;
+}
+function maskAccountNumber(number) {
+  const str = String(number || "");
+  return str.length > 4 ? `•••••${str.slice(-4)}` : (str || "Unavailable");
+}
+function maskMiddle(address) {
+  const str = String(address || "");
+  return str.length > 10 ? `${str.slice(0, 4)}…${str.slice(-4)}` : (str || "Unavailable");
+}
+function paymentAccountCardHTML(account) {
+  const badge = account.isDefault ? '<span class="badge-status" style="background:rgba(34,197,94,.14);color:var(--green);">Default</span>' : "";
+  return account.currency === "USDT"
+    ? `<div class="payment-account-card"><div class="payment-account-card-top"><strong>${account.asset || "Tether USD (USDT)"}</strong>${badge}</div><p>${account.network}</p><p>${maskMiddle(account.walletAddress)}</p></div>`
+    : `<div class="payment-account-card"><div class="payment-account-card-top"><strong>${account.institution}</strong>${badge}</div><p>${account.accountName}</p><p>${maskAccountNumber(account.accountNumber)}</p></div>`;
+}
+function paymentAccountSummaryLine(account) {
+  if (!account) return "Not set";
+  return account.currency === "USDT" ? `${account.network} · ${maskMiddle(account.walletAddress)}` : `${account.institution} · ${maskAccountNumber(account.accountNumber)}`;
+}
+function summarizeCustomPaymentDetails(details, currency) {
+  if (!details) return "Not set";
+  return currency === "USDT" ? `${details.network || "—"} · ${maskMiddle(details.walletAddress)}` : `${details.institution || "—"} · ${maskAccountNumber(details.accountNumber)}`;
+}
+
+function renderPaymentDefaultPreview() {
+  const container = document.getElementById("payment-default-preview");
+  if (!container) return;
+  const account = defaultPaymentAccountFor(pendingCircle.currency);
+  container.innerHTML = account ? paymentAccountCardHTML(account) : `<p class="payment-account-empty">No default ${pendingCircle.currency} payment account yet. Add one in Me → Payment Accounts, or use a custom destination for this Circle.</p>`;
+}
+function renderPaymentCustomFields() {
+  const container = document.getElementById("payment-custom-fields");
+  if (!container) return;
+  const fields = PAYMENT_DETAIL_FIELDS[pendingCircle.currency] || PAYMENT_DETAIL_FIELDS.NGN;
+  const existing = pendingCircle.paymentDetails || {};
+  container.innerHTML = fields.map((f) => `<label class="form-field"><span>${f.label}</span><input type="text" data-payment-field="${f.key}" placeholder="${f.placeholder}" value="${existing[f.key] || ""}" /></label>`).join("");
+}
+
+function initializeWizardStep5Payment() {
+  const segmented = document.getElementById("payment-mode-segmented");
+  if (!segmented) return;
+  segmented.querySelectorAll("button[data-mode]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      segmented.querySelectorAll("button").forEach((b) => b.classList.toggle("active", b === btn));
+      pendingCircle.paymentMode = btn.dataset.mode;
+      document.getElementById("payment-default-preview").hidden = btn.dataset.mode !== "default";
+      document.getElementById("payment-custom-fields").hidden = btn.dataset.mode !== "custom";
+      if (btn.dataset.mode === "default") renderPaymentDefaultPreview(); else renderPaymentCustomFields();
+      document.getElementById("payment-warning").textContent = "";
+    });
+  });
 }
 
 function populateStep5() {
-  setText("confirm-summary-line", `"${pendingCircle.name}" — ${pendingCircle.membersTarget} members × ${formatNaira(pendingCircle.amount)} ${pendingCircle.frequency.toLowerCase()}. Member setup and payout scheduling are not created at this step.`);
+  pendingCircle.paymentMode = pendingCircle.paymentMode || "default";
+  document.getElementById("payment-mode-segmented")?.querySelectorAll("button").forEach((b) => b.classList.toggle("active", b.dataset.mode === pendingCircle.paymentMode));
+  document.getElementById("payment-default-preview").hidden = pendingCircle.paymentMode !== "default";
+  document.getElementById("payment-custom-fields").hidden = pendingCircle.paymentMode !== "custom";
+  renderPaymentDefaultPreview();
+  renderPaymentCustomFields();
+  const checkbox = document.getElementById("payment-confirm-checkbox");
+  if (checkbox) checkbox.checked = Boolean(pendingCircle.paymentConfirmed);
+  document.getElementById("payment-warning").textContent = "";
+}
+
+function validateStep5() {
+  const warning = document.getElementById("payment-warning");
+  warning.textContent = "";
+  if (pendingCircle.paymentMode === "custom") {
+    const inputs = document.querySelectorAll("#payment-custom-fields [data-payment-field]");
+    const details = {};
+    let missing = false;
+    inputs.forEach((input) => { details[input.dataset.paymentField] = input.value.trim(); if (!input.value.trim()) missing = true; });
+    if (missing) { warning.textContent = "Fill in every payment detail field."; return; }
+    pendingCircle.paymentDetails = details;
+  } else {
+    if (!defaultPaymentAccountFor(pendingCircle.currency)) { warning.textContent = `No default ${pendingCircle.currency} payment account exists yet — switch to "Use Custom", or add one in Payment Accounts first.`; return; }
+    pendingCircle.paymentDetails = null;
+  }
+  if (!document.getElementById("payment-confirm-checkbox")?.checked) { warning.textContent = "Please confirm these are the correct payment details before continuing."; return; }
+  pendingCircle.paymentConfirmed = true;
+  populateStep6();
+  goToWizardStep(6);
+}
+
+/* ---- Step 6: Review — folds the old separate confirmation modal into
+   this step's own submit button (one fewer modal hop). ---- */
+function populateStep6() {
+  const { programType, name, membersTarget, currency, amount, frequency, startMode, startDate } = pendingCircle;
+  setText("review-circle-type", programType);
+  setText("review-name", name);
+  setText("review-members", membersTarget);
+  setText("review-currency", `${currencyMeta(currency).label} (${currency})`);
+  setText("review-contribution", formatAmount(amount, currency));
+  setText("review-frequency", frequency);
+  setText("review-start-mode", startMode === "manual" ? "Manual — you'll start it yourself" : new Date(startDate).toLocaleDateString("en-NG", { day: "numeric", month: "long", year: "numeric" }));
+  setText("review-payment-summary", pendingCircle.paymentMode === "default" ? paymentAccountSummaryLine(defaultPaymentAccountFor(currency)) : summarizeCustomPaymentDetails(pendingCircle.paymentDetails, currency));
+
+  const days = frequency === "Daily" ? 1 : frequency === "Weekly" ? 7 : 30;
+  setText("wizard-insight-days", `${days} day${days === 1 ? "" : "s"}`);
+  setText("wizard-insight-amount", formatAmount(amount * membersTarget, currency));
+  setText("wizard-insight-note", `${membersTarget} members contributing ${formatAmount(amount, currency)} every ${days} day${days === 1 ? "" : "s"} — actual totals depend on who has paid.`);
+
+  renderProjectedSchedule();
+  document.getElementById("create-circle-error").textContent = "";
+}
+
+// PROJECTED only — never implies a real backend schedule (see the
+// field-hint under the list). One cycle per contribution period,
+// payout cadence == contribution cadence (the classic Ajo/Esusu
+// model) — buildPayoutSchedule/addMonthsClamped below are unchanged
+// from production, just always called with matching frequencies.
+function renderProjectedSchedule() {
+  const container = document.getElementById("projected-schedule-list");
+  if (!container) return;
+  const { frequency, startMode, startDate, membersTarget } = pendingCircle;
+  const anchor = startMode === "manual" ? TODAY : new Date(startDate);
+  const schedule = buildPayoutSchedule(frequency, frequency, anchor.toISOString().slice(0, 10), membersTarget);
+  pendingCircle.schedule = schedule;
+  const rows = schedule.periods.map((p, i) => ({ n: i + 1, date: p.payoutDate }));
+  const visible = rows.length > 5 ? [...rows.slice(0, 3), null, rows[rows.length - 1]] : rows;
+  container.innerHTML = visible.map((row) => row
+    ? `<div class="projected-schedule-row"><span>Cycle ${row.n}</span><span>${row.date.toLocaleDateString("en-NG", { day: "numeric", month: "short" })}</span></div>`
+    : `<div class="projected-schedule-row ellipsis">⋯</div>`
+  ).join("");
+}
+
+/* ---- Step 7: Circle Created — three possible outcomes, computed from
+   the Circle Start step, never chosen directly (PRODUCT RULE 13). ---- */
+function computeInitialStatus(startMode, startDate) {
+  if (startMode === "manual") return "setup";
+  return new Date(startDate) <= TODAY ? "active" : "scheduled";
 }
 
 function createPendingCircle() {
   const circle_id = nextMockCircleId++;
+  const status = computeInitialStatus(pendingCircle.startMode, pendingCircle.startDate);
   mockCircles.push({
     circle_id, organizer_user_id: organizerUserId, circle_name: pendingCircle.name,
-    contribution_amount: pendingCircle.amount, frequency: pendingCircle.frequency, start_date: pendingCircle.startDate, status: "active",
+    contribution_amount: pendingCircle.amount, currency: pendingCircle.currency, frequency: pendingCircle.frequency,
+    start_date: pendingCircle.startMode === "manual" ? null : pendingCircle.startDate,
+    status, program_type: pendingCircle.programType,
   });
   createdCircleId = circle_id;
   loadDashboardData();
+
+  const statusCopy = {
+    active: { icon: "fa-check", title: "Circle created and active", pillClass: "status-active", pillText: "Active" },
+    scheduled: { icon: "fa-calendar-check", title: "Circle created — scheduled to start", pillClass: "status-scheduled", pillText: "Scheduled" },
+    setup: { icon: "fa-user-clock", title: "Circle created — setup / recruiting", pillClass: "status-setup", pillText: "Setup / Recruiting" },
+  }[status];
+  const iconEl = document.getElementById("success-icon");
+  if (iconEl) iconEl.innerHTML = `<i class="fa-solid ${statusCopy.icon}"></i>`;
+  setText("success-title", statusCopy.title);
+  const pill = document.getElementById("success-status-pill");
+  if (pill) { pill.className = "cd-status " + statusCopy.pillClass; pill.textContent = statusCopy.pillText; }
   setText("success-circle-name", `"${pendingCircle.name}" was saved successfully.`);
   const inviteCode = "c" + circle_id + Math.random().toString(36).slice(2, 6);
   setText("success-invite-link", `https://kuntribute.com/join/${inviteCode}`);
-  closeModal("confirm-create-overlay");
-  goToWizardStep(6);
+  goToWizardStep(7);
 }
 
 function downloadCircleReceipt() {
   const circle = mockCircles.find((c) => c.circle_id === createdCircleId) || pendingCircle;
+  const currency = circle.currency || pendingCircle.currency;
   const lines = [
     "KUNTRIBUTE — Circle Summary (Prototype)",
     "=========================================",
     `Circle Name: ${circle.circle_name || circle.name}`,
-    `Type: Rotational Savings`,
-    `Contribution: ${formatNaira(circle.contribution_amount || pendingCircle.amount)}`,
+    `Type: ${circle.program_type || pendingCircle.programType}`,
+    `Currency / Asset: ${currency}`,
+    `Contribution: ${formatAmount(circle.contribution_amount ?? pendingCircle.amount, currency)}`,
     `Frequency: ${circle.frequency || pendingCircle.frequency}`,
-    `Start Date: ${circle.start_date || pendingCircle.startDate}`,
+    `Start: ${circle.start_date || (pendingCircle.startMode === "manual" ? "Manual — not started yet" : pendingCircle.startDate)}`,
     "",
     "This is a prototype document generated locally. No real financial",
     "transactions or account data are represented.",
@@ -2449,6 +2936,59 @@ function downloadCircleReceipt() {
   a.remove();
   URL.revokeObjectURL(url);
   showToast("Circle summary downloaded.", "fa-solid fa-download");
+}
+
+/* ==========================================================
+   PAYMENT ACCOUNTS (Me -> Settings concept) — mock UI only, grouped by
+   currency/asset. The wizard's Payment Details "Use Default" option
+   reads from this same list rather than duplicating it.
+========================================================== */
+function renderPaymentAccountsBody() {
+  const container = document.getElementById("payment-accounts-body");
+  if (!container) return;
+  container.innerHTML = ["NGN", "USD", "USDT"].map((code) => {
+    const accounts = mockPaymentAccounts.filter((a) => a.currency === code);
+    const cards = accounts.length ? accounts.map(paymentAccountCardHTML).join("") : `<p class="payment-account-empty">No ${code} payment account yet.</p>`;
+    return `<div class="payment-account-group"><p class="payment-account-currency-label">${code}</p>${cards}</div>`;
+  }).join("");
+}
+
+function initializePaymentAccounts() {
+  document.getElementById("me-payment-accounts-row")?.addEventListener("click", () => { renderPaymentAccountsBody(); openModal("payment-accounts-overlay"); });
+  document.getElementById("close-payment-accounts")?.addEventListener("click", () => closeModal("payment-accounts-overlay"));
+  document.getElementById("add-payment-account-btn")?.addEventListener("click", () => showToast("Adding a new payment account is planned for a future release.", "fa-solid fa-hourglass-half"));
+}
+
+/* ==========================================================
+   REGION & CURRENCY (account preference concept) — mock UI only. A
+   DEFAULT/PERSONALIZATION layer: changes what the dashboard opens on,
+   never which currency a Circle can use (PRODUCT RULE 2).
+========================================================== */
+function renderRegionPreferenceSummary() {
+  setText("me-region-currency-summary", `${organizerPreference.country} · Preferred: ${organizerPreference.preferredCurrency}`);
+}
+
+function initializeRegionPreference() {
+  renderRegionPreferenceSummary();
+  document.getElementById("me-region-currency-row")?.addEventListener("click", () => {
+    const countryField = document.getElementById("preference-country");
+    const currencyField = document.getElementById("preference-currency");
+    if (countryField) countryField.value = organizerPreference.country;
+    if (currencyField) currencyField.value = organizerPreference.preferredCurrency;
+    openModal("region-currency-overlay");
+  });
+  document.getElementById("close-region-currency")?.addEventListener("click", () => closeModal("region-currency-overlay"));
+  document.getElementById("save-region-currency")?.addEventListener("click", () => {
+    organizerPreference = {
+      country: document.getElementById("preference-country").value,
+      preferredCurrency: document.getElementById("preference-currency").value,
+    };
+    renderRegionPreferenceSummary();
+    dashboardCurrency = organizerPreference.preferredCurrency;
+    loadDashboardData();
+    closeModal("region-currency-overlay");
+    showToast("Preference saved (prototype only).", "fa-solid fa-earth-africa");
+  });
 }
 
 /* Payout schedule math (unchanged from production — verified logic) */
@@ -2489,19 +3029,11 @@ function closeModal(id) { document.getElementById(id)?.classList.remove("show");
 
 function initializeModals() {
   document.getElementById("close-manage-circle")?.addEventListener("click", () => closeModal("manage-circle-overlay"));
-  document.getElementById("close-confirm-create")?.addEventListener("click", () => closeModal("confirm-create-overlay"));
   // Every modal-overlay closes on backdrop click — one rule for the whole set,
   // so new sheets don't need their own wiring.
   document.querySelectorAll(".modal-overlay").forEach((overlay) => {
     overlay.addEventListener("click", (e) => { if (e.target === overlay) closeModal(overlay.id); });
   });
-}
-
-function initializeCircleTypeSelect() {
-  const typeRotational = document.getElementById("type-rotational");
-  if (typeRotational) typeRotational.addEventListener("click", () => { closeModal("select-circle-type-overlay"); enterWizard(); });
-  document.getElementById("close-select-type")?.addEventListener("click", () => closeModal("select-circle-type-overlay"));
-  document.querySelectorAll(".type-card.disabled").forEach((card) => card.addEventListener("click", () => showToast("Coming soon.", "fa-solid fa-hourglass-half")));
 }
 
 function initializeStartDate() {
@@ -2515,14 +3047,16 @@ function initializeStartDate() {
 function initializeBalanceToggle() {
   const toggleBtn = document.querySelector(".toggle-balance");
   const balanceEl = document.getElementById("wallet-balance");
+  const partitionedEl = document.getElementById("wallet-balance-partitioned");
   const todayEl = document.getElementById("today-contributions");
   if (!toggleBtn || !balanceEl) return;
-  const maskedValue = "₦ • • • • • •";
+  const maskedValue = "• • • • • •";
   let hidden = false;
   toggleBtn.addEventListener("click", () => {
     hidden = !hidden;
     if (hidden) {
       balanceEl.textContent = maskedValue;
+      if (partitionedEl) partitionedEl.querySelectorAll(".currency-partition-row strong").forEach((el) => { el.textContent = maskedValue; });
       if (todayEl) todayEl.textContent = maskedValue;
     } else {
       renderTotalContributionsValue();
@@ -2557,7 +3091,8 @@ function initializeAmountFormatting() {
     let value = input.value.replace(/\D/g, "");
     if (value === "") { input.value = ""; return; }
     let number = parseInt(value);
-    if (number > 10000000) number = 10000000;
+    const maxAmount = currencyMeta(document.getElementById("circle-currency")?.value).maxAmount;
+    if (number > maxAmount) number = maxAmount;
     input.value = number.toLocaleString("en-NG");
   });
 }
