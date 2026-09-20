@@ -142,10 +142,11 @@ button { font-family:inherit; }
 .contrib-strip strong { color:var(--green); }
 
 .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:28px; }
-/* Mobile-only alternate presentation of the same four metrics as one
-   compact side-by-side strip (see the "FIXED MOBILE APP SHELL" media
-   query for the ≤992px swap). Desktop grid above is untouched. */
-.stats-mobile-compact { display:none; }
+/* Mobile-only compact quick metrics (Active Circles / Members /
+   Pending) — see the "FIXED MOBILE APP SHELL" media query for the
+   ≤992px swap and full .quick-metric-unit styling. Desktop's .stats
+   grid above is untouched. */
+.quick-metrics-mobile { display:none; }
 .stat-card { background:var(--card); border:1px solid var(--border); padding:18px 14px; border-radius:16px; }
 /* Neutral icon badge (not colored per-metric) so the green number
    stays the only accent — quieter than a green badge on every card. */
@@ -375,15 +376,16 @@ button { font-family:inherit; }
   /* Quick Actions is a desktop convenience; mobile already has the
      bottom nav + per-page primary actions, so it stays out of the way. */
   .quick-actions-section { display:none; }
-  /* Quick metrics: boxed 2x2 grid on desktop, one compact side-by-side
-     strip on mobile — same data, same order, no section heading. */
+  /* Quick metrics: boxed 2x2 grid on desktop; three compact,
+     self-contained icon units on mobile (Active Circles / Members /
+     Pending) — same rounded-square-icon-above-label language as the
+     Member interface's quick-action row, not a card. */
   .stats { display:none; }
-  .stats-mobile-compact { display:flex; background:var(--card); border:1px solid var(--border); border-radius:16px; margin-bottom:28px; overflow:hidden; }
-  .stats-mobile-cell { flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; text-align:center; gap:6px; padding:16px 6px; border-left:1px solid var(--border); }
-  .stats-mobile-cell:first-child { border-left:0; }
-  .stats-mobile-icon { width:28px; height:28px; border-radius:9px; background:var(--card2); color:var(--muted); display:grid; place-items:center; font-size:12px; }
-  .stats-mobile-cell h4 { font-size:1.05rem; color:var(--green); }
-  .stats-mobile-cell p { font-size:.6rem; color:var(--muted); line-height:1.25; }
+  .quick-metrics-mobile { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:28px; }
+  .quick-metric-unit { display:flex; flex-direction:column; align-items:center; text-align:center; gap:7px; min-width:0; }
+  .quick-metric-icon { width:40px; height:40px; border-radius:13px; background:var(--card); border:1px solid var(--border); color:var(--muted); display:grid; place-items:center; font-size:15px; flex-shrink:0; }
+  .quick-metric-unit h4 { font-size:1.05rem; color:var(--green); }
+  .quick-metric-unit p { font-size:.68rem; color:var(--muted); line-height:1.25; }
   .topbar-user { display:none; }
 }
 .sidebar-head { display:none; }
@@ -576,22 +578,41 @@ button { font-family:inherit; }
 
 /* ==========================================================
    CURRENCY-AWARE DASHBOARD — see PRODUCT RULE: one Circle = one
-   currency/asset; "All Currencies" is partitioned visibility, never
-   a converted total. Currency's own symbol/suffix (₦ / $ / " USDT")
-   is treated as sufficient labeling on its own — no extra badges.
+   currency/asset. The Total Contributions figure always belongs to
+   exactly one currency context at a time — never a converted or
+   combined total. Currency's own symbol/suffix (₦ / $ / " USDT") is
+   treated as sufficient labeling on its own — no extra badges.
+   The currency/"Account Type" selector itself lives inside the Total
+   Contributions info panel (see #total-contributions-overlay), not in
+   the card header — .currency-select-wrap/.currency-select below are
+   reused there.
 ========================================================== */
-.wallet-context-row { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:2px; }
-.wallet-context-row .wallet-context { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-top:0; }
-.currency-select-wrap { position:relative; flex-shrink:0; }
-.currency-select { appearance:none; -webkit-appearance:none; background:var(--card2); border:1px solid var(--border); color:var(--text); font-weight:700; font-size:.74rem; font-family:inherit; padding:6px 26px 6px 12px; border-radius:999px; cursor:pointer; }
+.currency-select-wrap { position:relative; flex-shrink:0; max-width:62%; }
+.currency-select { appearance:none; -webkit-appearance:none; background:var(--card2); border:1px solid var(--border); color:var(--text); font-weight:700; font-size:.74rem; font-family:inherit; padding:6px 26px 6px 12px; border-radius:999px; cursor:pointer; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .currency-select:focus { outline:none; border-color:var(--green); }
 .currency-select-wrap::after { content:"\f078"; font-family:"Font Awesome 6 Free"; font-weight:900; font-size:.55rem; color:var(--muted); position:absolute; right:11px; top:50%; transform:translateY(-50%); pointer-events:none; }
 
-.wallet-balance-row.partitioned { align-items:flex-start; }
-.currency-partition-list { display:flex; flex-direction:column; gap:7px; min-width:0; flex:1; }
-.currency-partition-row { display:flex; align-items:baseline; gap:10px; min-width:0; }
-.currency-partition-row .currency-tag { font-size:.66rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; width:36px; flex-shrink:0; }
-.currency-partition-row strong { font-size:clamp(15px,5vw,20px); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+/* Mobile Total Contributions header hierarchy: the figure stays
+   dominant (untouched, see .wallet-balance-row h1's own clamp()); the
+   heading row shrinks so it reads as tertiary, and the context line
+   (secondary) stays a touch larger than the heading it sits under. */
+@media (max-width:700px) {
+  .wallet-top { gap:7px; }
+  .wallet-label span { font-size:.74rem; }
+  .wallet-label i { font-size:.85em; }
+  .metric-info, .toggle-balance { width:25px; height:25px; font-size:12px; }
+  .wallet-context { font-size:.78rem; }
+  /* Single mobile New Circle entry point is the bottom-nav "+"; the
+     in-card action stays for desktop only (see .bottom-nav-fab). */
+  .add-money { display:none; }
+}
+
+/* Central floating "+" in the mobile bottom nav — the single primary
+   mobile New Circle entry point, referencing the Member interface's
+   prominent central plus (circular, elevated above the bar). */
+.bottom-nav-inner { align-items:flex-end; }
+.bottom-nav-fab { flex-shrink:0; width:52px; height:52px; border-radius:50%; margin-top:-24px; background:linear-gradient(135deg,var(--green),var(--green-dark)); color:#fff; border:none; display:grid; place-items:center; font-size:19px; box-shadow:0 8px 18px rgba(34,197,94,.4); cursor:pointer; }
+.bottom-nav-fab:active { transform:scale(.96); }
 
 .badge-status.status-scheduled { background:rgba(59,130,246,.14); color:var(--info); }
 .badge-status.status-setup { background:rgba(245,158,11,.14); color:var(--warning); }
@@ -723,15 +744,9 @@ button { font-family:inherit; }
                 </div>
                 <div class="wallet-balance-row" id="wallet-balance-row">
                   <h1 id="wallet-balance">Loading…</h1>
-                  <div class="currency-partition-list" id="wallet-balance-partitioned" hidden></div>
                   <button class="add-money" type="button"><i class="fa-solid fa-plus"></i>New Circle</button>
                 </div>
-                <div class="wallet-context-row">
-                  <p class="wallet-context" id="wallet-context-text">Across all active circles</p>
-                  <div class="currency-select-wrap">
-                    <select id="dashboard-currency-select" class="currency-select" aria-label="Currency"></select>
-                  </div>
-                </div>
+                <p class="wallet-context" id="wallet-context-text">Across all active circles</p>
               </div>
               <div class="contrib-strip">
                 <div class="contrib-strip-left"><i class="fa-solid fa-store"></i><span>Today's Contributions: <strong id="today-contributions">Loading…</strong></span></div>
@@ -747,16 +762,17 @@ button { font-family:inherit; }
             <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-money-bill-transfer"></i></div><h2 id="upcoming-payouts-count">—</h2><p>Upcoming Payouts</p></div>
           </section>
 
-          <!-- Same four metrics, same data, as one compact side-by-side
-               strip instead of a titled analytics block — no "Quick
-               Metrics" heading, reads as part of the quick-glance summary.
-               Desktop keeps the .stats grid above untouched; this strip is
-               hidden on desktop via CSS and shown only ≤992px. -->
-          <section class="stats-mobile-compact">
-            <div class="stats-mobile-cell"><div class="stats-mobile-icon"><i class="fa-solid fa-layer-group"></i></div><h4 id="active-circles-count-mobile">—</h4><p>Active Circles</p></div>
-            <div class="stats-mobile-cell"><div class="stats-mobile-icon"><i class="fa-solid fa-users"></i></div><h4 id="total-members-count-mobile">—</h4><p>Total Members</p></div>
-            <div class="stats-mobile-cell"><div class="stats-mobile-icon"><i class="fa-solid fa-clock"></i></div><h4 id="pending-payments-count-mobile">—</h4><p>Pending Confirmations</p></div>
-            <div class="stats-mobile-cell"><div class="stats-mobile-icon"><i class="fa-solid fa-money-bill-transfer"></i></div><h4 id="upcoming-payouts-count-mobile">—</h4><p>Upcoming Payouts</p></div>
+          <!-- Compact, self-contained quick metrics for mobile Home only —
+               three units (Active Circles / Members / Pending), same
+               rounded-square-icon-above-label language as the Member
+               interface's quick-action row, adapted here for metrics
+               instead of actions. Desktop keeps the .stats grid above
+               untouched; this section is hidden on desktop via CSS and
+               shown only ≤992px. -->
+          <section class="quick-metrics-mobile">
+            <div class="quick-metric-unit"><div class="quick-metric-icon"><i class="fa-solid fa-layer-group"></i></div><h4 id="active-circles-count-mobile">—</h4><p>Active Circles</p></div>
+            <div class="quick-metric-unit"><div class="quick-metric-icon"><i class="fa-solid fa-users"></i></div><h4 id="total-members-count-mobile">—</h4><p>Members</p></div>
+            <div class="quick-metric-unit"><div class="quick-metric-icon"><i class="fa-solid fa-clock"></i></div><h4 id="pending-payments-count-mobile">—</h4><p>Pending</p></div>
           </section>
 
           <section class="quick-actions-section">
@@ -1248,9 +1264,15 @@ button { font-family:inherit; }
         <div class="modal-sheet" role="dialog" aria-modal="true"><div class="modal-handle"></div>
           <div class="modal-header"><h2>Total Contributions</h2><button type="button" class="modal-close" id="close-total-contributions" aria-label="Close"><i class="fa-solid fa-xmark"></i></button></div>
           <p style="font-size:1.6rem;font-weight:700;margin-bottom:8px;" id="total-contributions-title">₦0</p>
-          <p class="modal-subtext">Contributions collected across all active circles.</p>
+          <p class="modal-subtext" id="total-contributions-subtext">Contributions collected across all active circles.</p>
           <div class="review-row"><span>Active Circles</span><strong id="metric-active-circles">0</strong></div>
           <div class="review-row"><span>Today's Contributions</span><strong id="metric-today-contributions">₦0</strong></div>
+          <!-- Contextual currency/account switcher — only currencies the
+               Organizer actually has circles in ever appear here. This is
+               NOT a global "show everything" control: it always resolves
+               to exactly one currency, and switching it updates the
+               dashboard's contribution figures for that currency only. -->
+          <div class="review-row"><span>Account Type</span><div class="currency-select-wrap"><select id="total-contributions-currency-select" class="currency-select" aria-label="Account Type"></select></div></div>
           <p style="display:flex;gap:8px;color:var(--muted);font-size:.76rem;line-height:1.5;margin-top:14px;"><i class="fa-solid fa-shield-halved" style="color:var(--green);margin-top:2px;"></i> KUNTRIBUTE does not hold funds; members pay organizers directly.</p>
         </div>
       </div>
@@ -1297,12 +1319,33 @@ button { font-family:inherit; }
         </div>
       </div>
 
+      <!-- ================= MOBILE NEW CIRCLE ENTRY — Choose Program Type =================
+           Triggered only by the mobile bottom nav's central "+" (the
+           single primary mobile New Circle entry point — see
+           .bottom-nav-fab). Selecting a type sets pendingCircle and
+           jumps straight to the wizard's Circle Details step, skipping
+           the wizard's own Step 1 (already answered here). Desktop's
+           New Circle entry points are unchanged and still open the full
+           wizard at Step 1. -->
+      <div class="modal-overlay" id="mobile-new-circle-overlay">
+        <div class="modal-sheet"><div class="modal-handle"></div>
+          <div class="modal-header"><h2>Choose Program Type</h2><button type="button" class="modal-close" id="close-mobile-new-circle" aria-label="Close"><i class="fa-solid fa-xmark"></i></button></div>
+          <div class="type-card" id="mobile-type-rotational" data-type="Rotational Savings">
+            <div class="type-icon"><i class="fa-solid fa-rotate"></i></div>
+            <div><div class="type-name">Rotational Savings</div><div class="type-desc">Members contribute regularly and take turns receiving the collected funds. Ajo / Esusu / Adashe.</div><div class="type-examples">Friends · Family · Market groups</div></div>
+          </div>
+          <div class="type-card disabled"><div class="type-icon"><i class="fa-solid fa-shield-heart"></i></div><div><div class="type-name">Welfare Fund <span class="type-badge">Coming soon</span></div><div class="type-desc">Members contribute into a shared fund used for approved needs and emergencies.</div><div class="type-examples">Medical · Burial · Community support</div></div></div>
+          <div class="type-card disabled"><div class="type-icon"><i class="fa-solid fa-handshake"></i></div><div><div class="type-name">Cooperative Savings <span class="type-badge">Coming soon</span></div><div class="type-desc">Members save together toward a shared financial goal.</div><div class="type-examples">Business · Equipment · Housing</div></div></div>
+        </div>
+      </div>
+
       <div class="toast-stack" id="toast-stack"></div>
 
       <nav class="bottom-nav">
         <div class="bottom-nav-inner">
           <button class="bottom-nav-item active" type="button" data-nav="home"><i class="fa-solid fa-house"></i>Home</button>
           <button class="bottom-nav-item" type="button" data-nav="programs"><i class="fa-solid fa-sitemap"></i>Programs</button>
+          <button class="bottom-nav-fab" type="button" id="bottom-nav-new-circle" aria-label="New Circle"><i class="fa-solid fa-plus"></i></button>
           <button class="bottom-nav-item" type="button" data-nav="members"><i class="fa-solid fa-users"></i>Members</button>
           <button class="bottom-nav-item" type="button" data-nav="me"><i class="fa-solid fa-circle-user"></i>Me</button>
         </div>
@@ -1334,9 +1377,10 @@ document.addEventListener("DOMContentLoaded", () => {
   initializeCircleDetailTabs();
   initializeCircleWorkflows();
   initializeTheme();
-  initializeDashboardCurrencySelect();
+  initializeTotalContributionsCurrencySelect();
   initializeRegionPreference();
   initializePaymentAccounts();
+  initializeMobileNewCircle();
   bootstrapSession();
 });
 
@@ -1687,6 +1731,10 @@ function initializeBottomNav() {
       if (pageId === "members") renderMembersPage(null);
     });
   });
+
+  // Central "+" — the single primary mobile New Circle entry point
+  // (see initializeMobileNewCircle for what it opens).
+  document.getElementById("bottom-nav-new-circle")?.addEventListener("click", () => openModal("mobile-new-circle-overlay"));
 }
 
 /* ==========================================================
@@ -1717,10 +1765,11 @@ function loadDashboardData() {
 
   if (!organizerUserId) organizerUserId = mockCircles[0]?.organizer_user_id || null;
 
-  // PRODUCT RULE: no FX conversion, no cross-currency totals. Every
-  // monetary figure below is either scoped to one selected currency or
-  // kept partitioned by currency — never summed across currencies.
-  const inSelectedCurrency = (currency) => dashboardCurrency === "all" || currency === dashboardCurrency;
+  // PRODUCT RULE: no FX conversion, no cross-currency totals. dashboardCurrency
+  // is always exactly one real currency (never "all") — this is a contextual
+  // switcher, not a global "show everything" control (see the Account Type
+  // selector inside #total-contributions-overlay).
+  const inSelectedCurrency = (currency) => currency === dashboardCurrency;
   const activeCircles = circlesData.filter((c) => c.status === "active" && inSelectedCurrency(c.currency));
   const allContributions = circlesData.flatMap((circle) => circle.contributions.map((c) => ({ ...c, circle_name: circle.name, currency: circle.currency })));
   const allPayouts = circlesData.flatMap((circle) => circle.payouts.map((p) => ({ ...p, currency: circle.currency })));
@@ -1741,25 +1790,21 @@ function loadDashboardData() {
   confirmed.forEach((c) => { totalContributionsByCurrency[c.currency] = (totalContributionsByCurrency[c.currency] || 0) + Number(c.amount); });
   todaysAll.forEach((c) => { todayContributionsByCurrency[c.currency] = (todayContributionsByCurrency[c.currency] || 0) + Number(c.amount); });
 
-  renderDashboardCurrencyOptions();
+  renderTotalContributionsCurrencyOptions();
   renderTotalContributionsValue();
   renderTodayContributionsValue();
   setText("active-circles-count", activeCircles.length);
   setText("total-members-count", activeCircles.reduce((t, c) => t + c.membersJoined, 0));
   setText("pending-payments-count", pendingScoped.length);
   setText("upcoming-payouts-count", pendingPayoutsScoped.length);
-  // Same four values, mirrored into the mobile row presentation.
+  // Same figures, mirrored into the compact mobile quick-metric units
+  // (Active Circles / Members / Pending — see .quick-metrics-mobile).
   setText("active-circles-count-mobile", activeCircles.length);
   setText("total-members-count-mobile", activeCircles.reduce((t, c) => t + c.membersJoined, 0));
   setText("pending-payments-count-mobile", pendingScoped.length);
-  setText("upcoming-payouts-count-mobile", pendingPayoutsScoped.length);
   setText("metric-active-circles", activeCircles.length);
-  setText("metric-today-contributions", dashboardCurrency === "all"
-    ? partitionedInlineText(todayContributionsByCurrency)
-    : formatAmount(todayContributionsByCurrency[dashboardCurrency] || 0, dashboardCurrency));
-  setText("total-contributions-title", dashboardCurrency === "all"
-    ? partitionedInlineText(totalContributionsByCurrency)
-    : formatAmount(totalContributionsByCurrency[dashboardCurrency] || 0, dashboardCurrency));
+  setText("metric-today-contributions", formatAmount(todayContributionsByCurrency[dashboardCurrency] || 0, dashboardCurrency));
+  setText("total-contributions-title", formatAmount(totalContributionsByCurrency[dashboardCurrency] || 0, dashboardCurrency));
 
   renderCirclesPage();
   renderMembersPage();
@@ -1767,76 +1812,50 @@ function loadDashboardData() {
   renderProgramsPage();
 }
 
-// A single compact line joining each currency's own figure with " · "
-// — used only where a stacked partitioned list would be too heavy
-// (e.g. the "Today's Contributions" strip). Never a sum: each amount
-// keeps its own currency's symbol/suffix.
-function partitionedInlineText(byCurrency) {
-  const codes = activeCurrencyCodes().filter((code) => byCurrency[code]);
-  if (!codes.length) return formatAmount(0, dashboardCurrency === "all" ? "NGN" : dashboardCurrency);
-  return codes.map((code) => formatAmount(byCurrency[code] || 0, code)).join(" · ");
-}
+// Short display labels for the compact Account Type row specifically
+// (the wizard's own Currency/Asset step keeps its fuller CURRENCIES
+// labels — this is just this one narrow row's own presentation).
+const ACCOUNT_TYPE_LABELS = { NGN: "Naira (NGN)", USD: "US Dollar (USD)", USDT: "Tether (USDT)" };
 
-function renderDashboardCurrencyOptions() {
-  const select = document.getElementById("dashboard-currency-select");
+// Only ever lists currencies the Organizer actually has circles in — a
+// contextual "Account Type" switcher, not a global "show everything"
+// control, so there is no "All Currencies" option here.
+function renderTotalContributionsCurrencyOptions() {
+  const select = document.getElementById("total-contributions-currency-select");
   if (!select) return;
   const codes = activeCurrencyCodes();
-  // dashboardCurrency itself is the single source of truth (set by the
+  // dashboardCurrency is the single source of truth (set by this
   // select's own change handler, the Region & Currency preference, or
   // bootstrapSession's initial default) — this only validates it's
-  // still a real option and keeps the <select> in sync with it, rather
-  // than re-deriving it from the <select>'s own possibly-stale value.
-  if (dashboardCurrency !== "all" && !codes.includes(dashboardCurrency)) dashboardCurrency = "all";
-  select.innerHTML = `<option value="all">All Currencies</option>` + codes.map((code) => `<option value="${code}">${code}</option>`).join("");
+  // still a real option and keeps the <select> in sync with it.
+  if (!codes.includes(dashboardCurrency)) dashboardCurrency = codes[0] || "NGN";
+  select.innerHTML = codes.map((code) => `<option value="${code}">${ACCOUNT_TYPE_LABELS[code] || code}</option>`).join("");
   select.value = dashboardCurrency;
 }
 
-function initializeDashboardCurrencySelect() {
-  const select = document.getElementById("dashboard-currency-select");
-  if (!select) return;
-  select.addEventListener("change", () => {
-    dashboardCurrency = select.value;
+function initializeTotalContributionsCurrencySelect() {
+  document.getElementById("total-contributions-currency-select")?.addEventListener("change", (e) => {
+    dashboardCurrency = e.target.value;
     loadDashboardData();
   });
 }
 
 function renderWalletContextText() {
-  const el = document.getElementById("wallet-context-text");
-  if (!el) return;
-  el.textContent = dashboardCurrency === "all" ? "Across all active circles, by currency" : `Across active ${dashboardCurrency} circles`;
+  setText("wallet-context-text", `Across all active ${dashboardCurrency} circles`);
+  setText("total-contributions-subtext", `Contributions collected across all active ${dashboardCurrency} circles.`);
 }
 
 function renderTotalContributionsValue() {
-  const row = document.getElementById("wallet-balance-row");
   const single = document.getElementById("wallet-balance");
-  const partitioned = document.getElementById("wallet-balance-partitioned");
-  if (!row || !single || !partitioned) return;
-
-  if (dashboardCurrency === "all") {
-    const codes = activeCurrencyCodes();
-    row.classList.add("partitioned");
-    single.hidden = true;
-    partitioned.hidden = false;
-    partitioned.innerHTML = codes.length
-      ? codes.map((code) => `<div class="currency-partition-row"><span class="currency-tag">${code}</span><strong>${formatAmount(totalContributionsByCurrency[code] || 0, code)}</strong></div>`).join("")
-      : `<div class="currency-partition-row"><span class="currency-tag">NGN</span><strong>${formatAmount(0, "NGN")}</strong></div>`;
-  } else {
-    row.classList.remove("partitioned");
-    partitioned.hidden = true;
-    single.hidden = false;
-    const value = totalContributionsByCurrency[dashboardCurrency] || 0;
-    single.textContent = window.innerWidth <= 600 ? formatCompactAmount(value, dashboardCurrency) : formatAmount(value, dashboardCurrency);
-    single.dataset.exact = formatAmount(value, dashboardCurrency);
-  }
+  if (!single) return;
+  const value = totalContributionsByCurrency[dashboardCurrency] || 0;
+  single.textContent = window.innerWidth <= 600 ? formatCompactAmount(value, dashboardCurrency) : formatAmount(value, dashboardCurrency);
+  single.dataset.exact = formatAmount(value, dashboardCurrency);
   renderWalletContextText();
 }
 
 function renderTodayContributionsValue() {
-  const el = document.getElementById("today-contributions");
-  if (!el) return;
-  el.textContent = dashboardCurrency === "all"
-    ? partitionedInlineText(todayContributionsByCurrency)
-    : formatAmount(todayContributionsByCurrency[dashboardCurrency] || 0, dashboardCurrency);
+  setText("today-contributions", formatAmount(todayContributionsByCurrency[dashboardCurrency] || 0, dashboardCurrency));
 }
 
 // currencyFilter is only ever passed by the dashboard's own panel (see
@@ -2649,6 +2668,23 @@ function initializeWizardStep1() {
   document.querySelectorAll("#page-create-circle .type-card.disabled").forEach((card) => card.addEventListener("click", () => showToast("Coming soon.", "fa-solid fa-hourglass-half")));
 }
 
+/* ---- Mobile New Circle entry (bottom-nav "+") — Choose Program Type
+   bottom sheet. Program Type has already been answered here, so
+   selecting Rotational Savings skips straight to the wizard's Circle
+   Details step rather than re-asking via the wizard's own Step 1.
+   Desktop's New Circle entry points are untouched and still open the
+   full wizard at Step 1. ---- */
+function initializeMobileNewCircle() {
+  document.getElementById("close-mobile-new-circle")?.addEventListener("click", () => closeModal("mobile-new-circle-overlay"));
+  document.getElementById("mobile-type-rotational")?.addEventListener("click", () => {
+    closeModal("mobile-new-circle-overlay");
+    pendingCircle = { programType: "Rotational Savings" };
+    switchPage("create-circle");
+    goToWizardStep(2);
+  });
+  document.querySelectorAll("#mobile-new-circle-overlay .type-card.disabled").forEach((card) => card.addEventListener("click", () => showToast("Coming soon.", "fa-solid fa-hourglass-half")));
+}
+
 /* ---- Step 2: Circle Details ---- */
 function validateStep2() {
   const name = document.getElementById("circle-name").value.trim();
@@ -3044,10 +3080,26 @@ function initializeStartDate() {
   dateInput.value = `${y}-${m}-${d}`;
 }
 
+// Both the eye and the info control open the same expanded Total
+// Contributions panel (currency/account context now lives there — see
+// #total-contributions-overlay's "Account Type" row — not as a
+// separate balance-mask toggle).
+// Info is the ONLY control that opens the Total Contributions panel
+// (Account Type selector lives inside it). The eye is a separate,
+// unrelated control — see initializeBalanceToggle — that masks/unmasks
+// the card's own figures and never opens this panel.
+function initializeTotalContributionsDetails() {
+  document.getElementById("total-contributions-info")?.addEventListener("click", () => openModal("total-contributions-overlay"));
+  document.getElementById("close-total-contributions")?.addEventListener("click", () => closeModal("total-contributions-overlay"));
+  document.getElementById("total-contributions-overlay")?.addEventListener("click", (e) => { if (e.target.id === "total-contributions-overlay") closeModal("total-contributions-overlay"); });
+  window.addEventListener("resize", renderTotalContributionsValue);
+}
+
+// Eye: masks/unmasks the card's own Total Contributions figure and
+// Today's Contributions strip. Entirely separate from the info panel.
 function initializeBalanceToggle() {
   const toggleBtn = document.querySelector(".toggle-balance");
   const balanceEl = document.getElementById("wallet-balance");
-  const partitionedEl = document.getElementById("wallet-balance-partitioned");
   const todayEl = document.getElementById("today-contributions");
   if (!toggleBtn || !balanceEl) return;
   const maskedValue = "• • • • • •";
@@ -3056,21 +3108,14 @@ function initializeBalanceToggle() {
     hidden = !hidden;
     if (hidden) {
       balanceEl.textContent = maskedValue;
-      if (partitionedEl) partitionedEl.querySelectorAll(".currency-partition-row strong").forEach((el) => { el.textContent = maskedValue; });
       if (todayEl) todayEl.textContent = maskedValue;
     } else {
       renderTotalContributionsValue();
       renderTodayContributionsValue();
     }
+    toggleBtn.setAttribute("aria-pressed", String(hidden));
     toggleBtn.innerHTML = hidden ? '<i class="fa-solid fa-eye-slash"></i>' : '<i class="fa-solid fa-eye"></i>';
   });
-}
-
-function initializeTotalContributionsDetails() {
-  document.getElementById("total-contributions-info")?.addEventListener("click", () => openModal("total-contributions-overlay"));
-  document.getElementById("close-total-contributions")?.addEventListener("click", () => closeModal("total-contributions-overlay"));
-  document.getElementById("total-contributions-overlay")?.addEventListener("click", (e) => { if (e.target.id === "total-contributions-overlay") closeModal("total-contributions-overlay"); });
-  window.addEventListener("resize", renderTotalContributionsValue);
 }
 
 function initializeMemberDetail() {
