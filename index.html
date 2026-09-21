@@ -52,6 +52,12 @@ body.light-theme {
 body { background:var(--bg); color:var(--text); }
 a { text-decoration:none; color:inherit; }
 button { font-family:inherit; }
+/* Author-stylesheet `display` rules (even non-!important ones, e.g. an
+   inline-styled .workflow-back link) otherwise beat the UA stylesheet's
+   own [hidden]{display:none} in the cascade, so a hidden element like
+   #members-back-link stayed visibly rendered despite its `hidden`
+   attribute. This one rule restores `hidden` as the final word. */
+[hidden] { display:none !important; }
 .overlay { position:fixed; inset:0; background:var(--overlay); opacity:0; visibility:hidden; pointer-events:none; transition:.3s; z-index:999; }
 .overlay.show { opacity:1; visibility:visible; pointer-events:auto; }
 
@@ -129,8 +135,10 @@ button { font-family:inherit; }
 .wallet-label-row { display:flex; align-items:center; gap:8px; }
 .wallet-label { display:flex; align-items:center; gap:7px; color:var(--muted); font-size:.86rem; min-width:0; margin-right:auto; }
 .wallet-label span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.metric-info, .toggle-balance { background:none; border:none; color:var(--muted); font-size:14px; cursor:pointer; width:28px; height:28px; border-radius:8px; display:grid; place-items:center; flex-shrink:0; }
+.metric-info, .toggle-balance { background:none; border:none; color:var(--muted); font-size:14px; cursor:pointer; width:28px; height:28px; border-radius:8px; display:grid; place-items:center; flex-shrink:0; transition:.15s; touch-action:manipulation; -webkit-tap-highlight-color:transparent; }
 .metric-info:hover, .toggle-balance:hover { color:var(--green); background:rgba(34,197,94,.1); }
+.metric-info:active, .toggle-balance:active { color:var(--green); background:rgba(34,197,94,.18); transform:scale(.9); }
+.toggle-balance[aria-pressed="true"] { color:var(--text); background:rgba(148,163,184,.12); }
 .wallet-balance-row { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:nowrap; }
 .wallet-balance-row h1 { font-size:clamp(20px,7vw,32px); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; }
 .add-money { border:none; background:var(--green); color:#fff; padding:10px 15px; border-radius:11px; font-weight:700; cursor:pointer; white-space:nowrap; flex-shrink:0; font-size:.8rem; display:flex; align-items:center; gap:6px; }
@@ -531,7 +539,6 @@ button { font-family:inherit; }
   .mobile-drawer-brand .brand-mark { width:40px; height:40px; border-radius:12px; background:linear-gradient(135deg,var(--green),var(--green-dark)); display:flex; align-items:center; justify-content:center; padding:7px; flex-shrink:0; }
   .mobile-drawer-brand .brand-mark img { width:100%; height:100%; object-fit:contain; display:block; }
   .mobile-drawer-brand .brand-name { font-size:1.02rem; font-weight:800; letter-spacing:-0.01em; color:var(--text); }
-  .mobile-drawer-brand .brand-tagline { font-size:.66rem; color:var(--muted); margin-top:2px; line-height:1.3; }
   .mobile-drawer-brand .brand-quote { font-size:.66rem; color:var(--green); font-weight:700; margin-top:3px; }
 
   .mobile-drawer-scroll { flex:1; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:14px 16px 10px; }
@@ -607,11 +614,41 @@ button { font-family:inherit; }
   .add-money { display:none; }
 }
 
+/* Account Type is now a real button (opens #account-type-overlay, a
+   custom bottom sheet built from the same .filter-chip-row/.filter-chip
+   components as the Members/Notifications filters) instead of a native
+   <select> — a native select still hands rendering to the OS/browser's
+   own picker UI on many mobile browsers, which this spec explicitly
+   rules out. .currency-select-wrap/.currency-select keep their names
+   from when the trigger was a real <select>. */
+button.currency-select { width:100%; text-align:left; }
+.account-type-list { flex-direction:column; }
+.account-type-list .filter-chip { width:100%; text-align:left; }
+
+/* Date range ("From" / "To") used by both the Notifications filter and
+   the Members "Date Joined: Custom" filter — same intentional styling
+   as the single .filter-custom-date input, paired side by side. */
+.filter-date-range { display:flex; gap:8px; margin-top:10px; }
+.filter-date-range .filter-date-field { flex:1; display:flex; flex-direction:column; gap:4px; }
+.filter-date-range .filter-date-field span { font-size:.68rem; color:var(--muted); font-weight:700; text-transform:uppercase; letter-spacing:.04em; }
+.filter-date-range input[type="date"] { width:100%; background:var(--card2); border:1px solid var(--border); color:var(--text); padding:11px 13px; border-radius:11px; font-size:.86rem; font-family:inherit; }
+
+/* Member Record Snapshot's gateway into deeper detail — bold/prominent
+   on purpose (see spec: "a clearly represented, bold View Details"),
+   visually distinct from the muted Download action that now lives
+   inside the View Details sheet it opens rather than on the snapshot. */
+.member-view-details-btn { width:100%; margin-top:12px; border:none; background:var(--green); color:#fff; padding:14px; border-radius:13px; font-weight:800; font-size:.92rem; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; }
+.member-view-details-btn:hover { background:var(--green-dark); }
+
 /* Central floating "+" in the mobile bottom nav — the single primary
-   mobile New Circle entry point, referencing the Member interface's
-   prominent central plus (circular, elevated above the bar). */
-.bottom-nav-inner { align-items:flex-end; }
-.bottom-nav-fab { flex-shrink:0; width:52px; height:52px; border-radius:50%; margin-top:-24px; background:linear-gradient(135deg,var(--green),var(--green-dark)); color:#fff; border:none; display:grid; place-items:center; font-size:19px; box-shadow:0 8px 18px rgba(34,197,94,.4); cursor:pointer; }
+   mobile New Circle entry point. Elevation reference: the Member-facing
+   prototype's .nav-fab (css/member-app.css) centers the row and lifts
+   the fab -30px with a surface-colored ring border, reading as a
+   floating disc cut out of the bar. flex-end + a smaller -24px here
+   previously sat the fab's own baseline flush with the other items,
+   so it read as "too low". */
+.bottom-nav-inner { align-items:center; }
+.bottom-nav-fab { flex-shrink:0; width:54px; height:54px; border-radius:50%; margin-top:-30px; background:linear-gradient(135deg,var(--green),var(--green-dark)); color:#fff; border:5px solid var(--sidebar); display:grid; place-items:center; font-size:20px; box-shadow:0 10px 24px rgba(34,197,94,.4); cursor:pointer; }
 .bottom-nav-fab:active { transform:scale(.96); }
 
 .badge-status.status-scheduled { background:rgba(59,130,246,.14); color:var(--info); }
@@ -694,9 +731,8 @@ button { font-family:inherit; }
         <div class="mobile-drawer-brand">
           <span class="brand-mark"><img src="assets/kuntribute-mark.png" alt="KUNTRIBUTE" /></span>
           <div>
-            <h1 class="brand-name">KUNTRIBUTE</h1>
-            <p class="brand-tagline">Smarter Contributions. Stronger Communities.</p>
-            <p class="brand-quote">Trust that scales</p>
+            <h1 class="brand-name">Kuntribute</h1>
+            <p class="brand-quote">Trust that Scales.</p>
           </div>
         </div>
 
@@ -708,7 +744,7 @@ button { font-family:inherit; }
           <a href="#" class="mobile-drawer-link planned-nav" aria-disabled="true"><i class="fa-solid fa-wallet"></i>Payments <span>Planned</span></a>
 
           <p class="mobile-drawer-group-label">Analytics</p>
-          <a href="#" class="mobile-drawer-link planned-nav" aria-disabled="true"><i class="fa-solid fa-chart-simple"></i>Group Performance <span>Planned</span></a>
+          <a href="#" class="mobile-drawer-link planned-nav" aria-disabled="true"><i class="fa-solid fa-chart-simple"></i>Performance <span>Planned</span></a>
           <a href="#" class="mobile-drawer-link planned-nav" aria-disabled="true"><i class="fa-solid fa-chart-line"></i>Reports <span>Planned</span></a>
           <a href="#" class="mobile-drawer-link planned-nav" aria-disabled="true"><i class="fa-solid fa-star"></i>Reviews <span>Planned</span></a>
         </div>
@@ -797,6 +833,7 @@ button { font-family:inherit; }
 
         <!-- ================= MY CIRCLES ================= -->
         <div id="page-circles" class="page" data-title="My Circles">
+          <a href="#" id="circles-back-to-programs" class="workflow-back" style="display:inline-flex;align-items:center;gap:8px;color:var(--green);font-size:.86rem;font-weight:700;margin-bottom:12px;"><i class="fa-solid fa-arrow-left"></i> Back to Programs</a>
           <div class="page-header"><div><h1>My Circles</h1><p>Manage every contribution circle you organize</p></div>
             <button class="create-circle-btn" type="button" id="open-create-circle"><i class="fa-solid fa-plus"></i>Create Circle</button>
           </div>
@@ -912,6 +949,10 @@ button { font-family:inherit; }
 
         <div id="page-notifications" class="page" data-title="Notifications">
           <div class="page-header"><div><h1>Notifications</h1><p>Recent activity across your circles</p></div></div>
+          <div class="search-row">
+            <div class="search"><input type="text" id="notifications-search-input" placeholder="Search notifications..." /></div>
+            <button class="filter-btn" id="notifications-filter-btn" type="button"><i class="fa-solid fa-sliders"></i>Filter</button>
+          </div>
           <div class="panel"><div class="activity-feed-list" id="notifications-feed"></div></div>
         </div>
 
@@ -1125,12 +1166,36 @@ button { font-family:inherit; }
       <div class="modal-overlay" id="member-filter-overlay">
         <div class="modal-sheet filter-sheet"><div class="modal-handle"></div>
           <div class="modal-header"><h2>Filter Members</h2><button type="button" class="modal-close" id="close-member-filter" aria-label="Close"><i class="fa-solid fa-xmark"></i></button></div>
-          <div class="filter-group"><h4>Circle</h4><div class="filter-chip-row" id="filter-circle-chips"></div></div>
+          <div class="filter-group"><h4>Program Type</h4><div class="filter-chip-row" id="filter-program-type-chips"></div></div>
           <div class="filter-group"><h4>Membership Status</h4><div class="filter-chip-row" id="filter-status-chips"></div></div>
           <div class="filter-group"><h4>Date Joined</h4><div class="filter-chip-row" id="filter-joined-chips"></div>
-            <input type="date" id="filter-joined-custom-date" class="filter-custom-date" hidden />
+            <div class="filter-date-range" id="filter-joined-date-range" hidden>
+              <label class="filter-date-field"><span>From</span><input type="date" id="filter-joined-date-from" /></label>
+              <label class="filter-date-field"><span>To</span><input type="date" id="filter-joined-date-to" /></label>
+            </div>
           </div>
           <div class="wizard-actions"><button type="button" class="modal-secondary" id="clear-filters-btn">Clear</button><button type="button" class="modal-submit" id="apply-filters-btn">Show Results</button></div>
+        </div>
+      </div>
+
+      <!-- ================= NOTIFICATIONS FILTER SHEET =================
+           Exactly two filtering concepts — Currency/Account Type and
+           Date — never a per-Circle list. Currency/Account Type only
+           ever offers currencies the Organizer actually has circles in
+           (see activeCurrencyCodes()), with no "All Currencies" entry:
+           Notifications always resolves to exactly one currency at a
+           time, initialized from the dashboard's own Account Type. -->
+      <div class="modal-overlay" id="notifications-filter-overlay">
+        <div class="modal-sheet filter-sheet"><div class="modal-handle"></div>
+          <div class="modal-header"><h2>Filter Notifications</h2><button type="button" class="modal-close" id="close-notifications-filter" aria-label="Close"><i class="fa-solid fa-xmark"></i></button></div>
+          <div class="filter-group"><h4>Currency / Account Type</h4><div class="filter-chip-row" id="notifications-filter-currency-chips"></div></div>
+          <div class="filter-group"><h4>Date</h4><div class="filter-chip-row" id="notifications-filter-date-chips"></div>
+            <div class="filter-date-range" id="notifications-filter-date-range" hidden>
+              <label class="filter-date-field"><span>From</span><input type="date" id="notifications-filter-date-from" /></label>
+              <label class="filter-date-field"><span>To</span><input type="date" id="notifications-filter-date-to" /></label>
+            </div>
+          </div>
+          <div class="wizard-actions"><button type="button" class="modal-secondary" id="clear-notifications-filters-btn">Clear</button><button type="button" class="modal-submit" id="apply-notifications-filters-btn">Show Results</button></div>
         </div>
       </div>
 
@@ -1150,15 +1215,6 @@ button { font-family:inherit; }
             <div class="review-row"><span>KTB ID</span><strong id="member-detail-ktb">-</strong></div>
           </div>
 
-          <p class="me-section-label">Account / Payout Details</p>
-          <div class="review-section">
-            <div class="review-row"><span>Bank Name</span><strong id="member-detail-bank">-</strong></div>
-            <div class="review-row"><span>Account Name</span><strong id="member-detail-account-name">-</strong></div>
-            <div class="review-row"><span>Account Number</span>
-              <div class="review-row-copy"><strong id="member-detail-account-number">-</strong><button type="button" class="copy-btn" id="member-detail-copy-account" aria-label="Copy account number"><i class="fa-regular fa-copy"></i></button></div>
-            </div>
-          </div>
-
           <p class="me-section-label">Quick Actions</p>
           <div class="member-qa-grid">
             <button type="button" class="member-qa-item" id="member-pay-btn"><i class="fa-solid fa-hand-holding-dollar"></i>Pay Member</button>
@@ -1166,7 +1222,46 @@ button { font-family:inherit; }
             <button type="button" class="member-qa-item" id="member-report-btn"><i class="fa-solid fa-flag"></i>Report</button>
             <button type="button" class="member-qa-item" id="member-support-btn"><i class="fa-solid fa-headset"></i>Support</button>
           </div>
-          <button type="button" class="modal-secondary" id="member-download-btn" style="margin-top:10px;"><i class="fa-solid fa-download"></i> Download Member Details</button>
+          <button type="button" class="member-view-details-btn" id="member-view-details-btn">View Details <i class="fa-solid fa-arrow-right"></i></button>
+        </div>
+      </div>
+
+      <!-- ================= PAY MEMBER (Account / Payout Details, moved out of
+           the Member Record Snapshot) ================= -->
+      <div class="modal-overlay" id="member-pay-overlay">
+        <div class="modal-sheet"><div class="modal-handle"></div>
+          <div class="modal-header"><h2>Pay Member</h2><button type="button" class="modal-close" id="close-member-pay" aria-label="Close"><i class="fa-solid fa-xmark"></i></button></div>
+          <p class="modal-subtext" id="member-pay-subtext" style="text-align:left;">Send this member's contribution or payout directly using their payout destination below. KUNTRIBUTE does not hold or move funds.</p>
+          <p class="me-section-label">Account / Payout Details</p>
+          <div class="review-section">
+            <div class="review-row"><span>Bank Name</span><strong id="member-pay-bank">-</strong></div>
+            <div class="review-row"><span>Account Name</span><strong id="member-pay-account-name">-</strong></div>
+            <div class="review-row"><span>Account Number</span>
+              <div class="review-row-copy"><strong id="member-pay-account-number">-</strong><button type="button" class="copy-btn" id="member-pay-copy-account" aria-label="Copy account number"><i class="fa-regular fa-copy"></i></button></div>
+            </div>
+          </div>
+          <button type="button" class="modal-submit" id="member-pay-mark-btn"><i class="fa-solid fa-hand-holding-dollar"></i> Mark as Paid</button>
+        </div>
+      </div>
+
+      <!-- ================= MEMBER VIEW DETAILS (deeper record, gateway from
+           the Member Record Snapshot) ================= -->
+      <div class="modal-overlay" id="member-view-details-overlay">
+        <div class="modal-sheet"><div class="modal-handle"></div>
+          <div class="modal-header"><h2>Member Details</h2><button type="button" class="modal-close" id="close-member-view-details" aria-label="Close"><i class="fa-solid fa-xmark"></i></button></div>
+          <p class="me-section-label">Identity</p>
+          <div class="review-section">
+            <div class="review-row"><span>Name</span><strong id="member-view-fullname">-</strong></div>
+            <div class="review-row"><span>Email</span><strong id="member-view-email">-</strong></div>
+            <div class="review-row"><span>KTB ID</span><strong id="member-view-ktb">-</strong></div>
+          </div>
+          <p class="me-section-label">Membership</p>
+          <div class="review-section">
+            <div class="review-row"><span>Circle</span><strong id="member-view-circle">-</strong></div>
+            <div class="review-row"><span>Status</span><strong id="member-view-status">-</strong></div>
+            <div class="review-row"><span>Date Joined</span><strong id="member-view-joined">-</strong></div>
+          </div>
+          <button type="button" class="modal-secondary" id="member-download-btn" style="width:100%;"><i class="fa-solid fa-download"></i> Download Member Details</button>
         </div>
       </div>
 
@@ -1192,7 +1287,7 @@ button { font-family:inherit; }
             <div class="cd-stat"><span>Contribution</span><strong id="snapshot-amount">—</strong></div>
             <div class="cd-stat"><span>Frequency</span><strong id="snapshot-frequency">—</strong></div>
             <div class="cd-stat"><span>Members</span><strong id="snapshot-member-count">0</strong></div>
-            <div class="cd-stat cd-stat-cycle" style="grid-column:1/-1;"><span>Current Cycle</span><strong id="snapshot-current-cycle">—</strong></div>
+            <div class="cd-stat"><span>Status</span><strong id="snapshot-status">—</strong></div>
           </div>
           <button type="button" class="modal-submit" id="snapshot-see-details" style="margin-top:18px;">See Details <i class="fa-solid fa-arrow-right"></i></button>
         </div>
@@ -1272,8 +1367,20 @@ button { font-family:inherit; }
                NOT a global "show everything" control: it always resolves
                to exactly one currency, and switching it updates the
                dashboard's contribution figures for that currency only. -->
-          <div class="review-row"><span>Account Type</span><div class="currency-select-wrap"><select id="total-contributions-currency-select" class="currency-select" aria-label="Account Type"></select></div></div>
+          <div class="review-row"><span>Account Type</span><div class="currency-select-wrap"><button type="button" id="total-contributions-currency-trigger" class="currency-select" aria-label="Change Account Type" aria-haspopup="true"></button></div></div>
           <p style="display:flex;gap:8px;color:var(--muted);font-size:.76rem;line-height:1.5;margin-top:14px;"><i class="fa-solid fa-shield-halved" style="color:var(--green);margin-top:2px;"></i> KUNTRIBUTE does not hold funds; members pay organizers directly.</p>
+        </div>
+      </div>
+
+      <!-- ================= ACCOUNT TYPE PICKER (custom, replaces a native
+           <select>) — opened from the Account Type row inside
+           #total-contributions-overlay. Only ever lists currencies the
+           Organizer actually has circles in; no "All Currencies" entry,
+           since the dashboard always resolves to exactly one currency. -->
+      <div class="modal-overlay" id="account-type-overlay">
+        <div class="modal-sheet"><div class="modal-handle"></div>
+          <div class="modal-header"><h2>Account Type</h2><button type="button" class="modal-close" id="close-account-type" aria-label="Close"><i class="fa-solid fa-xmark"></i></button></div>
+          <div class="filter-chip-row account-type-list" id="account-type-options"></div>
         </div>
       </div>
 
@@ -1374,6 +1481,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initializeSearch();
   initializeCirclesSegments();
   initializeMemberFilters();
+  initializeNotificationsFilters();
   initializeCircleDetailTabs();
   initializeCircleWorkflows();
   initializeTheme();
@@ -1495,7 +1603,9 @@ let dashboardCurrency = "all"; // "all" | "NGN" | "USD" | "USDT" — set from or
 let membersPageFilter = null;
 let expandedMemberGroups = new Set();
 let circlesSegment = "active";
-let memberFilters = { circle: "all", status: "all", joined: "all", joinedCustomDate: "" };
+let memberFilters = { programType: "all", status: "all", joined: "all", joinedFrom: "", joinedTo: "" };
+let notificationFilters = { currency: null, date: "all", from: "", to: "" };
+const PROGRAM_TYPES = ["Rotational Savings", "Welfare Savings", "Cooperative Savings"];
 let pendingCircle = null;
 let createdCircleId = null;
 let activeMemberDetail = null;
@@ -1620,6 +1730,10 @@ function switchPage(pageId) {
   const userCard = document.getElementById("topbar-user-card");
   if (userCard) userCard.hidden = pageId === "me";
 
+  // Notifications inherits the dashboard's current financial context
+  // every time it's (re)entered — see openNotifications().
+  if (pageId === "notifications") openNotifications();
+
   closeDrawer();
   window.scrollTo(0, 0);
 }
@@ -1640,6 +1754,8 @@ function initializePageNav() {
   });
   const circleDetailBack = document.getElementById("circle-detail-back");
   if (circleDetailBack) circleDetailBack.addEventListener("click", (e) => { e.preventDefault(); switchPage("circles"); });
+  const circlesBackToPrograms = document.getElementById("circles-back-to-programs");
+  if (circlesBackToPrograms) circlesBackToPrograms.addEventListener("click", (e) => { e.preventDefault(); switchPage("programs"); });
   const backToWebsite = document.getElementById("sidebar-back-website");
   if (backToWebsite) backToWebsite.addEventListener("click", (e) => { e.preventDefault(); showToast("This returns to the public KUNTRIBUTE website in production."); });
   const mobileBackToWebsite = document.getElementById("mobile-drawer-back-website");
@@ -1821,21 +1937,31 @@ const ACCOUNT_TYPE_LABELS = { NGN: "Naira (NGN)", USD: "US Dollar (USD)", USDT: 
 // contextual "Account Type" switcher, not a global "show everything"
 // control, so there is no "All Currencies" option here.
 function renderTotalContributionsCurrencyOptions() {
-  const select = document.getElementById("total-contributions-currency-select");
-  if (!select) return;
+  const trigger = document.getElementById("total-contributions-currency-trigger");
+  if (!trigger) return;
   const codes = activeCurrencyCodes();
-  // dashboardCurrency is the single source of truth (set by this
-  // select's own change handler, the Region & Currency preference, or
+  // dashboardCurrency is the single source of truth (set by the Account
+  // Type sheet's own selection, the Region & Currency preference, or
   // bootstrapSession's initial default) — this only validates it's
-  // still a real option and keeps the <select> in sync with it.
+  // still a real option and keeps the trigger/sheet in sync with it.
   if (!codes.includes(dashboardCurrency)) dashboardCurrency = codes[0] || "NGN";
-  select.innerHTML = codes.map((code) => `<option value="${code}">${ACCOUNT_TYPE_LABELS[code] || code}</option>`).join("");
-  select.value = dashboardCurrency;
+  trigger.textContent = ACCOUNT_TYPE_LABELS[dashboardCurrency] || dashboardCurrency;
+
+  const list = document.getElementById("account-type-options");
+  if (list) list.innerHTML = codes.map((code) => `<button type="button" class="filter-chip${code === dashboardCurrency ? " active" : ""}" data-currency="${code}">${ACCOUNT_TYPE_LABELS[code] || code}</button>`).join("");
 }
 
+// Account Type is a custom in-app bottom sheet (#account-type-overlay),
+// not a native <select> — a native select still hands rendering to the
+// OS/browser's own picker on many mobile browsers.
 function initializeTotalContributionsCurrencySelect() {
-  document.getElementById("total-contributions-currency-select")?.addEventListener("change", (e) => {
-    dashboardCurrency = e.target.value;
+  document.getElementById("total-contributions-currency-trigger")?.addEventListener("click", () => openModal("account-type-overlay"));
+  document.getElementById("close-account-type")?.addEventListener("click", () => closeModal("account-type-overlay"));
+  document.getElementById("account-type-options")?.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-currency]");
+    if (!btn) return;
+    dashboardCurrency = btn.dataset.currency;
+    closeModal("account-type-overlay");
     loadDashboardData();
   });
 }
@@ -1845,9 +1971,19 @@ function renderWalletContextText() {
   setText("total-contributions-subtext", `Contributions collected across all active ${dashboardCurrency} circles.`);
 }
 
+// Masked state lives here (module-level), not as a closure var private
+// to the toggle button's own click handler — every re-render path
+// (currency switch, window resize, a plain data reload) calls back
+// through these two render functions, so this is the one place that
+// has to remember "currently masked" for a balance to actually stay
+// hidden across those re-renders instead of only across nothing.
+const MASKED_VALUE = "• • • • • •";
+let balanceMasked = false;
+
 function renderTotalContributionsValue() {
   const single = document.getElementById("wallet-balance");
   if (!single) return;
+  if (balanceMasked) { single.textContent = MASKED_VALUE; return; }
   const value = totalContributionsByCurrency[dashboardCurrency] || 0;
   single.textContent = window.innerWidth <= 600 ? formatCompactAmount(value, dashboardCurrency) : formatAmount(value, dashboardCurrency);
   single.dataset.exact = formatAmount(value, dashboardCurrency);
@@ -1855,7 +1991,7 @@ function renderTotalContributionsValue() {
 }
 
 function renderTodayContributionsValue() {
-  setText("today-contributions", formatAmount(todayContributionsByCurrency[dashboardCurrency] || 0, dashboardCurrency));
+  setText("today-contributions", balanceMasked ? MASKED_VALUE : formatAmount(todayContributionsByCurrency[dashboardCurrency] || 0, dashboardCurrency));
 }
 
 // currencyFilter is only ever passed by the dashboard's own panel (see
@@ -1907,10 +2043,112 @@ function renderDashboardActivity() {
 
 function renderActivityFeed() {
   renderDashboardActivity();
-  renderActivityList("notifications-feed");
+  renderNotificationsFeed();
   renderActivityList("history-feed");
 }
 window.addEventListener("resize", renderDashboardActivity);
+
+/* ==========================================================
+   NOTIFICATIONS — search + filter (Currency/Account Type, Date).
+   Unlike History (untouched, still shows everything), Notifications
+   inherits the dashboard's current financial context: opening it
+   carries in dashboardCurrency rather than dumping every currency at
+   once — see openNotifications(), called from switchPage().
+========================================================== */
+function openNotifications() {
+  notificationFilters = { currency: dashboardCurrency, date: "all", from: "", to: "" };
+  const search = document.getElementById("notifications-search-input");
+  if (search) search.value = "";
+  renderNotificationsFeed();
+}
+
+function notificationsActiveFilterCount() {
+  let n = 0;
+  if (notificationFilters.currency && notificationFilters.currency !== dashboardCurrency) n++;
+  if (notificationFilters.date !== "all") n++;
+  return n;
+}
+
+function matchesNotificationDate(item) {
+  if (notificationFilters.date === "all") return true;
+  const date = item.date ? new Date(item.date) : null;
+  if (!date || Number.isNaN(date.getTime())) return false;
+  if (notificationFilters.date === "7d") return (TODAY - date) / 86400000 <= 7;
+  if (notificationFilters.date === "30d") return (TODAY - date) / 86400000 <= 30;
+  if (notificationFilters.date === "custom") {
+    if (notificationFilters.from && date < new Date(notificationFilters.from)) return false;
+    if (notificationFilters.to && date > new Date(notificationFilters.to)) return false;
+  }
+  return true;
+}
+
+function renderNotificationsFeed() {
+  const el = document.getElementById("notifications-feed");
+  if (!el) return;
+  const term = document.getElementById("notifications-search-input")?.value.trim().toLowerCase() || "";
+  const items = activityData.filter((item) => {
+    if (notificationFilters.currency && item.currency !== notificationFilters.currency) return false;
+    if (!matchesNotificationDate(item)) return false;
+    if (term && !item.title.toLowerCase().includes(term) && !item.circleName.toLowerCase().includes(term)) return false;
+    return true;
+  });
+
+  el.innerHTML = items.length
+    ? items.map((item) => `
+      <div class="activity-row">
+        <div class="activity-row-icon ${item.kind}"><i class="fa-solid ${item.kind === "payout" ? "fa-money-bill-transfer" : "fa-money-check-dollar"}"></i></div>
+        <div class="activity-row-body"><h4>${item.title}</h4><p>${item.circleName}</p></div>
+        <div class="activity-row-right"><strong>${formatAmount(item.amount, item.currency)}</strong><small>${formatActivityDate(item.date)} · ${item.status}</small></div>
+      </div>`).join("")
+    : `<div class="empty-state compact"><i class="fa-regular fa-clock"></i><p>No notifications match your search/filters.</p></div>`;
+
+  const filterBtn = document.getElementById("notifications-filter-btn");
+  if (filterBtn) {
+    const count = notificationsActiveFilterCount();
+    filterBtn.classList.toggle("has-filters", count > 0);
+    filterBtn.innerHTML = `<i class="fa-solid fa-sliders"></i>Filter${count ? ` <span class="count">${count}</span>` : ""}`;
+  }
+}
+
+// Exactly two filtering concepts, never a per-Circle list: Currency /
+// Account Type only ever lists currencies the Organizer actually has
+// circles in (no "All Currencies" entry — Notifications always
+// resolves to exactly one currency), and Date.
+function populateNotificationsFilterSheet() {
+  const currencyChips = document.getElementById("notifications-filter-currency-chips");
+  const dateChips = document.getElementById("notifications-filter-date-chips");
+  if (!currencyChips) return;
+
+  const chip = (label, value, group) => `<button type="button" class="filter-chip${notificationFilters[group] === value ? " active" : ""}" data-group="${group}" data-value="${value}">${label}</button>`;
+
+  currencyChips.innerHTML = activeCurrencyCodes().map((code) => chip(ACCOUNT_TYPE_LABELS[code] || code, code, "currency")).join("");
+  dateChips.innerHTML = chip("Last 7 Days", "7d", "date") + chip("Last 30 Days", "30d", "date") + chip("Custom", "custom", "date");
+
+  const dateRange = document.getElementById("notifications-filter-date-range");
+  const fromInput = document.getElementById("notifications-filter-date-from");
+  const toInput = document.getElementById("notifications-filter-date-to");
+  if (dateRange) dateRange.hidden = notificationFilters.date !== "custom";
+  if (fromInput) fromInput.value = notificationFilters.from || "";
+  if (toInput) toInput.value = notificationFilters.to || "";
+
+  document.querySelectorAll("#notifications-filter-overlay .filter-chip").forEach((c) => c.addEventListener("click", () => {
+    notificationFilters[c.dataset.group] = c.dataset.value;
+    populateNotificationsFilterSheet();
+  }));
+}
+
+function initializeNotificationsFilters() {
+  document.getElementById("notifications-filter-btn")?.addEventListener("click", () => { populateNotificationsFilterSheet(); openModal("notifications-filter-overlay"); });
+  document.getElementById("close-notifications-filter")?.addEventListener("click", () => closeModal("notifications-filter-overlay"));
+  document.getElementById("clear-notifications-filters-btn")?.addEventListener("click", () => {
+    notificationFilters = { currency: dashboardCurrency, date: "all", from: "", to: "" };
+    populateNotificationsFilterSheet();
+  });
+  document.getElementById("notifications-filter-date-from")?.addEventListener("change", (e) => { notificationFilters.from = e.target.value; });
+  document.getElementById("notifications-filter-date-to")?.addEventListener("change", (e) => { notificationFilters.to = e.target.value; });
+  document.getElementById("apply-notifications-filters-btn")?.addEventListener("click", () => { closeModal("notifications-filter-overlay"); renderNotificationsFeed(); });
+  document.getElementById("notifications-search-input")?.addEventListener("input", renderNotificationsFeed);
+}
 
 /* ==========================================================
    MY CIRCLES (segmented Active / Completed / Cancelled)
@@ -2007,6 +2245,11 @@ function renderProgramsPage() {
 /* ==========================================================
    CIRCLE DETAIL (redesigned)
 ========================================================== */
+function circleStatusLabel(status) {
+  if (status === "setup") return "Setup / Recruiting";
+  return status.charAt(0).toUpperCase() + status.slice(1);
+}
+
 function currentCycleLabel(cycles) {
   if (!cycles.length) return "No cycles scheduled";
   const open = cycles.find((c) => c.status === "open") || cycles.find((c) => c.status === "scheduled");
@@ -2223,7 +2466,7 @@ function openCircleSnapshot(circleId) {
   setText("snapshot-amount", formatAmount(circle.amount, circle.currency));
   setText("snapshot-frequency", circle.frequency);
   setText("snapshot-member-count", circle.membersJoined);
-  setText("snapshot-current-cycle", currentCycleLabel(circle.cycles));
+  setText("snapshot-status", circleStatusLabel(circle.status));
 
   openModal("circle-snapshot-overlay");
 }
@@ -2329,11 +2572,15 @@ function membershipStatusLabel(status) {
   return status === "inactive" ? "Inactive" : "Active";
 }
 
+// Concise, consistent across every context a member row appears in
+// (Circle Detail's Members tab, a circle-scoped Members page, the
+// grouped All Members page, Programs -> Program Type -> Circle): once
+// the user is already inside a Circle (or a group already headed by
+// its Circle name), repeating the Circle name or a contribution-status
+// note on every row is redundant. Name + KTB ID is the whole row.
 function buildMemberRowHTML(member) {
-  const contributionNote = member.status === "confirmed" ? "Confirmed this cycle" : "Payment pending";
-  const secondary = member.circleName ? `${member.circleName} · ${contributionNote}` : contributionNote;
   return `<button type="button" class="member-row" data-member-id="${member.userId}" data-member-circle-id="${member.circleId}">
-    <div class="member-row-left"><div class="member-avatar">${getInitials(member.name)}</div><div><h4>${member.name}</h4><p class="member-row-note">${secondary}</p></div></div>
+    <div class="member-row-left"><div class="member-avatar">${getInitials(member.name)}</div><div><h4>${member.name}</h4><p class="member-row-note">${member.ktbId || "KTB ID unavailable"}</p></div></div>
     <i class="fa-solid fa-chevron-right member-chevron"></i>
   </button>`;
 }
@@ -2365,11 +2612,32 @@ function openMemberDetail(member) {
   if (emailLink) { emailLink.textContent = member.email || "Unavailable"; emailLink.href = member.email ? `mailto:${member.email}` : "#"; }
   setText("member-detail-ktb", member.ktbId || "Unavailable");
 
-  setText("member-detail-bank", member.bankName || "Unavailable");
-  setText("member-detail-account-name", member.name);
-  setText("member-detail-account-number", member.accountNumber || "Unavailable");
-
   openModal("member-detail-overlay");
+}
+
+// Pay Member — the snapshot's Account/Payout Details moved here, since
+// it's the actual payment destination this action needs, rather than
+// sitting on the snapshot every time regardless of whether the
+// Organizer is about to pay this member.
+function openMemberPay(member) {
+  setText("member-pay-subtext", `Send ${member.name}'s contribution or payout directly using their payout destination below. KUNTRIBUTE does not hold or move funds.`);
+  setText("member-pay-bank", member.bankName || "Unavailable");
+  setText("member-pay-account-name", member.name);
+  setText("member-pay-account-number", member.accountNumber || "Unavailable");
+  openModal("member-pay-overlay");
+}
+
+// View Details — the snapshot's gateway to deeper record info; carries
+// the Download action that used to sit directly on the snapshot.
+function openMemberViewDetails(member) {
+  setText("member-view-fullname", member.name);
+  setText("member-view-email", member.email || "Unavailable");
+  setText("member-view-ktb", member.ktbId || "Unavailable");
+  const circle = circlesData.find((c) => c.id === member.circleId);
+  setText("member-view-circle", circle ? circle.name : "Unavailable");
+  setText("member-view-status", membershipStatusLabel(member.membershipStatus));
+  setText("member-view-joined", member.joinedAt ? formatActivityDate(member.joinedAt) : "Unavailable");
+  openModal("member-view-details-overlay");
 }
 
 function updateMemberMembershipStatus(member, newStatus) {
@@ -2390,19 +2658,35 @@ function initializeMemberActions() {
     renderMembersPage(membersPageFilter);
   });
 
-  // Pay Member / Report / Support: prototype-only UI concepts, same
-  // "planned" toast convention already used across this file — no
-  // backing API to call.
-  document.getElementById("member-pay-btn")?.addEventListener("click", () => showToast("Pay Member is planned for a future release.", "fa-solid fa-hourglass-half"));
+  // Pay Member now opens the dedicated Pay Member sheet (Account/Payout
+  // Details moved there — see openMemberPay). Report/Support remain
+  // prototype-only UI concepts with no backing API, same "planned"
+  // toast convention already used across this file.
+  document.getElementById("member-pay-btn")?.addEventListener("click", () => {
+    if (!activeMemberDetail) return;
+    closeModal("member-detail-overlay");
+    openMemberPay(activeMemberDetail);
+  });
   document.getElementById("member-report-btn")?.addEventListener("click", () => showToast("Reporting is planned for a future release.", "fa-solid fa-hourglass-half"));
   document.getElementById("member-support-btn")?.addEventListener("click", () => showToast("Support is planned for a future release.", "fa-solid fa-hourglass-half"));
 
-  document.getElementById("member-detail-copy-account")?.addEventListener("click", async () => {
-    const value = document.getElementById("member-detail-account-number")?.textContent || "";
+  document.getElementById("member-view-details-btn")?.addEventListener("click", () => {
+    if (!activeMemberDetail) return;
+    closeModal("member-detail-overlay");
+    openMemberViewDetails(activeMemberDetail);
+  });
+
+  // Backdrop-click-to-close for both new sheets is already covered
+  // generically by initializeModals()'s ".modal-overlay" loop.
+  document.getElementById("close-member-pay")?.addEventListener("click", () => closeModal("member-pay-overlay"));
+  document.getElementById("member-pay-mark-btn")?.addEventListener("click", () => showToast("Marking payouts as paid is planned for a future release.", "fa-solid fa-hourglass-half"));
+  document.getElementById("member-pay-copy-account")?.addEventListener("click", async () => {
+    const value = document.getElementById("member-pay-account-number")?.textContent || "";
     try { await navigator.clipboard.writeText(value); showToast("Account number copied.", "fa-regular fa-copy"); }
     catch (e) { showToast("Copy not supported in this browser.", "fa-solid fa-triangle-exclamation"); }
   });
 
+  document.getElementById("close-member-view-details")?.addEventListener("click", () => closeModal("member-view-details-overlay"));
   document.getElementById("member-download-btn")?.addEventListener("click", downloadMemberDetails);
 }
 
@@ -2480,7 +2764,10 @@ function allMembersFlat() {
 }
 
 function matchesMemberFilters(member) {
-  if (memberFilters.circle !== "all" && member.circleId !== Number(memberFilters.circle)) return false;
+  if (memberFilters.programType !== "all") {
+    const circle = circlesData.find((c) => c.id === member.circleId);
+    if (!circle || circle.programType !== memberFilters.programType) return false;
+  }
   if (memberFilters.status === "suspended_removed") {
     if (!["suspended", "removed"].includes(member.membershipStatus)) return false;
   } else if (memberFilters.status !== "all" && member.membershipStatus !== memberFilters.status) {
@@ -2489,8 +2776,10 @@ function matchesMemberFilters(member) {
   if (memberFilters.joined === "recent") {
     const days = (TODAY - new Date(member.joinedAt)) / 86400000;
     if (days > 30) return false;
-  } else if (memberFilters.joined === "custom" && memberFilters.joinedCustomDate) {
-    if (new Date(member.joinedAt) > new Date(memberFilters.joinedCustomDate)) return false;
+  } else if (memberFilters.joined === "custom") {
+    const joined = new Date(member.joinedAt);
+    if (memberFilters.joinedFrom && joined < new Date(memberFilters.joinedFrom)) return false;
+    if (memberFilters.joinedTo && joined > new Date(memberFilters.joinedTo)) return false;
   }
   return true;
 }
@@ -2501,7 +2790,7 @@ function matchesMemberSearch(member, term) {
 }
 
 function activeFilterCount() {
-  return ["circle", "status", "joined"].filter((key) => memberFilters[key] !== "all").length;
+  return ["programType", "status", "joined"].filter((key) => memberFilters[key] !== "all").length;
 }
 
 function renderMembersPage(circleId = membersPageFilter) {
@@ -2553,10 +2842,20 @@ function renderMembersPage(circleId = membersPageFilter) {
     // rows here sat flush against each other since .member-list's flex
     // gap only ever applied to this <section>'s own siblings, not to
     // the member-rows inside it.
-    return `<section style="margin-bottom:18px;"><p style="color:var(--muted);font-size:.76rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin:0 4px 8px;">${circle.name}</p><div class="member-list">${visible.map(buildMemberRowHTML).join("")}</div>${remaining > 0 ? `<button class="modal-secondary" type="button" style="width:100%;margin-top:8px;" data-view-more="${circle.id}">View ${remaining} more <i class="fa-solid fa-chevron-down"></i></button>` : ""}</section>`;
+    // Once expanded, the same control must offer a way back to the
+    // collapsed state (data-view-less) — an expansion a 50+ member
+    // group can never undo is exactly what this avoids. Search-driven
+    // expansion is excluded: it isn't tracked in expandedMemberGroups,
+    // so "View Less" would have nothing to collapse while searching.
+    const manuallyExpanded = expandedMemberGroups.has(circle.id) && !searchTerm;
+    const toggleBtn = manuallyExpanded && members.length > 3
+      ? `<button class="modal-secondary" type="button" style="width:100%;margin-top:8px;" data-view-less="${circle.id}">View Less <i class="fa-solid fa-chevron-up"></i></button>`
+      : (!expanded && remaining > 0 ? `<button class="modal-secondary" type="button" style="width:100%;margin-top:8px;" data-view-more="${circle.id}">View ${remaining} more <i class="fa-solid fa-chevron-down"></i></button>` : "");
+    return `<section style="margin-bottom:18px;"><p style="color:var(--muted);font-size:.76rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin:0 4px 8px;">${circle.name}</p><div class="member-list">${visible.map(buildMemberRowHTML).join("")}</div>${toggleBtn}</section>`;
   }).join("");
 
   container.querySelectorAll("[data-view-more]").forEach((btn) => btn.addEventListener("click", () => { expandedMemberGroups.add(Number(btn.dataset.viewMore)); renderMembersPage(null); }));
+  container.querySelectorAll("[data-view-less]").forEach((btn) => btn.addEventListener("click", () => { expandedMemberGroups.delete(Number(btn.dataset.viewLess)); renderMembersPage(null); }));
   wireMemberRows(container, all);
 }
 
@@ -2573,32 +2872,42 @@ function initializeMemberFilters() {
   const close = document.getElementById("close-member-filter");
   if (close) close.addEventListener("click", () => closeModal("member-filter-overlay"));
   const clear = document.getElementById("clear-filters-btn");
-  if (clear) clear.addEventListener("click", () => { memberFilters = { circle: "all", status: "all", joined: "all", joinedCustomDate: "" }; populateFilterSheet(); });
-  const customDate = document.getElementById("filter-joined-custom-date");
-  if (customDate) customDate.addEventListener("change", () => { memberFilters.joinedCustomDate = customDate.value; });
+  if (clear) clear.addEventListener("click", () => { memberFilters = { programType: "all", status: "all", joined: "all", joinedFrom: "", joinedTo: "" }; populateFilterSheet(); });
+  document.getElementById("filter-joined-date-from")?.addEventListener("change", (e) => { memberFilters.joinedFrom = e.target.value; });
+  document.getElementById("filter-joined-date-to")?.addEventListener("change", (e) => { memberFilters.joinedTo = e.target.value; });
   const apply = document.getElementById("apply-filters-btn");
   if (apply) apply.addEventListener("click", () => { closeModal("member-filter-overlay"); renderMembersPage(membersPageFilter); });
 }
 
+// Exactly three filtering dimensions — Program Type, Membership Status,
+// Date Joined — never a per-Circle list (that's the exact anti-pattern
+// this replaces: a long, unbounded chip row that grows with every new
+// Circle the Organizer creates).
 function populateFilterSheet() {
-  const circleChips = document.getElementById("filter-circle-chips");
+  const programTypeChips = document.getElementById("filter-program-type-chips");
   const statusChips = document.getElementById("filter-status-chips");
   const joinedChips = document.getElementById("filter-joined-chips");
-  if (!circleChips) return;
+  if (!programTypeChips) return;
 
   const chip = (label, value, group) => `<button type="button" class="filter-chip${memberFilters[group] === value ? " active" : ""}" data-group="${group}" data-value="${value}">${label}</button>`;
 
-  circleChips.innerHTML = chip("All Circles", "all", "circle") + circlesData.map((c) => chip(c.name, String(c.id), "circle")).join("");
-  statusChips.innerHTML = chip("Active", "active", "status") + chip("Inactive", "inactive", "status") + chip("Suspended/Removed", "suspended_removed", "status") + chip("All", "all", "status");
+  programTypeChips.innerHTML = chip("All", "all", "programType") + PROGRAM_TYPES.map((t) => chip(t, t, "programType")).join("");
+  // "Inactive" removed — the three real statuses this filter offers
+  // are All / Active / Suspended-Removed.
+  statusChips.innerHTML = chip("All", "all", "status") + chip("Active", "active", "status") + chip("Suspended/Removed", "suspended_removed", "status");
   joinedChips.innerHTML = chip("All", "all", "joined") + chip("Last 30 days", "recent", "joined") + chip("Custom", "custom", "joined");
 
-  const customDate = document.getElementById("filter-joined-custom-date");
-  if (customDate) {
-    customDate.hidden = memberFilters.joined !== "custom";
-    customDate.value = memberFilters.joinedCustomDate || "";
-  }
+  const dateRange = document.getElementById("filter-joined-date-range");
+  const fromInput = document.getElementById("filter-joined-date-from");
+  const toInput = document.getElementById("filter-joined-date-to");
+  if (dateRange) dateRange.hidden = memberFilters.joined !== "custom";
+  if (fromInput) fromInput.value = memberFilters.joinedFrom || "";
+  if (toInput) toInput.value = memberFilters.joinedTo || "";
 
-  document.querySelectorAll(".filter-chip").forEach((c) => c.addEventListener("click", () => {
+  // Scoped to this sheet only — the Notifications filter sheet reuses
+  // the same .filter-chip component for a different state object
+  // (notificationFilters), so a global selector would cross-wire them.
+  document.querySelectorAll("#member-filter-overlay .filter-chip").forEach((c) => c.addEventListener("click", () => {
     memberFilters[c.dataset.group] = c.dataset.value;
     populateFilterSheet();
   }));
@@ -3099,22 +3408,13 @@ function initializeTotalContributionsDetails() {
 // Today's Contributions strip. Entirely separate from the info panel.
 function initializeBalanceToggle() {
   const toggleBtn = document.querySelector(".toggle-balance");
-  const balanceEl = document.getElementById("wallet-balance");
-  const todayEl = document.getElementById("today-contributions");
-  if (!toggleBtn || !balanceEl) return;
-  const maskedValue = "• • • • • •";
-  let hidden = false;
+  if (!toggleBtn) return;
   toggleBtn.addEventListener("click", () => {
-    hidden = !hidden;
-    if (hidden) {
-      balanceEl.textContent = maskedValue;
-      if (todayEl) todayEl.textContent = maskedValue;
-    } else {
-      renderTotalContributionsValue();
-      renderTodayContributionsValue();
-    }
-    toggleBtn.setAttribute("aria-pressed", String(hidden));
-    toggleBtn.innerHTML = hidden ? '<i class="fa-solid fa-eye-slash"></i>' : '<i class="fa-solid fa-eye"></i>';
+    balanceMasked = !balanceMasked;
+    renderTotalContributionsValue();
+    renderTodayContributionsValue();
+    toggleBtn.setAttribute("aria-pressed", String(balanceMasked));
+    toggleBtn.innerHTML = balanceMasked ? '<i class="fa-solid fa-eye-slash"></i>' : '<i class="fa-solid fa-eye"></i>';
   });
 }
 
