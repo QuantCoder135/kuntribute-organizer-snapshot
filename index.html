@@ -451,6 +451,12 @@ button { font-family:inherit; }
 .activity-status.pending,.activity-status.open { color:var(--warning); background:rgba(245,158,11,.12); }
 .activity-status.scheduled { color:var(--info); background:rgba(59,130,246,.12); }
 .activity-status.cancelled { color:var(--danger); background:rgba(239,68,68,.12); }
+/* Two-way payout status model (see buildTransactionRecord): a
+   member-submitted contribution is "Awaiting Approval"; an
+   Organizer-recorded payout is "Pending Member Confirmation" until the
+   member confirms receipt. Both read as an active waiting state. */
+.activity-status.awaiting-approval,.activity-status.pending-member { color:var(--warning); background:rgba(245,158,11,.12); }
+.activity-status.rejected { color:var(--danger); background:rgba(239,68,68,.12); }
 
 .cycle-row { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:13px 14px; border:1px solid var(--border); border-radius:13px; background:var(--card2); }
 .cycle-row-left { display:flex; align-items:center; gap:11px; min-width:0; }
@@ -529,9 +535,16 @@ button { font-family:inherit; }
 @media (max-width:992px) {
   .mobile-drawer {
     display:flex; flex-direction:column; position:fixed; top:0; left:-300px;
-    width:280px; max-width:84vw; height:100vh; background:var(--sidebar);
+    width:280px; max-width:84vw; background:var(--sidebar);
     z-index:1000; box-shadow:var(--shadow);
     transition:left .35s cubic-bezier(.22,.61,.36,1); overflow:hidden;
+    /* 100vh is the browser-chrome-collapsed viewport height, not what's
+       actually visible right now — on mobile that varies with the
+       underlying page's scroll position (it's what was pinning "Back to
+       Website" off-screen depending on Home's scroll state when the
+       drawer opened). 100dvh tracks the real, currently-visible
+       viewport; vh stays only as a fallback for browsers without dvh. */
+    height:100vh; height:100dvh;
   }
   .mobile-drawer.showSidebar { left:0; }
 
@@ -552,7 +565,7 @@ button { font-family:inherit; }
   .mobile-drawer-link.planned-nav:hover { background:transparent; color:var(--nav-text); }
   .mobile-drawer-link.planned-nav span { margin-left:auto; padding:2px 7px; border-radius:999px; background:var(--card2); color:var(--muted); font-size:.6rem; font-weight:700; text-transform:uppercase; }
 
-  .mobile-drawer-bottom { padding:14px 16px calc(16px + env(safe-area-inset-bottom)); border-top:1px solid var(--border); }
+  .mobile-drawer-bottom { flex-shrink:0; padding:14px 16px calc(16px + env(safe-area-inset-bottom)); border-top:1px solid var(--border); }
   .mobile-drawer-exit { color:var(--green); font-weight:700; }
 }
 
@@ -639,6 +652,41 @@ button.currency-select { width:100%; text-align:left; }
    inside the View Details sheet it opens rather than on the snapshot. */
 .member-view-details-btn { width:100%; margin-top:12px; border:none; background:var(--green); color:#fff; padding:14px; border-radius:13px; font-weight:800; font-size:.92rem; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; }
 .member-view-details-btn:hover { background:var(--green-dark); }
+
+/* Pay Member's textarea note field — same visual family as
+   .form-field input/select, just with its own resize/min-height. */
+.form-field textarea { background:var(--card2); border:1px solid var(--border); color:var(--text); padding:13px 15px; border-radius:12px; font-size:.94rem; font-family:inherit; outline:none; width:100%; resize:vertical; min-height:70px; }
+.form-field textarea:focus { border-color:var(--green); }
+
+/* Payment Evidence — a tappable upload area plus a row of filename/
+   thumbnail chips, each removable. Prototype-only: files never leave
+   the browser (object URLs for image previews only, revoked on
+   removal/navigation), nothing is uploaded or persisted. */
+.evidence-upload-area { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; padding:26px 16px; border:1px dashed var(--border); border-radius:14px; color:var(--muted); text-align:center; cursor:pointer; margin-bottom:12px; }
+.evidence-upload-area:hover { border-color:var(--green-border); color:var(--text); }
+.evidence-upload-area i { font-size:22px; color:var(--green); }
+.evidence-upload-area p { font-size:.86rem; color:var(--text); font-weight:600; }
+.evidence-thumb-row { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:6px; }
+.evidence-thumb { position:relative; width:74px; height:74px; border-radius:12px; overflow:hidden; background:var(--card2); border:1px solid var(--border); }
+.evidence-thumb img { width:100%; height:100%; object-fit:cover; display:block; }
+.evidence-thumb-fallback { width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; color:var(--muted); font-size:.6rem; padding:4px; text-align:center; word-break:break-all; }
+.evidence-thumb-remove { position:absolute; top:3px; right:3px; width:20px; height:20px; border-radius:50%; border:none; background:rgba(0,0,0,.6); color:#fff; display:grid; place-items:center; font-size:10px; cursor:pointer; }
+
+/* Universal Transaction Details header — a financial-record feel
+   (centered status icon, dominant amount, plain-language title),
+   distinct from a generic activity modal. */
+.txn-hero { text-align:center; padding:8px 0 22px; }
+.txn-hero-icon { width:56px; height:56px; border-radius:50%; background:rgba(34,197,94,.15); color:var(--green); display:grid; place-items:center; font-size:22px; margin:0 auto 14px; }
+.txn-hero-icon.failed { background:rgba(239,68,68,.15); color:var(--danger); }
+.txn-hero-icon.info { background:rgba(59,130,246,.15); color:var(--info); }
+.txn-hero h1 { font-size:1.7rem; margin-bottom:4px; }
+.txn-hero p { color:var(--muted); font-size:.9rem; }
+
+/* Recent Activity / Notifications / History rows now open the
+   universal Transaction Details page — a visible chevron signals that,
+   while the row itself stays exactly as concise as before. */
+.activity-row.clickable { cursor:pointer; }
+.activity-row-chevron { color:var(--muted); font-size:.8rem; flex-shrink:0; margin-left:4px; }
 
 /* Central floating "+" in the mobile bottom nav — the single primary
    mobile New Circle entry point. Elevation reference: the Member-facing
@@ -1142,6 +1190,136 @@ button.currency-select { width:100%; text-align:left; }
             </div>
           </div>
         </div>
+
+        <!-- ================= PAY MEMBER — a dedicated contextual payment
+             page (not a pop-up): knows Member, Circle, currency and
+             payment destination throughout. See paymentDraft/openMemberPay. ================= -->
+        <div id="page-member-pay" class="page" data-title="Pay Member">
+          <a href="#" id="member-pay-back" class="workflow-back" style="display:inline-flex;align-items:center;gap:8px;color:var(--green);font-size:.86rem;font-weight:700;margin-bottom:12px;"><i class="fa-solid fa-arrow-left"></i> Member Record</a>
+          <div class="page-header"><div><h1>Pay Member</h1><p>Record a payout you're sending to this member.</p></div></div>
+
+          <div class="cd-header" style="margin-bottom:16px;">
+            <div class="cd-header-top">
+              <div class="cd-identity">
+                <h1 id="member-pay-name" style="font-size:1.1rem;">Member</h1>
+                <div class="cd-identity-meta"><span class="cd-type" id="member-pay-ktb">KTB ID</span></div>
+              </div>
+            </div>
+            <div class="cd-stats" style="grid-template-columns:1fr;margin-top:12px;">
+              <div class="cd-stat"><span>Circle</span><strong id="member-pay-circle">—</strong></div>
+            </div>
+          </div>
+
+          <p class="me-section-label">Payment Destination</p>
+          <div class="review-section">
+            <div class="review-row"><span>To</span><strong id="member-pay-to">-</strong></div>
+            <div class="review-row"><span>Bank</span><strong id="member-pay-bank">-</strong></div>
+            <div class="review-row"><span>Account</span><strong id="member-pay-account-number">-</strong></div>
+            <div class="review-row"><span>Account Holder</span><strong id="member-pay-account-name">-</strong></div>
+          </div>
+
+          <p class="me-section-label">Payment</p>
+          <label class="form-field"><span>Amount</span><input type="text" id="member-pay-amount" inputmode="numeric" /></label>
+          <label class="form-field"><span>Payment Type</span>
+            <div class="segmented" id="member-pay-type-segmented">
+              <button type="button" data-type="full" class="active">Full Payment</button>
+              <button type="button" data-type="partial">Partial Payment</button>
+            </div>
+          </label>
+          <label class="form-field"><span>Payment Date</span><input type="date" id="member-pay-date" /></label>
+
+          <p class="me-section-label">Payment Evidence</p>
+          <div class="evidence-upload-area" id="member-pay-evidence-upload">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+            <p>Upload payment screenshot(s)</p>
+            <span class="field-hint">Prototype only — nothing is uploaded or stored.</span>
+          </div>
+          <input type="file" id="member-pay-evidence-input" accept="image/*" multiple hidden />
+          <div class="evidence-thumb-row" id="member-pay-evidence-list"></div>
+
+          <p class="me-section-label">Note</p>
+          <label class="form-field"><span>Optional note</span><textarea id="member-pay-note" rows="3" placeholder="Add context for this payment (optional)"></textarea></label>
+
+          <p id="member-pay-warning" class="field-warning" role="alert"></p>
+          <button type="button" class="modal-submit" id="member-pay-continue-btn" style="margin-top:4px;">Continue <i class="fa-solid fa-arrow-right"></i></button>
+        </div>
+
+        <!-- ================= REVIEW PAYMENT — confirmation step before the
+             payment is actually recorded. ================= -->
+        <div id="page-payment-review" class="page" data-title="Review Payment">
+          <a href="#" id="payment-review-back" class="workflow-back" style="display:inline-flex;align-items:center;gap:8px;color:var(--green);font-size:.86rem;font-weight:700;margin-bottom:12px;"><i class="fa-solid fa-arrow-left"></i> Pay Member</a>
+          <div class="page-header"><div><h1>Review Payment</h1><p>Confirm the details before recording this payment.</p></div></div>
+
+          <div class="review-hero">
+            <p>You are recording a payment to</p>
+            <h1 id="payment-review-name">Member</h1>
+            <small id="payment-review-amount">₦0</small>
+          </div>
+
+          <div class="review-section">
+            <div class="review-row"><span>Amount</span><strong id="payment-review-amount-row">-</strong></div>
+            <div class="review-row"><span>Payment Type</span><strong id="payment-review-type">-</strong></div>
+            <div class="review-row"><span>Circle</span><strong id="payment-review-circle">-</strong></div>
+            <div class="review-row"><span>Payment Date</span><strong id="payment-review-date">-</strong></div>
+          </div>
+          <p class="me-section-label">Destination</p>
+          <div class="review-section">
+            <div class="review-row"><span>Bank</span><strong id="payment-review-bank">-</strong></div>
+            <div class="review-row"><span>Account</span><strong id="payment-review-account">-</strong></div>
+          </div>
+          <div class="review-section">
+            <div class="review-row"><span>Evidence</span><strong id="payment-review-evidence">-</strong></div>
+            <div class="review-row"><span>Note</span><strong id="payment-review-note">-</strong></div>
+          </div>
+
+          <p id="payment-review-warning" class="field-warning" role="alert"></p>
+          <div class="wizard-actions"><button type="button" class="modal-secondary" id="payment-review-edit-btn">← Back / Edit</button><button type="button" class="modal-submit" id="payment-review-confirm-btn">Confirm Payment</button></div>
+        </div>
+
+        <!-- ================= TRANSACTION DETAILS — universal detail view for
+             any contribution/payout row (Recent Activity, Notifications,
+             Circle Detail's Contributions/Payouts tabs, history pages).
+             Adapts to the two-way payout status model: Awaiting Approval
+             (member-submitted contribution), Pending Member Confirmation
+             (organizer payout), Confirmed. ================= -->
+        <div id="page-transaction-detail" class="page" data-title="Transaction">
+          <a href="#" id="transaction-detail-back" class="workflow-back" style="display:inline-flex;align-items:center;gap:8px;color:var(--green);font-size:.86rem;font-weight:700;margin-bottom:12px;"><i class="fa-solid fa-arrow-left"></i> Back</a>
+
+          <div class="txn-hero">
+            <div class="txn-hero-icon" id="transaction-detail-icon"><i class="fa-solid fa-check"></i></div>
+            <h1 id="transaction-detail-amount">₦0</h1>
+            <p id="transaction-detail-title">Transaction</p>
+          </div>
+
+          <div class="review-section">
+            <div class="review-row"><span>To</span>
+              <div style="text-align:right;">
+                <strong id="transaction-detail-to-name">-</strong>
+                <p class="detail-caption" id="transaction-detail-to-sub"></p>
+              </div>
+            </div>
+            <div class="review-row"><span>From</span><strong id="transaction-detail-from">-</strong></div>
+            <div class="review-row"><span>Date</span><strong id="transaction-detail-date">-</strong></div>
+            <div class="review-row"><span>Payment Status</span><span class="activity-status" id="transaction-detail-status">-</span></div>
+            <div class="review-row"><span>Payment Type</span><strong id="transaction-detail-type">-</strong></div>
+            <div class="review-row"><span>Circle</span><strong id="transaction-detail-circle">-</strong></div>
+            <div class="review-row"><span>Transaction ID</span><strong id="transaction-detail-txnid">-</strong></div>
+            <div class="review-row" id="transaction-detail-note-row"><span>Note</span><strong id="transaction-detail-note">-</strong></div>
+          </div>
+
+          <div id="transaction-detail-approval-actions" hidden style="margin-bottom:14px;">
+            <button type="button" class="modal-secondary" id="transaction-detail-view-evidence" style="width:100%;margin-bottom:10px;"><i class="fa-solid fa-eye"></i> View Evidence</button>
+            <div class="wizard-actions">
+              <button type="button" class="modal-secondary danger" id="transaction-detail-reject">Reject</button>
+              <button type="button" class="modal-submit" id="transaction-detail-approve">Approve</button>
+            </div>
+          </div>
+
+          <div class="me-list" style="margin-top:6px;">
+            <div class="me-list-item enabled" id="transaction-detail-support-row"><div class="me-list-icon"><i class="fa-regular fa-comment"></i></div><div><h4>Contact Customer Care</h4></div><i class="fa-solid fa-chevron-right"></i></div>
+            <div class="me-list-item enabled" id="transaction-detail-download-row"><div class="me-list-icon"><i class="fa-solid fa-download"></i></div><div><h4>Download Receipt</h4></div><i class="fa-solid fa-download"></i></div>
+          </div>
+        </div>
       </main>
 
       <!-- ================= MANAGE CIRCLE SHEET ================= -->
@@ -1226,24 +1404,6 @@ button.currency-select { width:100%; text-align:left; }
         </div>
       </div>
 
-      <!-- ================= PAY MEMBER (Account / Payout Details, moved out of
-           the Member Record Snapshot) ================= -->
-      <div class="modal-overlay" id="member-pay-overlay">
-        <div class="modal-sheet"><div class="modal-handle"></div>
-          <div class="modal-header"><h2>Pay Member</h2><button type="button" class="modal-close" id="close-member-pay" aria-label="Close"><i class="fa-solid fa-xmark"></i></button></div>
-          <p class="modal-subtext" id="member-pay-subtext" style="text-align:left;">Send this member's contribution or payout directly using their payout destination below. KUNTRIBUTE does not hold or move funds.</p>
-          <p class="me-section-label">Account / Payout Details</p>
-          <div class="review-section">
-            <div class="review-row"><span>Bank Name</span><strong id="member-pay-bank">-</strong></div>
-            <div class="review-row"><span>Account Name</span><strong id="member-pay-account-name">-</strong></div>
-            <div class="review-row"><span>Account Number</span>
-              <div class="review-row-copy"><strong id="member-pay-account-number">-</strong><button type="button" class="copy-btn" id="member-pay-copy-account" aria-label="Copy account number"><i class="fa-regular fa-copy"></i></button></div>
-            </div>
-          </div>
-          <button type="button" class="modal-submit" id="member-pay-mark-btn"><i class="fa-solid fa-hand-holding-dollar"></i> Mark as Paid</button>
-        </div>
-      </div>
-
       <!-- ================= MEMBER VIEW DETAILS (deeper record, gateway from
            the Member Record Snapshot) ================= -->
       <div class="modal-overlay" id="member-view-details-overlay">
@@ -1293,28 +1453,6 @@ button.currency-select { width:100%; text-align:left; }
         </div>
       </div>
 
-      <!-- ================= CONTRIBUTION DETAIL (slide-up) ================= -->
-      <div class="modal-overlay" id="contribution-detail-overlay">
-        <div class="modal-sheet"><div class="modal-handle"></div>
-          <div class="modal-header"><h2>Contribution</h2><button type="button" class="modal-close" id="close-contribution-detail" aria-label="Close"><i class="fa-solid fa-xmark"></i></button></div>
-          <div class="review-section">
-            <div class="review-row"><span>Member</span><strong id="contribution-detail-member">-</strong></div>
-            <div class="review-row"><span>Amount</span><strong id="contribution-detail-amount">-</strong></div>
-            <div class="review-row"><span>Date</span><strong id="contribution-detail-date">-</strong></div>
-            <div class="review-row"><span>Status</span><span class="activity-status" id="contribution-detail-status">-</span></div>
-          </div>
-          <p class="me-section-label">Payment Screenshot</p>
-          <div class="payment-proof-box" id="contribution-detail-proof-box">
-            <i class="fa-regular fa-image"></i>
-            <p id="contribution-detail-proof-text">No screenshot uploaded for this contribution.</p>
-          </div>
-          <div class="wizard-actions" id="contribution-detail-proof-actions" style="margin-top:10px;">
-            <button type="button" class="modal-secondary" id="contribution-detail-view-proof"><i class="fa-solid fa-eye"></i> View</button>
-            <button type="button" class="modal-secondary" id="contribution-detail-download-proof"><i class="fa-solid fa-download"></i> Download</button>
-          </div>
-        </div>
-      </div>
-
       <!-- ================= CYCLE DETAIL — member payment breakdown (slide-up) ================= -->
       <div class="modal-overlay" id="cycle-detail-overlay">
         <div class="modal-sheet"><div class="modal-handle"></div>
@@ -1327,33 +1465,6 @@ button.currency-select { width:100%; text-align:left; }
         </div>
       </div>
 
-      <!-- ================= PAYOUT DETAIL (slide-up) ================= -->
-      <div class="modal-overlay" id="payout-detail-overlay">
-        <div class="modal-sheet"><div class="modal-handle"></div>
-          <div class="modal-header"><h2>Payout</h2><button type="button" class="modal-close" id="close-payout-detail" aria-label="Close"><i class="fa-solid fa-xmark"></i></button></div>
-          <div class="review-section">
-            <div class="review-row"><span>Recipient</span><strong id="payout-detail-recipient">-</strong></div>
-            <div class="review-row"><span>Amount</span><strong id="payout-detail-amount">-</strong></div>
-            <div class="review-row"><span>Date</span><strong id="payout-detail-date">-</strong></div>
-            <div class="review-row"><span>Status</span><span class="activity-status" id="payout-detail-status">-</span></div>
-          </div>
-          <p class="me-section-label">Bank Details</p>
-          <div class="review-section">
-            <div class="review-row"><span>Bank Name</span><strong id="payout-detail-bank">-</strong></div>
-            <div class="review-row"><span>Account Name</span><strong id="payout-detail-account-name">-</strong></div>
-            <div class="review-row"><span>Account Number</span><strong id="payout-detail-account-number">-</strong></div>
-          </div>
-          <p class="me-section-label">Receipt</p>
-          <div class="payment-proof-box" id="payout-detail-proof-box">
-            <i class="fa-regular fa-file-lines"></i>
-            <p id="payout-detail-proof-text">No receipt uploaded for this payout.</p>
-          </div>
-          <div class="wizard-actions" id="payout-detail-proof-actions" style="margin-top:10px;">
-            <button type="button" class="modal-secondary" id="payout-detail-view-receipt"><i class="fa-solid fa-eye"></i> View Receipt</button>
-            <button type="button" class="modal-secondary" id="payout-detail-download-receipt"><i class="fa-solid fa-download"></i> Download Receipt</button>
-          </div>
-        </div>
-      </div>
 
       <div class="modal-overlay metric-overlay" id="total-contributions-overlay">
         <div class="modal-sheet" role="dialog" aria-modal="true"><div class="modal-handle"></div>
@@ -1478,6 +1589,9 @@ document.addEventListener("DOMContentLoaded", () => {
   initializeTotalContributionsDetails();
   initializeMemberDetail();
   initializeMemberActions();
+  initializeMemberPay();
+  initializePaymentReview();
+  initializeTransactionDetail();
   initializeSearch();
   initializeCirclesSegments();
   initializeMemberFilters();
@@ -1704,9 +1818,27 @@ function showToast(message, icon = "fa-solid fa-circle-check") {
 }
 
 /* ==========================================================
-   PAGE SWITCHING
+   PAGE SWITCHING + BROWSER HISTORY
+   Every genuine page-level view participates in real browser history
+   via pushState/popstate, so the Android/system Back button steps back
+   through the app's own view stack instead of immediately leaving the
+   GitHub Pages document. Modals/bottom sheets, the drawer, and filter
+   sheets deliberately do NOT participate — only switchPage() does.
 ========================================================== */
-function switchPage(pageId) {
+let suppressHistoryPush = false; // true only while restoreView() is replaying a popstate
+
+function pushPageHistory(pageId, ctx) {
+  if (suppressHistoryPush) return;
+  const state = { ktbPage: pageId, ctx: ctx || {} };
+  const prev = history.state;
+  // No-op re-navigation to the exact page+context already on top (e.g.
+  // clicking an already-active nav item) shouldn't grow the stack.
+  if (prev && prev.ktbPage === pageId && JSON.stringify(prev.ctx || {}) === JSON.stringify(state.ctx)) return;
+  if (!prev) history.replaceState(state, "", "#" + pageId); // the page's own initial load entry becomes the root — Home gets no extra back-stop
+  else history.pushState(state, "", "#" + pageId);
+}
+
+function switchPage(pageId, ctx = {}) {
   document.querySelectorAll(".page").forEach((p) => p.classList.remove("active"));
   const target = document.getElementById("page-" + pageId);
   if (target) target.classList.add("active");
@@ -1734,20 +1866,118 @@ function switchPage(pageId) {
   // every time it's (re)entered — see openNotifications().
   if (pageId === "notifications") openNotifications();
 
+  pushPageHistory(pageId, ctx);
   closeDrawer();
   window.scrollTo(0, 0);
 }
+
+// Stable, re-resolvable keys for history.state — never full object
+// references, since state must survive independent of any particular
+// in-memory object and stay small/plain.
+function memberKeyFor(member) { return `${member.circleId}:${member.userId}`; }
+function findMemberByKey(key) {
+  if (!key) return null;
+  const [circleId, userId] = key.split(":").map(Number);
+  const circle = circlesData.find((c) => c.id === circleId);
+  const member = circle?.members.find((m) => m.userId === userId);
+  return member ? { ...member, circleId } : null;
+}
+
+// Member Record is the one modal the spec calls out by name as its own
+// step in the Back chain ("... -> Circle -> Member Record"), so unlike
+// every other modal/bottom sheet it gets a real, deliberately-narrow
+// history layer *on top of* whatever page is current — not a new page
+// of its own. Opening it pushes {..baseState, modal:"member-detail"};
+// re-opening it for a *different* member while that layer is still on
+// top replaces rather than stacks (otherwise repeatedly tapping members
+// without navigating away would pile up dead entries, and one Back
+// press would resurrect a stale member instead of reaching the page).
+function pushMemberDetailHistory(member) {
+  if (suppressHistoryPush) return;
+  const base = history.state || { ktbPage: "dashboard", ctx: {} };
+  const state = { ktbPage: base.ktbPage, ctx: base.ctx || {}, modal: "member-detail", modalCtx: { memberKey: memberKeyFor(member) } };
+  const hash = "#" + base.ktbPage;
+  if (base.modal === "member-detail") history.replaceState(state, "", hash);
+  else history.pushState(state, "", hash);
+}
+// The X button / backdrop tap is functionally "go back one step" when
+// Member Record owns the current history entry — using history.back()
+// (rather than plain closeModal()) pops that entry for real, so it
+// can't resurface on a later, unrelated Back press. Falls back to a
+// plain close if this modal somehow isn't the one on top.
+function closeMemberDetailModal() {
+  if (history.state && history.state.modal === "member-detail") history.back();
+  else closeModal("member-detail-overlay");
+}
+
+// Replays a popped browser-history state through the exact same
+// open*/render* functions normal forward navigation uses — no parallel
+// restore logic to keep in sync, just suppressHistoryPush guarding
+// against re-pushing while they call switchPage() internally.
+function restoreView(state) {
+  const pageId = state.ktbPage;
+  const ctx = state.ctx || {};
+  // Forward navigation always closes a modal explicitly before opening
+  // the next page (e.g. "Pay Member" does closeModal() then switches
+  // page) — popstate is the one path that can arrive here with a modal
+  // still open while the page underneath changes, so it has to close
+  // whatever's open itself first or it'd be left floating over the
+  // wrong page. Member Record is reopened afterwards, below, if this
+  // particular state says it should be.
+  document.querySelectorAll(".modal-overlay.show").forEach((overlay) => overlay.classList.remove("show"));
+  suppressHistoryPush = true;
+  try {
+    if (pageId === "circle-detail" && ctx.circleId != null) { openCircleDetail(ctx.circleId); }
+    else if (pageId === "contributions-history" && ctx.circleId != null) { renderContributionsHistoryPage(ctx.circleId); switchPage("contributions-history", ctx); }
+    else if (pageId === "payouts-history" && ctx.circleId != null) { renderPayoutsHistoryPage(ctx.circleId); switchPage("payouts-history", ctx); }
+    else if (pageId === "members") { renderMembersPage(ctx.circleId ?? null); switchPage("members", ctx); }
+    else if (pageId === "member-pay" && ctx.memberKey) {
+      const member = findMemberByKey(ctx.memberKey);
+      if (member) openMemberPay(member); else switchPage("dashboard");
+    } else if (pageId === "payment-review" && ctx.memberKey) {
+      if (paymentDraft && paymentDraft.memberKey === ctx.memberKey) { renderPaymentReviewPage(); switchPage("payment-review", ctx); }
+      else { const member = findMemberByKey(ctx.memberKey); if (member) openMemberPay(member); else switchPage("dashboard"); }
+    } else if (pageId === "transaction-detail" && ctx.txnKey) {
+      const txn = findTransactionByKey(ctx.txnKey);
+      if (txn) openTransactionDetail(txn); else switchPage("dashboard");
+    } else {
+      switchPage(pageId, ctx);
+    }
+
+    if (state.modal === "member-detail" && state.modalCtx?.memberKey) {
+      const member = findMemberByKey(state.modalCtx.memberKey);
+      if (member) openMemberDetail(member);
+    }
+  } finally {
+    suppressHistoryPush = false;
+  }
+}
+
+window.addEventListener("popstate", (e) => {
+  const state = e.state;
+  // No app state on this history entry — it's the one the browser had
+  // before our first replaceState, i.e. the genuine root. Do nothing
+  // and let the browser's own default Back behavior leave the document.
+  if (!state || !state.ktbPage) return;
+  restoreView(state);
+});
 
 function initializePageNav() {
   document.querySelectorAll(".sidebar nav a[data-page], .mobile-drawer a[data-page]").forEach((link) => {
     link.addEventListener("click", (e) => {
       e.preventDefault();
-      switchPage(link.dataset.page);
+      // Reset the Members context *before* switching, not after — the
+      // page id and its ctx are what gets pushed to browser history.
       if (link.dataset.page === "members") renderMembersPage(null);
+      switchPage(link.dataset.page, link.dataset.page === "members" ? { circleId: null } : {});
     });
   });
   document.querySelectorAll("[data-goto]").forEach((el) => {
-    el.addEventListener("click", (e) => { e.preventDefault(); switchPage(el.dataset.goto); });
+    el.addEventListener("click", (e) => {
+      e.preventDefault();
+      if (el.dataset.goto === "members") renderMembersPage(null);
+      switchPage(el.dataset.goto, el.dataset.goto === "members" ? { circleId: null } : {});
+    });
   });
   document.querySelectorAll(".planned-nav, .planned-action").forEach((link) => {
     link.addEventListener("click", (e) => { e.preventDefault(); showToast("This is planned for a future release.", "fa-solid fa-hourglass-half"); });
@@ -1843,8 +2073,9 @@ function initializeBottomNav() {
       items.forEach((i) => i.classList.remove("active"));
       item.classList.add("active");
       const pageId = navToPage[item.dataset.nav];
-      if (pageId) switchPage(pageId);
+      if (!pageId) return;
       if (pageId === "members") renderMembersPage(null);
+      switchPage(pageId, pageId === "members" ? { circleId: null } : {});
     });
   });
 
@@ -1890,8 +2121,8 @@ function loadDashboardData() {
   const allContributions = circlesData.flatMap((circle) => circle.contributions.map((c) => ({ ...c, circle_name: circle.name, currency: circle.currency })));
   const allPayouts = circlesData.flatMap((circle) => circle.payouts.map((p) => ({ ...p, currency: circle.currency })));
   activityData = [
-    ...allContributions.map((c) => ({ kind: "contribution", title: `${c.full_name || "Member"} contribution`, circleName: c.circle_name, amount: c.amount, currency: c.currency, status: c.status, date: c.payment_date })),
-    ...allPayouts.map((p) => ({ kind: "payout", title: `${p.full_name || "Member"} payout`, circleName: circlesData.find((c) => c.id === p.circle_id)?.name || "", amount: p.amount, currency: p.currency, status: p.status, date: p.payout_date })),
+    ...allContributions.map((c) => ({ kind: "contribution", id: c.contribution_id, title: `${c.full_name || "Member"} contribution`, circleName: c.circle_name, amount: c.amount, currency: c.currency, status: c.status, date: c.payment_date })),
+    ...allPayouts.map((p) => ({ kind: "payout", id: p.payout_id, title: `${p.full_name || "Member"} payout`, circleName: circlesData.find((c) => c.id === p.circle_id)?.name || "", amount: p.amount, currency: p.currency, status: p.status, date: p.payout_date })),
   ].sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
 
   const todayISO = TODAY.toISOString().slice(0, 10);
@@ -1994,6 +2225,21 @@ function renderTodayContributionsValue() {
   setText("today-contributions", balanceMasked ? MASKED_VALUE : formatAmount(todayContributionsByCurrency[dashboardCurrency] || 0, dashboardCurrency));
 }
 
+// Every row that opens the universal Transaction Details page (see
+// section 6/7 of the spec) carries data-activity-kind/-id and a
+// trailing chevron; rows stay exactly as concise as before — the
+// chevron is what signals "there's a detail view behind this".
+function activityRowChevronHTML() { return `<i class="fa-solid fa-chevron-right activity-row-chevron"></i>`; }
+function wireActivityRows(el) {
+  el.querySelectorAll("[data-activity-kind]").forEach((row) => {
+    row.addEventListener("click", () => {
+      const kind = row.dataset.activityKind;
+      const id = Number(row.dataset.activityId);
+      if (kind === "payout") openPayoutDetail(id); else openContributionDetail(id);
+    });
+  });
+}
+
 // currencyFilter is only ever passed by the dashboard's own panel (see
 // renderDashboardActivity) — Notifications/History always show every
 // currency, each row self-labeled by its own amount's symbol/suffix.
@@ -2004,12 +2250,14 @@ function renderActivityList(id, limit, currencyFilter) {
   if (!el) return;
   el.innerHTML = items.length
     ? items.map((item) => `
-      <div class="activity-row">
+      <div class="activity-row clickable" data-activity-kind="${item.kind}" data-activity-id="${item.id}">
         <div class="activity-row-icon ${item.kind}"><i class="fa-solid ${item.kind === "payout" ? "fa-money-bill-transfer" : "fa-money-check-dollar"}"></i></div>
         <div class="activity-row-body"><h4>${item.title}</h4><p>${item.circleName}</p></div>
         <div class="activity-row-right"><strong>${formatAmount(item.amount, item.currency)}</strong><small>${formatActivityDate(item.date)} · ${item.status}</small></div>
+        ${activityRowChevronHTML()}
       </div>`).join("")
     : `<div class="empty-state compact"><i class="fa-regular fa-clock"></i><p>No recorded activity yet.</p></div>`;
+  wireActivityRows(el);
 }
 // Mobile-only compact Recent Activity row: three deliberate lines —
 // name + purpose, circle name, full date — no separate right-hand
@@ -2024,12 +2272,14 @@ function renderRecentActivityCompact(id, limit, currencyFilter) {
   el.innerHTML = items.length
     ? items.map((item) => {
         const verb = item.kind === "payout" ? "received a payout" : "recorded a contribution";
-        return `<div class="activity-row">
+        return `<div class="activity-row clickable" data-activity-kind="${item.kind}" data-activity-id="${item.id}">
         <div class="activity-row-icon ${item.kind}"><i class="fa-solid ${item.kind === "payout" ? "fa-money-bill-transfer" : "fa-money-check-dollar"}"></i></div>
         <div class="activity-row-body"><h4>${item.title.replace(/ (contribution|payout)$/, "")} ${verb}</h4><p>${item.circleName}</p><p>${formatActivityDate(item.date)}</p></div>
+        ${activityRowChevronHTML()}
       </div>`;
       }).join("")
     : `<div class="empty-state compact"><i class="fa-regular fa-clock"></i><p>No recorded activity yet.</p></div>`;
+  wireActivityRows(el);
 }
 
 // The dashboard's own Recent Activity panel switches between the two
@@ -2095,12 +2345,14 @@ function renderNotificationsFeed() {
 
   el.innerHTML = items.length
     ? items.map((item) => `
-      <div class="activity-row">
+      <div class="activity-row clickable" data-activity-kind="${item.kind}" data-activity-id="${item.id}">
         <div class="activity-row-icon ${item.kind}"><i class="fa-solid ${item.kind === "payout" ? "fa-money-bill-transfer" : "fa-money-check-dollar"}"></i></div>
         <div class="activity-row-body"><h4>${item.title}</h4><p>${item.circleName}</p></div>
         <div class="activity-row-right"><strong>${formatAmount(item.amount, item.currency)}</strong><small>${formatActivityDate(item.date)} · ${item.status}</small></div>
+        ${activityRowChevronHTML()}
       </div>`).join("")
     : `<div class="empty-state compact"><i class="fa-regular fa-clock"></i><p>No notifications match your search/filters.</p></div>`;
+  wireActivityRows(el);
 
   const filterBtn = document.getElementById("notifications-filter-btn");
   if (filterBtn) {
@@ -2199,7 +2451,7 @@ function renderCirclesPage(searchTerm = "") {
       <div class="circle-card-badges">
         <span class="badge-amount">${formatAmount(circle.amount, circle.currency)}</span>
         <span class="badge-frequency">${circle.frequency}</span>
-        ${circle.status !== "active" ? `<span class="badge-status status-${circle.status}">${circle.status === "setup" ? "Setup / Recruiting" : circle.status}</span>` : ""}
+        ${circle.status !== "active" ? `<span class="badge-status status-${circle.status}">${circle.status === "scheduled" && circle.startDate ? `${circleStatusLabel(circle.status)} · ${formatShortMonthDay(circle.startDate)}` : circleStatusLabel(circle.status)}</span>` : ""}
       </div>
     </div>`).join("");
 
@@ -2249,6 +2501,14 @@ function circleStatusLabel(status) {
   if (status === "setup") return "Setup / Recruiting";
   return status.charAt(0).toUpperCase() + status.slice(1);
 }
+// "Oct 1" — used only for a Scheduled circle's start date on its card
+// badge (see renderCirclesPage), distinct from formatActivityDate's
+// fuller "1 Oct 2026" used everywhere else.
+function formatShortMonthDay(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "" : date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
 
 function currentCycleLabel(cycles) {
   if (!cycles.length) return "No cycles scheduled";
@@ -2284,14 +2544,9 @@ function initializeCircleWorkflows() {
     if (snapshotCircleId != null) openCircleDetail(snapshotCircleId);
   });
 
-  document.getElementById("close-contribution-detail")?.addEventListener("click", () => closeModal("contribution-detail-overlay"));
-  document.getElementById("contribution-detail-view-proof")?.addEventListener("click", () => showToast("Opening the payment screenshot (mock preview only).", "fa-regular fa-image"));
-  document.getElementById("contribution-detail-download-proof")?.addEventListener("click", () => downloadMockFile("payment-screenshot.txt", "Mock placeholder for a member-uploaded payment screenshot."));
-
-  document.getElementById("close-payout-detail")?.addEventListener("click", () => closeModal("payout-detail-overlay"));
-  document.getElementById("payout-detail-view-receipt")?.addEventListener("click", () => showToast("Opening the payout receipt (mock preview only).", "fa-regular fa-file-lines"));
-  document.getElementById("payout-detail-download-receipt")?.addEventListener("click", () => downloadMockFile("payout-receipt.txt", "Mock placeholder for an uploaded payout receipt."));
-
+  // Contribution/Payout detail are now the universal Transaction
+  // Details page (see openContributionDetail/openPayoutDetail), not
+  // modals — nothing to wire here for them anymore.
   document.getElementById("close-cycle-detail")?.addEventListener("click", () => closeModal("cycle-detail-overlay"));
 
   // "View all" (Contributions/Payouts tabs) -> dedicated history page.
@@ -2300,22 +2555,22 @@ function initializeCircleWorkflows() {
     e.preventDefault();
     if (activeCircleId == null) return;
     renderContributionsHistoryPage(activeCircleId);
-    switchPage("contributions-history");
+    switchPage("contributions-history", { circleId: activeCircleId });
   });
   document.getElementById("cd-view-all-payouts")?.addEventListener("click", (e) => {
     e.preventDefault();
     if (activeCircleId == null) return;
     renderPayoutsHistoryPage(activeCircleId);
-    switchPage("payouts-history");
+    switchPage("payouts-history", { circleId: activeCircleId });
   });
   document.getElementById("contributions-history-back")?.addEventListener("click", (e) => {
     e.preventDefault();
-    switchPage("circle-detail");
+    switchPage("circle-detail", { circleId: activeCircleId });
     setCircleDetailTab("contributions");
   });
   document.getElementById("payouts-history-back")?.addEventListener("click", (e) => {
     e.preventDefault();
-    switchPage("circle-detail");
+    switchPage("circle-detail", { circleId: activeCircleId });
     setCircleDetailTab("payouts");
   });
 }
@@ -2371,7 +2626,7 @@ function openCircleDetail(circleId) {
 
   renderCyclesList("cd-cycles-full", circle.cycles);
   setCircleDetailTab("members");
-  switchPage("circle-detail");
+  switchPage("circle-detail", { circleId });
 }
 
 // items are raw mockContributions/mockPayouts records (not a mapped
@@ -2386,7 +2641,7 @@ function renderActivityRowsInto(id, items, kind, currencyCode = "NGN") {
   const title = (item) => `${item.full_name || "Member"} ${isPayout ? "payout" : "contribution"}`;
 
   el.innerHTML = items.length
-    ? items.map((item) => `<div class="activity-row" data-record-id="${recordId(item)}"><div class="activity-row-icon ${kind}"><i class="fa-solid ${isPayout ? "fa-money-bill-transfer" : "fa-money-check-dollar"}"></i></div><div class="activity-row-body"><h4>${title(item)}</h4><p>${formatActivityDate(date(item))}</p></div><div class="activity-row-right"><strong>${formatAmount(item.amount, currencyCode)}</strong><span class="activity-status ${item.status}">${item.status}</span></div></div>`).join("")
+    ? items.map((item) => `<div class="activity-row clickable" data-record-id="${recordId(item)}"><div class="activity-row-icon ${kind}"><i class="fa-solid ${isPayout ? "fa-money-bill-transfer" : "fa-money-check-dollar"}"></i></div><div class="activity-row-body"><h4>${title(item)}</h4><p>${formatActivityDate(date(item))}</p></div><div class="activity-row-right"><strong>${formatAmount(item.amount, currencyCode)}</strong><span class="activity-status ${item.status}">${item.status}</span></div>${activityRowChevronHTML()}</div>`).join("")
     : `<div class="empty-state compact"><i class="fa-regular fa-clock"></i><p>No records yet.</p></div>`;
 
   el.querySelectorAll("[data-record-id]").forEach((row) => {
@@ -2472,51 +2727,177 @@ function openCircleSnapshot(circleId) {
 }
 
 /* ==========================================================
-   CONTRIBUTION / PAYOUT DETAIL (slide-up) + circle-scoped history
-   pages. Neither the contribution nor payout mock records carry a
-   real uploaded file, so the "screenshot"/"receipt" section is a
-   plain mock placeholder rather than a fabricated image — confirmed
-   contributions and paid payouts simply present it as available.
+   TRANSACTION DETAILS — universal detail view (a real page, not a
+   modal) for any contribution/payout row anywhere in the app (Recent
+   Activity, Notifications, History, Circle Detail's Contributions/
+   Payouts tabs). Normalizes a mock contribution or payout record into
+   one consistent shape and represents the two-way payout status model:
+     - member-submitted contribution: "Awaiting Approval" until the
+       Organizer approves/rejects it (see the Approve/Reject actions
+       below — this reuses/refines the existing pending/confirmed
+       contribution concept rather than inventing a new one).
+     - Organizer-recorded payout: "Pending Member Confirmation" until
+       the member confirms receipt (no Organizer-side action exists for
+       that half — it's the member's own confirmation, out of scope for
+       this Organizer-only prototype).
+   KUNTRIBUTE itself never moves money; this is a tracking/record
+   workflow, never presented as KUNTRIBUTE settling the payment.
 ========================================================== */
+function transactionKeyFor(kind, id) { return `${kind}:${id}`; }
+
+function synthTxnId(kind, id, dateStr) {
+  const d = dateStr ? new Date(dateStr) : TODAY;
+  const ymd = Number.isNaN(d.getTime())
+    ? "20260101"
+    : `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}`;
+  return `KTB-TXN-${ymd}-${String(id).padStart(5, "0")}`;
+}
+
+function buildTransactionRecord(kind, item, circle) {
+  const isPayout = kind === "payout";
+  const id = isPayout ? item.payout_id : item.contribution_id;
+  const date = isPayout ? item.payout_date : item.payment_date;
+  const member = circle ? circle.members.find((m) => m.userId === item.user_id) : null;
+  let statusKey, statusLabel;
+  if (isPayout) {
+    statusKey = item.status === "paid" ? "confirmed" : item.status === "cancelled" ? "cancelled" : "pending-member";
+    statusLabel = statusKey === "confirmed" ? "Confirmed" : statusKey === "cancelled" ? "Cancelled" : "Pending Member Confirmation";
+  } else {
+    statusKey = item.status === "confirmed" ? "confirmed" : item.status === "rejected" ? "rejected" : "awaiting-approval";
+    statusLabel = statusKey === "confirmed" ? "Confirmed" : statusKey === "rejected" ? "Rejected" : "Awaiting Approval";
+  }
+  const evidenceCount = item.evidence_count != null ? item.evidence_count : (isPayout ? (item.status === "paid" ? 1 : 0) : (item.status === "confirmed" ? 1 : 0));
+  return {
+    kind, id, key: transactionKeyFor(kind, id),
+    memberName: item.full_name || "Member",
+    circleId: circle ? circle.id : (item.circle_id ?? null),
+    circleName: circle ? circle.name : "Unavailable",
+    currency: circle ? circle.currency : "NGN",
+    amount: item.amount, date, statusKey, statusLabel,
+    paymentType: item.payment_type || "Full Payment",
+    note: item.note || "",
+    hasEvidence: evidenceCount > 0,
+    txnId: item.txn_id || synthTxnId(kind, id, date),
+    toName: isPayout ? (item.full_name || "Member") : "Amina Yusuf",
+    toSub: isPayout ? (member?.bankName || "") : "",
+    fromName: isPayout ? "Amina Yusuf" : (item.full_name || "Member"),
+  };
+}
+
+function findTransactionByKey(key) {
+  if (!key) return null;
+  const sep = key.indexOf(":");
+  const kind = key.slice(0, sep);
+  const id = Number(key.slice(sep + 1));
+  if (kind === "payout") {
+    const item = mockPayouts.find((p) => p.payout_id === id);
+    return item ? buildTransactionRecord("payout", item, circlesData.find((c) => c.id === item.circle_id)) : null;
+  }
+  if (kind === "contribution") {
+    const item = mockContributions.find((c) => c.contribution_id === id);
+    return item ? buildTransactionRecord("contribution", item, circlesData.find((c) => c.id === item.circle_id)) : null;
+  }
+  return null;
+}
+
 function openContributionDetail(contributionId) {
   const item = mockContributions.find((c) => c.contribution_id === contributionId);
   if (!item) return;
-
-  setText("contribution-detail-member", item.full_name || "Member");
-  setText("contribution-detail-amount", formatAmount(item.amount, currencyForCircleId(item.circle_id)));
-  setText("contribution-detail-date", formatActivityDate(item.payment_date));
-  const statusEl = document.getElementById("contribution-detail-status");
-  statusEl.textContent = item.status;
-  statusEl.className = "activity-status " + item.status;
-
-  const hasProof = item.status === "confirmed";
-  setText("contribution-detail-proof-text", hasProof ? "payment-screenshot.jpg" : "No screenshot uploaded for this contribution.");
-  document.getElementById("contribution-detail-proof-actions").style.display = hasProof ? "flex" : "none";
-
-  openModal("contribution-detail-overlay");
+  openTransactionDetail(buildTransactionRecord("contribution", item, circlesData.find((c) => c.id === item.circle_id)));
 }
 
 function openPayoutDetail(payoutId) {
   const item = mockPayouts.find((p) => p.payout_id === payoutId);
   if (!item) return;
-  const member = mockCircleMembers.find((m) => m.circle_member_id === item.circle_member_id);
+  openTransactionDetail(buildTransactionRecord("payout", item, circlesData.find((c) => c.id === item.circle_id)));
+}
 
-  setText("payout-detail-recipient", item.full_name || "Member");
-  setText("payout-detail-amount", formatAmount(item.amount, currencyForCircleId(item.circle_id)));
-  setText("payout-detail-date", formatActivityDate(item.payout_date));
-  const statusEl = document.getElementById("payout-detail-status");
-  statusEl.textContent = item.status;
-  statusEl.className = "activity-status " + item.status;
+let activeTransaction = null;
 
-  setText("payout-detail-bank", member?.bank_name || "Unavailable");
-  setText("payout-detail-account-name", item.full_name || "Unavailable");
-  setText("payout-detail-account-number", member?.account_number || "Unavailable");
+function openTransactionDetail(txn) {
+  if (!txn) return;
+  activeTransaction = txn;
 
-  const hasReceipt = item.status === "paid";
-  setText("payout-detail-proof-text", hasReceipt ? "payout-receipt.pdf" : "No receipt uploaded for this payout.");
-  document.getElementById("payout-detail-proof-actions").style.display = hasReceipt ? "flex" : "none";
+  const iconEl = document.getElementById("transaction-detail-icon");
+  if (iconEl) {
+    const settled = txn.statusKey === "confirmed";
+    const failed = txn.statusKey === "rejected" || txn.statusKey === "cancelled";
+    iconEl.className = "txn-hero-icon" + (settled ? "" : failed ? " failed" : " info");
+    iconEl.innerHTML = settled ? '<i class="fa-solid fa-check"></i>' : failed ? '<i class="fa-solid fa-xmark"></i>' : '<i class="fa-solid fa-clock"></i>';
+  }
+  setText("transaction-detail-amount", formatAmount(txn.amount, txn.currency));
+  setText("transaction-detail-title", txn.kind === "payout" ? `Payout to ${txn.memberName}` : `Contribution from ${txn.memberName}`);
+  setText("transaction-detail-to-name", txn.toName);
+  setText("transaction-detail-to-sub", txn.toSub || "");
+  setText("transaction-detail-from", txn.fromName);
+  setText("transaction-detail-date", formatActivityDate(txn.date));
+  const statusEl = document.getElementById("transaction-detail-status");
+  if (statusEl) { statusEl.textContent = txn.statusLabel; statusEl.className = "activity-status " + txn.statusKey; }
+  setText("transaction-detail-type", txn.paymentType);
+  setText("transaction-detail-circle", txn.circleName);
+  setText("transaction-detail-txnid", txn.txnId);
+  const noteRow = document.getElementById("transaction-detail-note-row");
+  if (noteRow) noteRow.hidden = !txn.note;
+  setText("transaction-detail-note", txn.note || "");
 
-  openModal("payout-detail-overlay");
+  const approvalActions = document.getElementById("transaction-detail-approval-actions");
+  if (approvalActions) approvalActions.hidden = !(txn.kind === "contribution" && txn.statusKey === "awaiting-approval");
+
+  switchPage("transaction-detail", { txnKey: txn.key });
+}
+
+function initializeTransactionDetail() {
+  // Transaction Details is reachable from many different origins
+  // (Recent Activity, Notifications, History, a Circle's own
+  // Contributions/Payouts tabs) with no single fixed "back" target, so
+  // its own in-app Back link defers to real browser history — the same
+  // mechanism the Android/system Back button now uses.
+  document.getElementById("transaction-detail-back")?.addEventListener("click", (e) => { e.preventDefault(); history.back(); });
+
+  document.getElementById("transaction-detail-support-row")?.addEventListener("click", () => showToast("Customer care contact is planned for a future release.", "fa-solid fa-headset"));
+  document.getElementById("transaction-detail-view-evidence")?.addEventListener("click", () => showToast("Opening payment evidence (mock preview only).", "fa-regular fa-image"));
+  document.getElementById("transaction-detail-download-row")?.addEventListener("click", () => {
+    if (!activeTransaction) return;
+    const t = activeTransaction;
+    const lines = [
+      "KUNTRIBUTE — Transaction Receipt (Prototype)",
+      "=============================================",
+      `Transaction ID: ${t.txnId}`,
+      `Type: ${t.kind === "payout" ? "Payout" : "Contribution"}`,
+      `Amount: ${formatAmount(t.amount, t.currency)}`,
+      `To: ${t.toName}`,
+      `From: ${t.fromName}`,
+      `Date: ${formatActivityDate(t.date)}`,
+      `Status: ${t.statusLabel}`,
+      `Payment Type: ${t.paymentType}`,
+      `Circle: ${t.circleName}`,
+      t.note ? `Note: ${t.note}` : "",
+      "",
+      "This is a prototype document generated locally. No real financial",
+      "transactions are represented.",
+    ].filter(Boolean);
+    downloadMockFile(`kuntribute-receipt-${t.txnId}.txt`, lines.join("\n"));
+  });
+
+  document.getElementById("transaction-detail-approve")?.addEventListener("click", () => {
+    if (!activeTransaction || activeTransaction.kind !== "contribution") return;
+    const item = mockContributions.find((c) => c.contribution_id === activeTransaction.id);
+    if (!item) return;
+    item.status = "confirmed";
+    if (!item.payment_date) item.payment_date = defaultPaymentDate();
+    loadDashboardData();
+    showToast("Contribution approved.", "fa-solid fa-circle-check");
+    openTransactionDetail(findTransactionByKey(activeTransaction.key));
+  });
+  document.getElementById("transaction-detail-reject")?.addEventListener("click", () => {
+    if (!activeTransaction || activeTransaction.kind !== "contribution") return;
+    const item = mockContributions.find((c) => c.contribution_id === activeTransaction.id);
+    if (!item) return;
+    item.status = "rejected";
+    loadDashboardData();
+    showToast("Contribution rejected.", "fa-solid fa-circle-xmark");
+    openTransactionDetail(findTransactionByKey(activeTransaction.key));
+  });
 }
 
 function renderContributionsHistoryPage(circleId) {
@@ -2597,7 +2978,10 @@ function renderMemberListInto(containerId, members) {
   }));
 }
 
-function goToCircleMembers(circleId) { switchPage("members"); renderMembersPage(circleId); }
+// Render first, then switch — switchPage takes the circle id explicitly
+// as browser-history context, so the Android/system Back button can
+// restore this exact Members view (see restoreView()).
+function goToCircleMembers(circleId) { renderMembersPage(circleId); switchPage("members", { circleId }); }
 
 function openMemberDetail(member) {
   activeMemberDetail = member;
@@ -2613,18 +2997,196 @@ function openMemberDetail(member) {
   setText("member-detail-ktb", member.ktbId || "Unavailable");
 
   openModal("member-detail-overlay");
+  pushMemberDetailHistory(member);
 }
 
-// Pay Member — the snapshot's Account/Payout Details moved here, since
-// it's the actual payment destination this action needs, rather than
-// sitting on the snapshot every time regardless of whether the
-// Organizer is about to pay this member.
+/* ==========================================================
+   PAY MEMBER — a dedicated contextual payment page (not a pop-up).
+   Carries a small draft (paymentDraft) of what the Organizer is about
+   to record, threaded through to Review Payment and back via "Back /
+   Edit" — the Account/Payout Details that used to sit on the Member
+   Record Snapshot now live here, where they're actually needed.
+========================================================== */
+let paymentDraft = null;
+let nextMockPayoutId = Math.max(0, ...mockPayouts.map((p) => p.payout_id)) + 1;
+
+function defaultPaymentDate() {
+  const y = TODAY.getFullYear(), m = String(TODAY.getMonth() + 1).padStart(2, "0"), d = String(TODAY.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
 function openMemberPay(member) {
-  setText("member-pay-subtext", `Send ${member.name}'s contribution or payout directly using their payout destination below. KUNTRIBUTE does not hold or move funds.`);
-  setText("member-pay-bank", member.bankName || "Unavailable");
-  setText("member-pay-account-name", member.name);
-  setText("member-pay-account-number", member.accountNumber || "Unavailable");
-  openModal("member-pay-overlay");
+  const circle = circlesData.find((c) => c.id === member.circleId);
+  const key = memberKeyFor(member);
+  // A fresh draft per member — but returning here via "Back / Edit"
+  // from Review Payment for the *same* member keeps what was entered.
+  if (!paymentDraft || paymentDraft.memberKey !== key) {
+    paymentDraft = {
+      memberKey: key, memberName: member.name, ktbId: member.ktbId || "Unavailable",
+      circleId: member.circleId, circleName: circle ? circle.name : "Unavailable",
+      currency: circle ? circle.currency : "NGN",
+      bank: member.bankName || "Unavailable", accountName: member.name, accountNumber: member.accountNumber || "Unavailable",
+      amount: circle ? circle.amount : 0, paymentType: "full", date: defaultPaymentDate(),
+      evidence: [], note: "",
+    };
+  }
+  renderMemberPayPage();
+  switchPage("member-pay", { memberKey: key });
+}
+
+function renderMemberPayPage() {
+  if (!paymentDraft) return;
+  setText("member-pay-name", paymentDraft.memberName);
+  setText("member-pay-ktb", paymentDraft.ktbId);
+  setText("member-pay-circle", paymentDraft.circleName);
+  setText("member-pay-to", paymentDraft.memberName);
+  setText("member-pay-bank", paymentDraft.bank);
+  setText("member-pay-account-number", paymentDraft.accountNumber);
+  setText("member-pay-account-name", paymentDraft.accountName);
+
+  const amountInput = document.getElementById("member-pay-amount");
+  if (amountInput) amountInput.value = Number(paymentDraft.amount || 0).toLocaleString("en-NG");
+  const dateInput = document.getElementById("member-pay-date");
+  if (dateInput) dateInput.value = paymentDraft.date;
+  const noteInput = document.getElementById("member-pay-note");
+  if (noteInput) noteInput.value = paymentDraft.note || "";
+  document.querySelectorAll("#member-pay-type-segmented button").forEach((btn) => btn.classList.toggle("active", btn.dataset.type === paymentDraft.paymentType));
+
+  renderPaymentEvidenceList();
+  const warning = document.getElementById("member-pay-warning");
+  if (warning) warning.textContent = "";
+}
+
+// Prototype-only: files never leave the browser. Image files get a
+// real thumbnail via an object URL (revoked on removal); anything else
+// falls back to a filename chip — no actual upload/storage happens.
+function renderPaymentEvidenceList() {
+  const list = document.getElementById("member-pay-evidence-list");
+  if (!list || !paymentDraft) return;
+  list.innerHTML = paymentDraft.evidence.map((ev, i) => {
+    const body = ev.previewUrl
+      ? `<img src="${ev.previewUrl}" alt="${ev.name}" />`
+      : `<div class="evidence-thumb-fallback"><i class="fa-regular fa-image"></i>${ev.name}</div>`;
+    return `<div class="evidence-thumb">${body}<button type="button" class="evidence-thumb-remove" data-remove-evidence="${i}" aria-label="Remove evidence"><i class="fa-solid fa-xmark"></i></button></div>`;
+  }).join("");
+  list.querySelectorAll("[data-remove-evidence]").forEach((btn) => btn.addEventListener("click", () => {
+    const idx = Number(btn.dataset.removeEvidence);
+    const removed = paymentDraft.evidence.splice(idx, 1)[0];
+    if (removed?.previewUrl) URL.revokeObjectURL(removed.previewUrl);
+    renderPaymentEvidenceList();
+  }));
+}
+
+function initializeMemberPay() {
+  document.getElementById("member-pay-back")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    if (activeMemberDetail) openMemberDetail(activeMemberDetail); else switchPage("dashboard");
+  });
+
+  document.querySelectorAll("#member-pay-type-segmented button").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      if (!paymentDraft) return;
+      paymentDraft.paymentType = btn.dataset.type;
+      document.querySelectorAll("#member-pay-type-segmented button").forEach((b) => b.classList.toggle("active", b === btn));
+    });
+  });
+
+  document.getElementById("member-pay-amount")?.addEventListener("input", (e) => {
+    const digits = e.target.value.replace(/\D/g, "");
+    if (digits === "") { e.target.value = ""; if (paymentDraft) paymentDraft.amount = 0; return; }
+    const number = parseInt(digits, 10);
+    e.target.value = number.toLocaleString("en-NG");
+    if (paymentDraft) paymentDraft.amount = number;
+  });
+  document.getElementById("member-pay-date")?.addEventListener("change", (e) => { if (paymentDraft) paymentDraft.date = e.target.value; });
+  document.getElementById("member-pay-note")?.addEventListener("input", (e) => { if (paymentDraft) paymentDraft.note = e.target.value; });
+
+  const uploadArea = document.getElementById("member-pay-evidence-upload");
+  const fileInput = document.getElementById("member-pay-evidence-input");
+  uploadArea?.addEventListener("click", () => fileInput?.click());
+  fileInput?.addEventListener("change", (e) => {
+    if (!paymentDraft) return;
+    Array.from(e.target.files || []).forEach((file) => {
+      paymentDraft.evidence.push({ name: file.name, previewUrl: file.type.startsWith("image/") ? URL.createObjectURL(file) : null });
+    });
+    fileInput.value = "";
+    renderPaymentEvidenceList();
+  });
+
+  document.getElementById("member-pay-continue-btn")?.addEventListener("click", () => {
+    if (!paymentDraft) return;
+    const warning = document.getElementById("member-pay-warning");
+    if (!paymentDraft.amount || paymentDraft.amount <= 0) { if (warning) warning.textContent = "Enter an amount greater than zero."; return; }
+    if (warning) warning.textContent = "";
+    openPaymentReview();
+  });
+}
+
+/* ==========================================================
+   REVIEW PAYMENT — confirmation step before the payment is actually
+   recorded. Confirming creates the payout record in the "Pending
+   Member Confirmation" state (see recordPayoutFromDraft) and returns
+   the Organizer to the relevant Circle's Payouts tab — never just
+   closing an arbitrary modal.
+========================================================== */
+function openPaymentReview() {
+  if (!paymentDraft) return;
+  renderPaymentReviewPage();
+  switchPage("payment-review", { memberKey: paymentDraft.memberKey });
+}
+
+function renderPaymentReviewPage() {
+  if (!paymentDraft) return;
+  setText("payment-review-name", paymentDraft.memberName);
+  const amountStr = formatAmount(paymentDraft.amount, paymentDraft.currency);
+  setText("payment-review-amount", amountStr);
+  setText("payment-review-amount-row", amountStr);
+  setText("payment-review-type", paymentDraft.paymentType === "partial" ? "Partial Payment" : "Full Payment");
+  setText("payment-review-circle", paymentDraft.circleName);
+  setText("payment-review-date", formatActivityDate(paymentDraft.date));
+  setText("payment-review-bank", paymentDraft.bank);
+  setText("payment-review-account", paymentDraft.accountNumber);
+  setText("payment-review-evidence", paymentDraft.evidence.length ? `${paymentDraft.evidence.length} screenshot${paymentDraft.evidence.length === 1 ? "" : "s"}` : "None attached");
+  setText("payment-review-note", paymentDraft.note ? paymentDraft.note : "—");
+  const warning = document.getElementById("payment-review-warning");
+  if (warning) warning.textContent = "";
+}
+
+// Two-way status model: an Organizer-recorded payout starts life
+// "pending" (displayed as "Pending Member Confirmation") — never
+// immediately "paid"/Confirmed, since KUNTRIBUTE doesn't move the
+// money itself and the member hasn't confirmed receipt yet.
+function recordPayoutFromDraft(draft) {
+  const member = findMemberByKey(draft.memberKey);
+  const record = {
+    payout_id: nextMockPayoutId++, circle_id: draft.circleId, circle_member_id: member ? member.circleMemberId : null,
+    user_id: member ? member.userId : null, full_name: draft.memberName, amount: Number(draft.amount) || 0,
+    payout_date: draft.date, status: "pending",
+    payment_type: draft.paymentType === "partial" ? "Partial Payment" : "Full Payment",
+    note: draft.note || "", evidence_count: draft.evidence.length,
+  };
+  mockPayouts.push(record);
+  return record;
+}
+
+function initializePaymentReview() {
+  document.getElementById("payment-review-back")?.addEventListener("click", (e) => { e.preventDefault(); returnToMemberPay(); });
+  document.getElementById("payment-review-edit-btn")?.addEventListener("click", () => returnToMemberPay());
+  document.getElementById("payment-review-confirm-btn")?.addEventListener("click", () => {
+    if (!paymentDraft) return;
+    const memberName = paymentDraft.memberName;
+    const circleId = paymentDraft.circleId;
+    recordPayoutFromDraft(paymentDraft);
+    loadDashboardData();
+    paymentDraft = null;
+    showToast(`Payment to ${memberName} recorded — pending their confirmation.`, "fa-solid fa-hand-holding-dollar");
+    if (circleId != null) { openCircleDetail(circleId); setCircleDetailTab("payouts"); }
+    else switchPage("dashboard");
+  });
+}
+function returnToMemberPay() {
+  const member = paymentDraft ? findMemberByKey(paymentDraft.memberKey) : null;
+  if (member) openMemberPay(member); else switchPage("dashboard");
 }
 
 // View Details — the snapshot's gateway to deeper record info; carries
@@ -2658,8 +3220,8 @@ function initializeMemberActions() {
     renderMembersPage(membersPageFilter);
   });
 
-  // Pay Member now opens the dedicated Pay Member sheet (Account/Payout
-  // Details moved there — see openMemberPay). Report/Support remain
+  // Pay Member now navigates to the dedicated Pay Member page (see
+  // openMemberPay) instead of opening a pop-up. Report/Support remain
   // prototype-only UI concepts with no backing API, same "planned"
   // toast convention already used across this file.
   document.getElementById("member-pay-btn")?.addEventListener("click", () => {
@@ -2676,16 +3238,8 @@ function initializeMemberActions() {
     openMemberViewDetails(activeMemberDetail);
   });
 
-  // Backdrop-click-to-close for both new sheets is already covered
-  // generically by initializeModals()'s ".modal-overlay" loop.
-  document.getElementById("close-member-pay")?.addEventListener("click", () => closeModal("member-pay-overlay"));
-  document.getElementById("member-pay-mark-btn")?.addEventListener("click", () => showToast("Marking payouts as paid is planned for a future release.", "fa-solid fa-hourglass-half"));
-  document.getElementById("member-pay-copy-account")?.addEventListener("click", async () => {
-    const value = document.getElementById("member-pay-account-number")?.textContent || "";
-    try { await navigator.clipboard.writeText(value); showToast("Account number copied.", "fa-regular fa-copy"); }
-    catch (e) { showToast("Copy not supported in this browser.", "fa-solid fa-triangle-exclamation"); }
-  });
-
+  // Backdrop-click-to-close is already covered generically by
+  // initializeModals()'s ".modal-overlay" loop.
   document.getElementById("close-member-view-details")?.addEventListener("click", () => closeModal("member-view-details-overlay"));
   document.getElementById("member-download-btn")?.addEventListener("click", downloadMemberDetails);
 }
@@ -3374,9 +3928,14 @@ function closeModal(id) { document.getElementById(id)?.classList.remove("show");
 
 function initializeModals() {
   document.getElementById("close-manage-circle")?.addEventListener("click", () => closeModal("manage-circle-overlay"));
-  // Every modal-overlay closes on backdrop click — one rule for the whole set,
-  // so new sheets don't need their own wiring.
+  // Every modal-overlay closes on backdrop click — one rule for the whole
+  // set, so new sheets don't need their own wiring. member-detail-overlay
+  // is the one exception: it owns a history layer (see
+  // pushMemberDetailHistory), so its backdrop click is wired separately
+  // in initializeMemberDetail() to go through closeMemberDetailModal()
+  // instead of a plain closeModal().
   document.querySelectorAll(".modal-overlay").forEach((overlay) => {
+    if (overlay.id === "member-detail-overlay") return;
     overlay.addEventListener("click", (e) => { if (e.target === overlay) closeModal(overlay.id); });
   });
 }
@@ -3419,8 +3978,10 @@ function initializeBalanceToggle() {
 }
 
 function initializeMemberDetail() {
-  document.getElementById("close-member-detail")?.addEventListener("click", () => closeModal("member-detail-overlay"));
-  document.getElementById("member-detail-overlay")?.addEventListener("click", (e) => { if (e.target.id === "member-detail-overlay") closeModal("member-detail-overlay"); });
+  // These two close paths use closeMemberDetailModal() (history.back()),
+  // not plain closeModal() — see pushMemberDetailHistory for why.
+  document.getElementById("close-member-detail")?.addEventListener("click", () => closeMemberDetailModal());
+  document.getElementById("member-detail-overlay")?.addEventListener("click", (e) => { if (e.target.id === "member-detail-overlay") closeMemberDetailModal(); });
 }
 
 function initializeSearch() {
