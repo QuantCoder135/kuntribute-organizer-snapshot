@@ -301,9 +301,37 @@ button { font-family:inherit; }
 .wizard-step { display:none; }
 .wizard-step.active { display:block; }
 .wizard-actions { display:flex; gap:10px; margin-top:8px; }
-.wizard-actions .modal-secondary, .wizard-actions .modal-submit { margin-top:0; }
+/* Restrained, compact Back/Continue — smaller than the app's default
+   .modal-submit/.modal-secondary (those stay full-size everywhere they
+   already work, e.g. Suspend/Pay Member; this is scoped to the wizard
+   only). Back stays a fixed, narrow secondary; Continue/Confirm &
+   Create is the one clear primary action, taking the remaining width. */
+.wizard-actions .modal-secondary, .wizard-actions .modal-submit { margin-top:0; padding:13px; font-size:.88rem; border-radius:12px; }
+.wizard-actions .modal-secondary { flex:0 0 96px; }
+.wizard-actions .modal-submit { flex:1; width:auto; }
+@media (max-width:700px) {
+  /* A restrained, reachable action area rather than buttons buried at
+     the bottom of a long scroll — sticks just above the fixed bottom
+     nav (124px matches .main's own reserved clearance for it) without
+     bleeding past the page's normal side margins. */
+  .wizard-actions {
+    position:sticky; bottom:124px; z-index:5;
+    background:var(--bg); padding-top:10px; padding-bottom:4px; margin-top:14px;
+  }
+}
 
-.type-card { display:flex; gap:13px; align-items:flex-start; padding:15px; border-radius:15px; border:1px solid var(--border); background:var(--card2); margin-bottom:10px; cursor:pointer; }
+/* A titled, contained group of wizard fields (Circle Details,
+   Contribution Rules, etc.) instead of labels/inputs sitting directly
+   on the page background. --card so its own --card2 inputs read with
+   proper contrast (mirrors .cd-header/.cd-stat). */
+.wizard-section { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:16px; margin-bottom:14px; }
+.wizard-section h4 { font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); margin-bottom:12px; }
+.wizard-section .form-field:last-child { margin-bottom:0; }
+/* One short, live-updating sentence — never a paragraph. */
+.wizard-inline-summary { color:var(--muted); font-size:.82rem; margin:-4px 0 16px; }
+.wizard-inline-summary strong { color:var(--text); }
+
+.type-card { display:flex; gap:13px; align-items:center; padding:15px; border-radius:15px; border:1px solid var(--border); background:var(--card2); margin-bottom:10px; cursor:pointer; transition:border-color .15s,background-color .15s; }
 .type-card:hover { border-color:var(--green-border); }
 .type-card.disabled { opacity:.5; cursor:not-allowed; }
 .type-card.selected { border-color:var(--green); background:rgba(34,197,94,.08); }
@@ -311,8 +339,11 @@ button { font-family:inherit; }
 .type-card.disabled .type-icon { background:var(--card); border:1px solid var(--border); color:var(--muted); }
 .type-name { font-weight:700; font-size:.94rem; margin-bottom:3px; display:flex; align-items:center; gap:7px; flex-wrap:wrap; }
 .type-badge { font-size:.6rem; font-weight:700; padding:2px 7px; border-radius:999px; background:rgba(148,163,184,.15); color:var(--muted); text-transform:uppercase; }
-.type-desc { color:var(--muted); font-size:.8rem; line-height:1.45; margin-bottom:5px; }
-.type-examples { font-size:.72rem; color:var(--green); font-weight:600; }
+.type-desc { color:var(--muted); font-size:.8rem; line-height:1.45; }
+/* Explicit "selected state" affordance (not just a border/tint change)
+   for the one enabled option in Step 1 — hidden until .selected. */
+.type-check { display:none; color:var(--green); font-size:18px; flex-shrink:0; }
+.type-card.selected .type-check { display:block; }
 
 .form-field { display:flex; flex-direction:column; gap:7px; margin-bottom:16px; }
 .form-field span { font-size:.82rem; color:var(--muted); font-weight:600; }
@@ -334,9 +365,19 @@ button { font-family:inherit; }
 .review-hero p { font-size:.8rem; color:var(--muted); margin-bottom:7px; }
 .review-hero h1 { font-size:1.9rem; margin-bottom:5px; }
 .review-hero small { color:var(--muted); font-size:.78rem; }
-.review-section { margin-bottom:18px; }
-.review-section h3 { margin-bottom:12px; font-size:.92rem; }
-.review-row { display:flex; justify-content:space-between; align-items:center; padding:11px 0; border-bottom:1px solid rgba(255,255,255,.06); font-size:.86rem; }
+/* .review-section is the app's one shared "information card" — used by
+   Transaction Details, the wizard's Review step, Pay Member, Payment
+   Review, Member Record, Member View Details, the success screen and
+   more. It used to be a bare margin wrapper with no background/border,
+   so its rows read as labels floating on the page — this is the fix,
+   applied once so every consumer gets consistent containment instead
+   of one-off patches. --card2 (not --card) for contrast: this sits
+   directly on --bg on a page, and on --card inside a modal sheet —
+   --card2 reads correctly against both, matching how .cd-stat/
+   .payment-account-card already contrast against their own parents. */
+.review-section { background:var(--card2); border:1px solid var(--border); border-radius:16px; padding:4px 16px; margin-bottom:14px; }
+.review-section h3 { padding-top:12px; margin-bottom:2px; font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); }
+.review-row { display:flex; justify-content:space-between; align-items:center; padding:11px 0; border-bottom:1px solid var(--border); font-size:.86rem; }
 .review-row:last-child { border-bottom:none; }
 .review-row span { color:var(--muted); }
 .review-row strong { text-align:right; }
@@ -348,8 +389,12 @@ button { font-family:inherit; }
 
 .success-page-body { text-align:center; padding:20px 0; }
 .success-icon { width:64px; height:64px; border-radius:50%; background:rgba(34,197,94,.15); color:var(--green); display:grid; place-items:center; font-size:26px; margin:0 auto 18px; }
-.success-title { font-size:1.25rem; margin-bottom:6px; }
-.success-actions { display:flex; flex-direction:column; gap:10px; margin-top:22px; }
+.success-title { font-size:1.25rem; margin-bottom:14px; }
+.success-circle-name { font-size:1.1rem; font-weight:700; margin-bottom:3px; }
+.success-circle-meta { color:var(--muted); font-size:.84rem; }
+.success-circle-meta + .success-circle-meta { margin-top:1px; }
+#success-status-pill { display:inline-block; margin-top:12px; margin-bottom:20px; }
+.success-actions { display:flex; flex-direction:column; gap:10px; margin-top:6px; }
 .success-actions-row { display:flex; gap:10px; }
 .success-actions-row .modal-secondary { flex:1; }
 
@@ -708,8 +753,6 @@ button.currency-select { width:100%; text-align:left; }
 .confirm-checkbox-row { display:flex; align-items:flex-start; gap:10px; margin:18px 0 6px; }
 .confirm-checkbox-row input[type="checkbox"] { margin-top:3px; width:16px; height:16px; accent-color:var(--green); flex-shrink:0; cursor:pointer; }
 .confirm-checkbox-row label { font-size:.84rem; color:var(--nav-text); line-height:1.4; cursor:pointer; }
-.payment-destination-note { display:flex; gap:8px; color:var(--muted); font-size:.78rem; line-height:1.5; background:var(--card2); border:1px solid var(--border); border-radius:12px; padding:12px 14px; margin-bottom:16px; }
-.payment-destination-note i { color:var(--green); margin-top:2px; flex-shrink:0; }
 
 /* Payment Accounts (Me -> Settings concept). Mock UI only — grouped by
    currency/asset, matches the review-section/review-row visual family. */
@@ -722,15 +765,6 @@ button.currency-select { width:100%; text-align:left; }
 .payment-account-card-top strong { font-size:.9rem; }
 .payment-account-card p { color:var(--muted); font-size:.78rem; line-height:1.5; }
 .payment-account-empty { color:var(--muted); font-size:.8rem; padding:4px 0 8px; }
-
-/* Projected payout schedule (Review step). Explicitly labeled — this
-   is a client-side estimate, never a real backend schedule. */
-.projected-badge { display:inline-flex; align-items:center; gap:5px; font-size:.62rem; font-weight:700; letter-spacing:.06em; color:var(--info); background:rgba(59,130,246,.12); padding:3px 9px; border-radius:999px; margin-left:8px; }
-.projected-schedule-list { display:flex; flex-direction:column; margin-top:4px; }
-.projected-schedule-row { display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px solid rgba(255,255,255,.06); font-size:.84rem; }
-.projected-schedule-row:last-child { border-bottom:none; }
-.projected-schedule-row span:first-child { color:var(--muted); }
-.projected-schedule-row.ellipsis { justify-content:center; color:var(--muted); font-size:.78rem; letter-spacing:.1em; }
 
     </style>
   </head>
@@ -1052,14 +1086,15 @@ button.currency-select { width:100%; text-align:left; }
             <!-- Step 1: Program Type -->
             <div class="wizard-step active" data-step="1">
               <p class="wizard-eyebrow">Step 1 of 6 · Program Type</p>
-              <h1 class="wizard-title">What kind of circle is this?</h1>
+              <h1 class="wizard-title">Choose a program type</h1>
               <p class="wizard-subtext">This determines the rules KUNTRIBUTE applies to it.</p>
               <div class="type-card" id="type-rotational" data-type="Rotational Savings">
                 <div class="type-icon"><i class="fa-solid fa-rotate"></i></div>
-                <div><div class="type-name">Rotational Savings</div><div class="type-desc">Members contribute regularly and take turns receiving the collected funds. Ajo / Esusu / Adashe.</div><div class="type-examples">Friends · Family · Market groups</div></div>
+                <div><div class="type-name">Rotational Savings</div><div class="type-desc">Members take turns receiving the collected funds each cycle.</div></div>
+                <i class="fa-solid fa-circle-check type-check"></i>
               </div>
-              <div class="type-card disabled"><div class="type-icon"><i class="fa-solid fa-shield-heart"></i></div><div><div class="type-name">Welfare Fund <span class="type-badge">Coming soon</span></div><div class="type-desc">Members contribute into a shared fund used for approved needs and emergencies.</div><div class="type-examples">Medical · Burial · Community support</div></div></div>
-              <div class="type-card disabled"><div class="type-icon"><i class="fa-solid fa-handshake"></i></div><div><div class="type-name">Cooperative Savings <span class="type-badge">Coming soon</span></div><div class="type-desc">Members save together toward a shared financial goal.</div><div class="type-examples">Business · Equipment · Housing</div></div></div>
+              <div class="type-card disabled"><div class="type-icon"><i class="fa-solid fa-shield-heart"></i></div><div><div class="type-name">Welfare Fund <span class="type-badge">Coming soon</span></div><div class="type-desc">A shared fund used for approved needs and emergencies.</div></div></div>
+              <div class="type-card disabled"><div class="type-icon"><i class="fa-solid fa-handshake"></i></div><div><div class="type-name">Cooperative Savings <span class="type-badge">Coming soon</span></div><div class="type-desc">Members save together toward a shared goal.</div></div></div>
             </div>
 
             <!-- Step 2: Circle Details -->
@@ -1067,9 +1102,12 @@ button.currency-select { width:100%; text-align:left; }
               <p class="wizard-eyebrow">Step 2 of 6 · Circle Details</p>
               <h1 class="wizard-title">Name your circle</h1>
               <p class="wizard-subtext">Keep it focused — you can refine details later.</p>
-              <label class="form-field"><span>Circle Name</span><input type="text" id="circle-name" placeholder="e.g. IFFM Staff Savings Circle" /><p id="name-warning" class="field-warning"></p></label>
-              <label class="form-field"><span>Target Members</span><input type="text" id="circle-members" placeholder="e.g. 20" inputmode="numeric" /><small class="field-hint">Minimum 5 · Maximum 300</small><p id="member-warning" class="field-warning"></p></label>
-              <div class="wizard-actions"><button type="button" class="modal-secondary" id="step2-back">← Back</button><button type="button" class="modal-submit" id="step2-next">Continue →</button></div>
+              <div class="wizard-section">
+                <h4>Circle Details</h4>
+                <label class="form-field"><span>Circle Name</span><input type="text" id="circle-name" placeholder="e.g. IFFM Staff Savings Circle" /><p id="name-warning" class="field-warning"></p></label>
+                <label class="form-field"><span>Target Members</span><input type="text" id="circle-members" placeholder="e.g. 20" inputmode="numeric" /><small class="field-hint">Minimum 5 · Maximum 300</small><p id="member-warning" class="field-warning"></p></label>
+              </div>
+              <div class="wizard-actions"><button type="button" class="modal-secondary" id="step2-back">Back</button><button type="button" class="modal-submit" id="step2-next">Continue</button></div>
             </div>
 
             <!-- Step 3: Contribution Rules -->
@@ -1077,101 +1115,113 @@ button.currency-select { width:100%; text-align:left; }
               <p class="wizard-eyebrow">Step 3 of 6 · Contribution Rules</p>
               <h1 class="wizard-title">Set the contribution terms</h1>
               <p class="wizard-subtext">One circle uses exactly one currency or asset for its lifetime — it can't be changed later.</p>
-              <label class="form-field"><span>Currency / Asset</span>
-                <select id="circle-currency">
-                  <optgroup label="Fiat">
-                    <option value="NGN">Nigerian Naira (NGN)</option>
-                    <option value="USD">US Dollar (USD)</option>
-                  </optgroup>
-                  <optgroup label="Crypto">
-                    <option value="USDT">Tether USD (USDT)</option>
-                  </optgroup>
-                </select>
-              </label>
-              <label class="form-field"><span>Contribution Amount</span><input type="text" id="circle-amount" placeholder="10,000" inputmode="numeric" /><small class="field-hint" id="amount-hint">Minimum ₦2,000</small><p id="amount-warning" class="field-warning"></p></label>
-              <label class="form-field"><span>Contribution Frequency</span><select id="circle-frequency"><option value="Daily">Daily</option><option value="Weekly">Weekly</option><option value="Monthly">Monthly</option></select></label>
-              <div class="wizard-actions"><button type="button" class="modal-secondary" id="step3-back">← Back</button><button type="button" class="modal-submit" id="step3-next">Continue →</button></div>
+              <div class="wizard-section">
+                <h4>Contribution Rules</h4>
+                <label class="form-field"><span>Currency / Asset</span>
+                  <select id="circle-currency">
+                    <optgroup label="Fiat">
+                      <option value="NGN">Nigerian Naira (NGN)</option>
+                      <option value="USD">US Dollar (USD)</option>
+                    </optgroup>
+                    <optgroup label="Crypto">
+                      <option value="USDT">Tether USD (USDT)</option>
+                    </optgroup>
+                  </select>
+                </label>
+                <label class="form-field"><span>Contribution Amount</span><input type="text" id="circle-amount" placeholder="10,000" inputmode="numeric" /><small class="field-hint" id="amount-hint">Minimum ₦2,000</small><p id="amount-warning" class="field-warning"></p></label>
+                <label class="form-field"><span>Contribution Frequency</span><select id="circle-frequency"><option value="Daily">Daily</option><option value="Weekly">Weekly</option><option value="Monthly">Monthly</option></select></label>
+              </div>
+              <p class="wizard-inline-summary" id="contribution-rules-summary">Set an amount to see a quick summary.</p>
+              <div class="wizard-actions"><button type="button" class="modal-secondary" id="step3-back">Back</button><button type="button" class="modal-submit" id="step3-next">Continue</button></div>
             </div>
 
             <!-- Step 4: Circle Start -->
             <div class="wizard-step" data-step="4">
               <p class="wizard-eyebrow">Step 4 of 6 · Circle Start</p>
-              <h1 class="wizard-title">When does this circle start?</h1>
+              <h1 class="wizard-title">Circle Start</h1>
               <p class="wizard-subtext">Creating the circle and starting its first cycle are two different moments.</p>
               <div class="type-card" id="start-option-date" data-start-mode="date">
                 <div class="type-icon"><i class="fa-solid fa-calendar-check"></i></div>
-                <div><div class="type-name">Start on a specific date</div><div class="type-desc">Members can begin contributing from that date. The circle is Scheduled until then (or Active immediately, if the date is today).</div></div>
+                <div><div class="type-name">Start on a specific date</div><div class="type-desc">Members can begin contributing from that date.</div></div>
+                <i class="fa-solid fa-circle-check type-check"></i>
               </div>
               <div class="type-card" id="start-option-manual" data-start-mode="manual">
                 <div class="type-icon"><i class="fa-solid fa-user-clock"></i></div>
-                <div><div class="type-name">I'll start it manually</div><div class="type-desc">The circle is created in Setup / Recruiting. Add members first, then start the first cycle yourself whenever you're ready.</div></div>
+                <div><div class="type-name">I'll start it manually</div><div class="type-desc">Stays in setup until you start the first cycle yourself.</div></div>
+                <i class="fa-solid fa-circle-check type-check"></i>
               </div>
               <label class="form-field" id="start-date-field" hidden><span>Start Date</span><input type="date" id="circle-start-date" /></label>
               <p id="start-warning" class="field-warning"></p>
-              <div class="wizard-actions"><button type="button" class="modal-secondary" id="step4-back">← Back</button><button type="button" class="modal-submit" id="step4-next">Continue →</button></div>
+              <div class="wizard-actions"><button type="button" class="modal-secondary" id="step4-back">Back</button><button type="button" class="modal-submit" id="step4-next">Continue</button></div>
             </div>
 
             <!-- Step 5: Payment Details -->
             <div class="wizard-step" data-step="5">
               <p class="wizard-eyebrow">Step 5 of 6 · Payment Details</p>
               <h1 class="wizard-title">Where will members send their contributions?</h1>
-              <div class="payment-destination-note"><i class="fa-solid fa-circle-info"></i><span>These payment details are the destination members will be instructed to use for this Circle. This is <strong>your own</strong> payment destination — KUNTRIBUTE does not hold or move funds.</span></div>
-              <div class="segmented" id="payment-mode-segmented">
-                <button type="button" data-mode="default" class="active">Use Default</button>
-                <button type="button" data-mode="custom">Use Custom</button>
+              <p class="wizard-subtext">This is your own payment destination — KUNTRIBUTE does not hold or move funds.</p>
+              <div class="wizard-section">
+                <h4>Payment Destination</h4>
+                <div class="segmented" id="payment-mode-segmented">
+                  <button type="button" data-mode="default" class="active">Use Saved Account</button>
+                  <button type="button" data-mode="custom">Add New Details</button>
+                </div>
+                <div id="payment-default-preview"></div>
+                <div id="payment-custom-fields" hidden></div>
               </div>
-              <div id="payment-default-preview"></div>
-              <div id="payment-custom-fields" hidden></div>
+              <p class="wizard-inline-summary">Members will use this destination when making contributions to this Circle.</p>
               <div class="confirm-checkbox-row">
                 <input type="checkbox" id="payment-confirm-checkbox" />
                 <label for="payment-confirm-checkbox">I confirm these are the payment details members should use for this Circle.</label>
               </div>
               <p id="payment-warning" class="field-warning"></p>
-              <div class="wizard-actions"><button type="button" class="modal-secondary" id="step5-back">← Back</button><button type="button" class="modal-submit" id="step5-next">Continue →</button></div>
+              <div class="wizard-actions"><button type="button" class="modal-secondary" id="step5-back">Back</button><button type="button" class="modal-submit" id="step5-next">Continue</button></div>
             </div>
 
-            <!-- Step 6: Review -->
+            <!-- Step 6: Review — five distinct, contained sections; a
+                 clean confirmation summary, never a data dump. The old
+                 Projected Schedule block is deliberately gone entirely
+                 (not replaced by another schedule component — the real
+                 schedule is created once the circle actually starts). -->
             <div class="wizard-step" data-step="6">
               <p class="wizard-eyebrow">Step 6 of 6 · Review</p>
               <h1 class="wizard-title">Review your circle</h1>
+              <p class="wizard-subtext">Confirm your Circle setup before creating it.</p>
               <div class="review-section"><h3>Circle</h3>
                 <div class="review-row"><span>Program Type</span><strong id="review-circle-type">-</strong></div>
                 <div class="review-row"><span>Circle Name</span><strong id="review-name">-</strong></div>
                 <div class="review-row"><span>Target Members</span><strong id="review-members">-</strong></div>
               </div>
               <div class="review-section"><h3>Contribution Rules</h3>
-                <div class="review-row"><span>Currency / Asset</span><strong id="review-currency">-</strong></div>
-                <div class="review-row"><span>Contribution Amount</span><strong id="review-contribution">-</strong></div>
-                <div class="review-row"><span>Contribution Frequency</span><strong id="review-frequency">-</strong></div>
+                <div class="review-row"><span>Currency</span><strong id="review-currency">-</strong></div>
+                <div class="review-row"><span>Contribution</span><strong id="review-contribution">-</strong></div>
+                <div class="review-row"><span>Frequency</span><strong id="review-frequency">-</strong></div>
               </div>
               <div class="review-section"><h3>Circle Start</h3>
-                <div class="review-row"><span>Start</span><strong id="review-start-mode">-</strong></div>
+                <div class="review-row"><span>Start Method</span><strong id="review-start-method">-</strong></div>
+                <div class="review-row"><span id="review-start-date-label">Start Date</span><strong id="review-start-date">-</strong></div>
               </div>
               <div class="review-section"><h3><i class="fa-solid fa-lock" style="font-size:.7rem;color:var(--muted);margin-right:5px;"></i>Payment Details</h3>
                 <div class="review-row"><span>Destination</span><strong id="review-payment-summary">-</strong></div>
               </div>
-              <div class="cd-insight">
-                <div class="cd-insight-eyebrow"><i class="fa-solid fa-lightbulb"></i>Circle Insights</div>
-                <div class="cd-insight-row"><strong id="wizard-insight-days">7 days</strong><span>of contribution activity per cycle</span></div>
-                <div class="cd-insight-row"><strong id="wizard-insight-amount">₦0</strong><span>expected contribution activity</span></div>
-                <p class="note" id="wizard-insight-note"></p>
-              </div>
-              <div class="review-section">
-                <h3>Projected Schedule<span class="projected-badge"><i class="fa-solid fa-triangle-exclamation"></i>PROJECTED</span></h3>
-                <div class="projected-schedule-list" id="projected-schedule-list"></div>
-                <p class="field-hint">An estimate only, not a real backend schedule — the actual schedule is created once the circle starts.</p>
+              <div class="review-section"><h3>Circle Summary</h3>
+                <div class="circle-card-badges" id="circle-summary-chips" style="margin-top:2px;padding-bottom:10px;"></div>
               </div>
               <p id="create-circle-error" class="field-warning" role="alert"></p>
-              <div class="wizard-actions"><button type="button" class="modal-secondary" id="step6-back">← Back</button><button type="button" class="modal-submit" id="step6-create">Confirm &amp; Create</button></div>
+              <div class="wizard-actions"><button type="button" class="modal-secondary" id="step6-back">Back</button><button type="button" class="modal-submit" id="step6-create">Confirm &amp; Create</button></div>
             </div>
 
-            <!-- Step 7: Circle Created -->
+            <!-- Step 7: Circle Created — a proper completion state, not
+                 raw text: restrained success indicator, then the
+                 circle's own identity/terms/state, then next actions. -->
             <div class="wizard-step" data-step="7">
               <div class="success-page-body">
                 <div class="success-icon" id="success-icon"><i class="fa-solid fa-check"></i></div>
-                <h2 class="success-title" id="success-title">Circle created successfully</h2>
-                <span class="cd-status status-active" id="success-status-pill" style="display:inline-block;margin-bottom:8px;">Active</span>
-                <p class="modal-subtext" id="success-circle-name">Your circle record is saved.</p>
+                <h2 class="success-title" id="success-title">Circle Created</h2>
+                <p class="success-circle-name" id="success-circle-name">Circle Name</p>
+                <p class="success-circle-meta" id="success-circle-type">Rotational Savings</p>
+                <p class="success-circle-meta" id="success-circle-terms">NGN · ₦0</p>
+                <span class="cd-status status-active" id="success-status-pill">Active</span>
                 <div class="review-section" style="text-align:left;">
                   <h3>Invitation Link</h3>
                   <div class="review-row"><span>Share to invite members</span></div>
@@ -1292,6 +1342,7 @@ button.currency-select { width:100%; text-align:left; }
           </div>
 
           <div class="review-section">
+            <h3>Transaction Details</h3>
             <div class="review-row"><span>To</span>
               <div style="text-align:right;">
                 <strong id="transaction-detail-to-name">-</strong>
@@ -1550,10 +1601,10 @@ button.currency-select { width:100%; text-align:left; }
           <div class="modal-header"><h2>Choose Program Type</h2><button type="button" class="modal-close" id="close-mobile-new-circle" aria-label="Close"><i class="fa-solid fa-xmark"></i></button></div>
           <div class="type-card" id="mobile-type-rotational" data-type="Rotational Savings">
             <div class="type-icon"><i class="fa-solid fa-rotate"></i></div>
-            <div><div class="type-name">Rotational Savings</div><div class="type-desc">Members contribute regularly and take turns receiving the collected funds. Ajo / Esusu / Adashe.</div><div class="type-examples">Friends · Family · Market groups</div></div>
+            <div><div class="type-name">Rotational Savings</div><div class="type-desc">Members take turns receiving the collected funds each cycle.</div></div>
           </div>
-          <div class="type-card disabled"><div class="type-icon"><i class="fa-solid fa-shield-heart"></i></div><div><div class="type-name">Welfare Fund <span class="type-badge">Coming soon</span></div><div class="type-desc">Members contribute into a shared fund used for approved needs and emergencies.</div><div class="type-examples">Medical · Burial · Community support</div></div></div>
-          <div class="type-card disabled"><div class="type-icon"><i class="fa-solid fa-handshake"></i></div><div><div class="type-name">Cooperative Savings <span class="type-badge">Coming soon</span></div><div class="type-desc">Members save together toward a shared financial goal.</div><div class="type-examples">Business · Equipment · Housing</div></div></div>
+          <div class="type-card disabled"><div class="type-icon"><i class="fa-solid fa-shield-heart"></i></div><div><div class="type-name">Welfare Fund <span class="type-badge">Coming soon</span></div><div class="type-desc">A shared fund used for approved needs and emergencies.</div></div></div>
+          <div class="type-card disabled"><div class="type-icon"><i class="fa-solid fa-handshake"></i></div><div><div class="type-name">Cooperative Savings <span class="type-badge">Coming soon</span></div><div class="type-desc">Members save together toward a shared goal.</div></div></div>
         </div>
       </div>
 
@@ -1733,6 +1784,7 @@ let wizardStep = 1;
 const demoUser = { user_id: 1, full_name: "Aminah Yusuf", email: "amina.yusuf@example.com" };
 
 function bootstrapSession() {
+  assignInitialTxnIds();
   currentUser = demoUser;
   organizerUserId = demoUser.user_id;
   setText("topbar-user-name", demoUser.full_name);
@@ -2745,12 +2797,25 @@ function openCircleSnapshot(circleId) {
 ========================================================== */
 function transactionKeyFor(kind, id) { return `${kind}:${id}`; }
 
-function synthTxnId(kind, id, dateStr) {
-  const d = dateStr ? new Date(dateStr) : TODAY;
-  const ymd = Number.isNaN(d.getTime())
-    ? "20260101"
-    : `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}`;
-  return `KTB-TXN-${ymd}-${String(id).padStart(5, "0")}`;
+// Short, human-readable references — KTB-TXN-##### — assigned once per
+// transaction and kept stable (no dates/timestamps/UUIDs/sequential
+// prefixes). usedTxnDigits guarantees no two mock transactions ever
+// collide; the hash is just a deterministic starting point, not a
+// meaningful encoding of anything.
+const usedTxnDigits = new Set();
+function assignTxnId(key) {
+  let hash = 0;
+  for (let i = 0; i < key.length; i++) hash = (hash * 31 + key.charCodeAt(i)) >>> 0;
+  let digits = 10000 + (hash % 90000);
+  while (usedTxnDigits.has(digits)) digits = 10000 + ((digits - 10000 + 7) % 90000);
+  usedTxnDigits.add(digits);
+  return `KTB-TXN-${digits}`;
+}
+// Every existing mock contribution/payout gets its id assigned once,
+// up front, so it stays the same across re-renders — see bootstrapSession.
+function assignInitialTxnIds() {
+  mockContributions.forEach((c) => { if (!c.txn_id) c.txn_id = assignTxnId(`contribution:${c.contribution_id}`); });
+  mockPayouts.forEach((p) => { if (!p.txn_id) p.txn_id = assignTxnId(`payout:${p.payout_id}`); });
 }
 
 function buildTransactionRecord(kind, item, circle) {
@@ -2777,7 +2842,7 @@ function buildTransactionRecord(kind, item, circle) {
     paymentType: item.payment_type || "Full Payment",
     note: item.note || "",
     hasEvidence: evidenceCount > 0,
-    txnId: item.txn_id || synthTxnId(kind, id, date),
+    txnId: item.txn_id || assignTxnId(`${kind}:${id}`),
     toName: isPayout ? (item.full_name || "Member") : "Amina Yusuf",
     toSub: isPayout ? (member?.bankName || "") : "",
     fromName: isPayout ? "Amina Yusuf" : (item.full_name || "Member"),
@@ -3158,12 +3223,14 @@ function renderPaymentReviewPage() {
 // money itself and the member hasn't confirmed receipt yet.
 function recordPayoutFromDraft(draft) {
   const member = findMemberByKey(draft.memberKey);
+  const payoutId = nextMockPayoutId++;
   const record = {
-    payout_id: nextMockPayoutId++, circle_id: draft.circleId, circle_member_id: member ? member.circleMemberId : null,
+    payout_id: payoutId, circle_id: draft.circleId, circle_member_id: member ? member.circleMemberId : null,
     user_id: member ? member.userId : null, full_name: draft.memberName, amount: Number(draft.amount) || 0,
     payout_date: draft.date, status: "pending",
     payment_type: draft.paymentType === "partial" ? "Partial Payment" : "Full Payment",
     note: draft.note || "", evidence_count: draft.evidence.length,
+    txn_id: assignTxnId(`payout:${payoutId}`),
   };
   mockPayouts.push(record);
   return record;
@@ -3564,8 +3631,10 @@ function validateStep2() {
 /* ---- Step 3: Contribution Rules — PRODUCT RULE: one Circle = one
    currency/asset, chosen here and never changed or converted later. ---- */
 function initializeWizardStep3Currency() {
-  document.getElementById("circle-currency")?.addEventListener("change", updateAmountHint);
+  document.getElementById("circle-currency")?.addEventListener("change", () => { updateAmountHint(); updateContributionRulesSummary(); });
+  document.getElementById("circle-frequency")?.addEventListener("change", updateContributionRulesSummary);
   updateAmountHint();
+  updateContributionRulesSummary();
 }
 function updateAmountHint() {
   const select = document.getElementById("circle-currency");
@@ -3573,6 +3642,18 @@ function updateAmountHint() {
   if (!select || !hint) return;
   const meta = currencyMeta(select.value);
   hint.textContent = `Minimum ${formatAmount(meta.minAmount, select.value)} · Maximum ${formatAmount(meta.maxAmount, select.value)}`;
+}
+// Small, live contextual line under the Contribution Rules card — kept
+// to one plain sentence on purpose (see spec: not a large explanatory
+// paragraph), updated on every relevant field change.
+function updateContributionRulesSummary() {
+  const el = document.getElementById("contribution-rules-summary");
+  if (!el) return;
+  const currency = document.getElementById("circle-currency")?.value || "NGN";
+  const amount = Number((document.getElementById("circle-amount")?.value || "").replace(/\D/g, "")) || 0;
+  const frequency = document.getElementById("circle-frequency")?.value || "Weekly";
+  const cadence = frequency === "Daily" ? "daily" : frequency === "Monthly" ? "monthly" : "weekly";
+  el.textContent = amount > 0 ? `${formatAmount(amount, currency)} contributed ${cadence}.` : "Set an amount to see a quick summary.";
 }
 
 function validateStep3() {
@@ -3733,45 +3814,30 @@ function validateStep5() {
 }
 
 /* ---- Step 6: Review — folds the old separate confirmation modal into
-   this step's own submit button (one fewer modal hop). ---- */
+   this step's own submit button (one fewer modal hop). Five distinct
+   contained sections: Circle / Contribution Rules / Circle Start /
+   Payment Details / Circle Summary — deliberately no Projected
+   Schedule and no Circle Insights analytics; Circle Summary is the one
+   small, concise final recap. ---- */
 function populateStep6() {
   const { programType, name, membersTarget, currency, amount, frequency, startMode, startDate } = pendingCircle;
   setText("review-circle-type", programType);
   setText("review-name", name);
-  setText("review-members", membersTarget);
-  setText("review-currency", `${currencyMeta(currency).label} (${currency})`);
+  setText("review-members", `${membersTarget} members`);
+  setText("review-currency", currency);
   setText("review-contribution", formatAmount(amount, currency));
   setText("review-frequency", frequency);
-  setText("review-start-mode", startMode === "manual" ? "Manual — you'll start it yourself" : new Date(startDate).toLocaleDateString("en-NG", { day: "numeric", month: "long", year: "numeric" }));
+  setText("review-start-method", startMode === "manual" ? "Manual" : "Scheduled");
+  setText("review-start-date-label", startMode === "manual" ? "Status after creation" : "Start Date");
+  setText("review-start-date", startMode === "manual" ? "Setup" : new Date(startDate).toLocaleDateString("en-NG", { day: "numeric", month: "long", year: "numeric" }));
   setText("review-payment-summary", pendingCircle.paymentMode === "default" ? paymentAccountSummaryLine(defaultPaymentAccountFor(currency)) : summarizeCustomPaymentDetails(pendingCircle.paymentDetails, currency));
 
-  const days = frequency === "Daily" ? 1 : frequency === "Weekly" ? 7 : 30;
-  setText("wizard-insight-days", `${days} day${days === 1 ? "" : "s"}`);
-  setText("wizard-insight-amount", formatAmount(amount * membersTarget, currency));
-  setText("wizard-insight-note", `${membersTarget} members contributing ${formatAmount(amount, currency)} every ${days} day${days === 1 ? "" : "s"} — actual totals depend on who has paid.`);
-
-  renderProjectedSchedule();
+  const chips = document.getElementById("circle-summary-chips");
+  if (chips) {
+    const cadence = frequency === "Daily" ? "daily" : frequency === "Monthly" ? "monthly" : "weekly";
+    chips.innerHTML = `<span class="badge-frequency">${membersTarget} members</span><span class="badge-amount">${formatAmount(amount, currency)} ${cadence}</span><span class="badge-frequency">${currency}</span>`;
+  }
   document.getElementById("create-circle-error").textContent = "";
-}
-
-// PROJECTED only — never implies a real backend schedule (see the
-// field-hint under the list). One cycle per contribution period,
-// payout cadence == contribution cadence (the classic Ajo/Esusu
-// model) — buildPayoutSchedule/addMonthsClamped below are unchanged
-// from production, just always called with matching frequencies.
-function renderProjectedSchedule() {
-  const container = document.getElementById("projected-schedule-list");
-  if (!container) return;
-  const { frequency, startMode, startDate, membersTarget } = pendingCircle;
-  const anchor = startMode === "manual" ? TODAY : new Date(startDate);
-  const schedule = buildPayoutSchedule(frequency, frequency, anchor.toISOString().slice(0, 10), membersTarget);
-  pendingCircle.schedule = schedule;
-  const rows = schedule.periods.map((p, i) => ({ n: i + 1, date: p.payoutDate }));
-  const visible = rows.length > 5 ? [...rows.slice(0, 3), null, rows[rows.length - 1]] : rows;
-  container.innerHTML = visible.map((row) => row
-    ? `<div class="projected-schedule-row"><span>Cycle ${row.n}</span><span>${row.date.toLocaleDateString("en-NG", { day: "numeric", month: "short" })}</span></div>`
-    : `<div class="projected-schedule-row ellipsis">⋯</div>`
-  ).join("");
 }
 
 /* ---- Step 7: Circle Created — three possible outcomes, computed from
@@ -3793,17 +3859,20 @@ function createPendingCircle() {
   createdCircleId = circle_id;
   loadDashboardData();
 
-  const statusCopy = {
-    active: { icon: "fa-check", title: "Circle created and active", pillClass: "status-active", pillText: "Active" },
-    scheduled: { icon: "fa-calendar-check", title: "Circle created — scheduled to start", pillClass: "status-scheduled", pillText: "Scheduled" },
-    setup: { icon: "fa-user-clock", title: "Circle created — setup / recruiting", pillClass: "status-setup", pillText: "Setup / Recruiting" },
+  // "Circle Created" is the one constant title — the pill below is what
+  // actually communicates state (Setup / Scheduled · date / Active),
+  // not the title or icon (kept as one restrained, consistent checkmark).
+  const pillCopy = {
+    active: { pillClass: "status-active", pillText: "Active" },
+    scheduled: { pillClass: "status-scheduled", pillText: `Scheduled · ${formatShortMonthDay(pendingCircle.startDate)}` },
+    setup: { pillClass: "status-setup", pillText: "Setup" },
   }[status];
-  const iconEl = document.getElementById("success-icon");
-  if (iconEl) iconEl.innerHTML = `<i class="fa-solid ${statusCopy.icon}"></i>`;
-  setText("success-title", statusCopy.title);
+  setText("success-circle-name", pendingCircle.name);
+  setText("success-circle-type", pendingCircle.programType);
+  const cadence = pendingCircle.frequency === "Daily" ? "daily" : pendingCircle.frequency === "Monthly" ? "monthly" : "weekly";
+  setText("success-circle-terms", `${pendingCircle.currency} · ${formatAmount(pendingCircle.amount, pendingCircle.currency)} ${cadence}`);
   const pill = document.getElementById("success-status-pill");
-  if (pill) { pill.className = "cd-status " + statusCopy.pillClass; pill.textContent = statusCopy.pillText; }
-  setText("success-circle-name", `"${pendingCircle.name}" was saved successfully.`);
+  if (pill) { pill.className = "cd-status " + pillCopy.pillClass; pill.textContent = pillCopy.pillText; }
   const inviteCode = "c" + circle_id + Math.random().toString(36).slice(2, 6);
   setText("success-invite-link", `https://kuntribute.com/join/${inviteCode}`);
   goToWizardStep(7);
@@ -3890,36 +3959,6 @@ function initializeRegionPreference() {
   });
 }
 
-/* Payout schedule math (unchanged from production — verified logic) */
-function addMonthsClamped(date, months) {
-  const d = new Date(date);
-  const originalDay = d.getDate();
-  d.setDate(1);
-  d.setMonth(d.getMonth() + months);
-  const daysInTargetMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
-  d.setDate(Math.min(originalDay, daysInTargetMonth));
-  return d;
-}
-function buildPayoutSchedule(contributionFrequency, payoutFrequency, startDate, numPayouts) {
-  const anchor = new Date(startDate);
-  if (contributionFrequency === "Monthly" && payoutFrequency === "Weekly") return { valid: false, periods: [] };
-  const periods = [];
-  let previousPayoutDays = 0;
-  for (let n = 1; n <= numPayouts; n++) {
-    let payoutDate;
-    if (payoutFrequency === "Weekly") { payoutDate = new Date(anchor); payoutDate.setDate(payoutDate.getDate() + n * 7); }
-    else payoutDate = addMonthsClamped(anchor, n);
-    const payoutDays = Math.round((payoutDate - anchor) / 86400000);
-    let instalments;
-    if (contributionFrequency === "Daily") instalments = payoutDays - previousPayoutDays;
-    else if (contributionFrequency === "Weekly") instalments = Math.floor(payoutDays / 7) - Math.floor(previousPayoutDays / 7);
-    else instalments = 1;
-    periods.push({ payoutDate, instalments });
-    previousPayoutDays = payoutDays;
-  }
-  return { valid: true, periods };
-}
-
 /* ==========================================================
    MODALS / MISC
 ========================================================== */
@@ -3995,11 +4034,12 @@ function initializeAmountFormatting() {
   if (!input) return;
   input.addEventListener("input", () => {
     let value = input.value.replace(/\D/g, "");
-    if (value === "") { input.value = ""; return; }
+    if (value === "") { input.value = ""; updateContributionRulesSummary(); return; }
     let number = parseInt(value);
     const maxAmount = currencyMeta(document.getElementById("circle-currency")?.value).maxAmount;
     if (number > maxAmount) number = maxAmount;
     input.value = number.toLocaleString("en-NG");
+    updateContributionRulesSummary();
   });
 }
 function initializeMemberFormatting() {
