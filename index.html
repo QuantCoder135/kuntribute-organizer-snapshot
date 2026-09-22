@@ -135,10 +135,18 @@ button { font-family:inherit; }
 .wallet-label-row { display:flex; align-items:center; gap:8px; }
 .wallet-label { display:flex; align-items:center; gap:7px; color:var(--muted); font-size:.86rem; min-width:0; margin-right:auto; }
 .wallet-label span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.metric-info, .toggle-balance { background:none; border:none; color:var(--muted); font-size:14px; cursor:pointer; width:28px; height:28px; border-radius:8px; display:grid; place-items:center; flex-shrink:0; transition:.15s; touch-action:manipulation; -webkit-tap-highlight-color:transparent; }
+.metric-info, .toggle-balance { border:none; color:var(--muted); font-size:14px; cursor:pointer; width:28px; height:28px; border-radius:8px; display:grid; place-items:center; flex-shrink:0; transition:.15s; touch-action:manipulation; -webkit-tap-highlight-color:transparent; }
+.toggle-balance { background:none; }
 .metric-info:hover, .toggle-balance:hover { color:var(--green); background:rgba(34,197,94,.1); }
 .metric-info:active, .toggle-balance:active { color:var(--green); background:rgba(34,197,94,.18); transform:scale(.9); }
 .toggle-balance[aria-pressed="true"] { color:var(--text); background:rgba(148,163,184,.12); }
+/* Info stays subtle but must read as its own independent control, not
+   blend into the label text next to it — a persistent faint chip
+   (background+border, slightly larger) rather than only-on-hover/tap
+   feedback, plus a bit of separation from the eye. Eye is untouched:
+   still bare/inline, same size, same behavior. */
+.metric-info { width:30px; height:30px; font-size:13px; background:var(--card2); border:1px solid var(--border); margin-left:6px; }
+.metric-info:hover { background:rgba(34,197,94,.14); border-color:var(--green-border); }
 .wallet-balance-row { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:nowrap; }
 .wallet-balance-row h1 { font-size:clamp(20px,7vw,32px); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; }
 .add-money { border:none; background:var(--green); color:#fff; padding:10px 15px; border-radius:11px; font-weight:700; cursor:pointer; white-space:nowrap; flex-shrink:0; font-size:.8rem; display:flex; align-items:center; gap:6px; }
@@ -245,7 +253,10 @@ button { font-family:inherit; }
 .cd-stats { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-top:16px; }
 .cd-stat { background:var(--card2); border-radius:13px; padding:12px 14px; }
 .cd-stat span { display:block; color:var(--muted); font-size:.68rem; text-transform:uppercase; letter-spacing:.04em; margin-bottom:4px; }
-.cd-stat strong { font-size:.94rem; }
+/* Amount/asset values (e.g. "100 USDT") must never break onto their
+   own line inside a narrow grid cell — nowrap + ellipsis truncates
+   gracefully instead of overflowing into a neighboring cell. */
+.cd-stat strong { display:block; font-size:.94rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .cd-stat.cd-stat-cycle strong { color:var(--green); }
 
 .cd-tabs { display:flex; gap:6px; overflow-x:auto; padding-bottom:2px; margin-bottom:16px; scrollbar-width:none; }
@@ -296,25 +307,35 @@ button { font-family:inherit; }
 .wizard-steps .seg { flex:1; height:4px; border-radius:999px; background:var(--card2); }
 .wizard-steps .seg.done, .wizard-steps .seg.current { background:var(--green); }
 .wizard-eyebrow { color:var(--green); font-weight:700; font-size:.74rem; text-transform:uppercase; letter-spacing:.06em; margin-bottom:6px; }
-.wizard-title { font-size:1.35rem; margin-bottom:6px; }
+/* margin-bottom carries the full gap to whatever comes next now that
+   several steps no longer have a .wizard-subtext underneath it. */
+.wizard-title { font-size:1.35rem; margin-bottom:20px; }
 .wizard-subtext { color:var(--muted); font-size:.86rem; margin-bottom:22px; }
 .wizard-step { display:none; }
 .wizard-step.active { display:block; }
 .wizard-actions { display:flex; gap:10px; margin-top:8px; }
-/* Restrained, compact Back/Continue — smaller than the app's default
-   .modal-submit/.modal-secondary (those stay full-size everywhere they
-   already work, e.g. Suspend/Pay Member; this is scoped to the wizard
-   only). Back stays a fixed, narrow secondary; Continue/Confirm &
-   Create is the one clear primary action, taking the remaining width. */
-.wizard-actions .modal-secondary, .wizard-actions .modal-submit { margin-top:0; padding:13px; font-size:.88rem; border-radius:12px; }
-.wizard-actions .modal-secondary { flex:0 0 96px; }
-.wizard-actions .modal-submit { flex:1; width:auto; }
+/* Restrained, compact Back/Continue — scoped to `.page .wizard-actions`
+   (the wizard steps, Payment Review, Transaction Detail's approval
+   row) on purpose. .wizard-actions is also reused, unscoped, inside
+   several MODALS (Suspend Member, Region & Currency, both filter
+   sheets) for their own Cancel/Save/Clear rows, which must keep the
+   app's normal full-size .modal-submit/.modal-secondary — a previous
+   version of this rule applied to every .wizard-actions regardless of
+   context, which is exactly what caused the filter sheets' sticky
+   Clear/Show Results footer to detach from document scroll entirely
+   and render on top of the filter content instead of below it (a
+   124px "clear the bottom nav" offset means nothing inside a modal's
+   own much shorter internal scroll). */
+.page .wizard-actions .modal-secondary, .page .wizard-actions .modal-submit { margin-top:0; padding:13px; font-size:.88rem; border-radius:12px; }
+.page .wizard-actions .modal-secondary { flex:0 0 96px; }
+.page .wizard-actions .modal-submit { flex:1; width:auto; }
 @media (max-width:700px) {
   /* A restrained, reachable action area rather than buttons buried at
      the bottom of a long scroll — sticks just above the fixed bottom
      nav (124px matches .main's own reserved clearance for it) without
-     bleeding past the page's normal side margins. */
-  .wizard-actions {
+     bleeding past the page's normal side margins. Page-level document
+     scroll only — see note above for why modals are excluded. */
+  .page .wizard-actions {
     position:sticky; bottom:124px; z-index:5;
     background:var(--bg); padding-top:10px; padding-bottom:4px; margin-top:14px;
   }
@@ -352,6 +373,13 @@ button { font-family:inherit; }
 .input-error { border:1px solid var(--danger) !important; box-shadow:0 0 0 2px rgba(239,68,68,.08); }
 .form-field input, .form-field select { background:var(--card2); border:1px solid var(--border); color:var(--text); padding:13px 15px; border-radius:12px; font-size:.94rem; font-family:inherit; outline:none; width:100%; }
 .form-field input:focus, .form-field select:focus { border-color:var(--green); }
+/* A form-field-styled trigger button for custom in-app pickers (e.g.
+   the wizard's Currency/Asset) — same visual weight as a real
+   input/select sibling, but opens KUNTRIBUTE's own sheet instead of
+   a native control. */
+.wizard-select-trigger { display:flex; align-items:center; justify-content:space-between; gap:8px; background:var(--card2); border:1px solid var(--border); color:var(--text); padding:13px 15px; border-radius:12px; font-size:.94rem; font-family:inherit; width:100%; text-align:left; cursor:pointer; }
+.wizard-select-trigger:focus { border-color:var(--green); }
+.wizard-select-trigger::after { content:"\f078"; font-family:"Font Awesome 6 Free"; font-weight:900; font-size:.7rem; color:var(--muted); flex-shrink:0; }
 
 .modal-submit { width:100%; border:none; background:var(--green); color:#fff; padding:15px; border-radius:13px; font-weight:700; font-size:.95rem; cursor:pointer; }
 .modal-submit:hover { background:var(--green-dark); }
@@ -454,7 +482,19 @@ button { font-family:inherit; }
 /* ==========================================================
    FILTER DRAWER (Members)
 ========================================================== */
-.filter-sheet { max-width:420px; }
+/* .modal-sheet.filter-sheet (compound selector — beats the base
+   .modal-sheet rule regardless of source order): header and footer are
+   fixed flex children, only .sheet-scroll-content scrolls. Previously
+   the whole sheet scrolled as one unit and the action row was plain
+   in-flow content that inherited position:sticky from the wizard's
+   .wizard-actions via a shared class — with a "clear the bottom nav"
+   offset that made no sense inside a much shorter modal, that rendered
+   Clear/Show Results on top of the filter chips instead of below them. */
+.modal-sheet.filter-sheet { display:flex; flex-direction:column; max-width:420px; max-height:85vh; padding:0; overflow:hidden; }
+.filter-sheet .modal-handle { flex-shrink:0; margin:14px auto 16px; }
+.filter-sheet .modal-header { flex-shrink:0; padding:0 22px; margin-bottom:14px; }
+.filter-sheet .sheet-scroll-content { flex:1; min-height:0; overflow-y:auto; padding:0 22px 4px; }
+.filter-sheet .sheet-actions-footer { flex-shrink:0; display:flex; gap:10px; padding:14px 22px calc(14px + env(safe-area-inset-bottom,0px)); border-top:1px solid var(--border); background:var(--card); }
 .filter-group { margin-bottom:18px; }
 .filter-group h4 { font-size:.8rem; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; margin-bottom:10px; }
 .filter-chip-row { display:flex; flex-wrap:wrap; gap:8px; }
@@ -489,7 +529,7 @@ button { font-family:inherit; }
 .activity-row-body h4 { font-size:.86rem; margin-bottom:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .activity-row-body p { color:var(--muted); font-size:.74rem; }
 .activity-row-right { text-align:right; flex-shrink:0; }
-.activity-row-right strong { display:block; font-size:.84rem; }
+.activity-row-right strong { display:block; font-size:.84rem; white-space:nowrap; }
 .activity-row-right small { color:var(--muted); font-size:.68rem; }
 .activity-status { padding:3px 8px; border-radius:999px; font-size:.62rem; text-transform:capitalize; background:var(--card2); color:var(--muted); }
 .activity-status.confirmed,.activity-status.paid,.activity-status.completed { color:var(--success); background:rgba(16,185,129,.12); }
@@ -665,7 +705,8 @@ button { font-family:inherit; }
   .wallet-top { gap:7px; }
   .wallet-label span { font-size:.74rem; }
   .wallet-label i { font-size:.85em; }
-  .metric-info, .toggle-balance { width:25px; height:25px; font-size:12px; }
+  .toggle-balance { width:25px; height:25px; font-size:12px; }
+  .metric-info { width:27px; height:27px; font-size:12px; }
   .wallet-context { font-size:.78rem; }
   /* Single mobile New Circle entry point is the bottom-nav "+"; the
      in-card action stays for desktop only (see .bottom-nav-fab). */
@@ -695,9 +736,6 @@ button.currency-select { width:100%; text-align:left; }
    on purpose (see spec: "a clearly represented, bold View Details"),
    visually distinct from the muted Download action that now lives
    inside the View Details sheet it opens rather than on the snapshot. */
-.member-view-details-btn { width:100%; margin-top:12px; border:none; background:var(--green); color:#fff; padding:14px; border-radius:13px; font-weight:800; font-size:.92rem; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; }
-.member-view-details-btn:hover { background:var(--green-dark); }
-
 /* Pay Member's textarea note field — same visual family as
    .form-field input/select, just with its own resize/min-height. */
 .form-field textarea { background:var(--card2); border:1px solid var(--border); color:var(--text); padding:13px 15px; border-radius:12px; font-size:.94rem; font-family:inherit; outline:none; width:100%; resize:vertical; min-height:70px; }
@@ -724,7 +762,7 @@ button.currency-select { width:100%; text-align:left; }
 .txn-hero-icon { width:56px; height:56px; border-radius:50%; background:rgba(34,197,94,.15); color:var(--green); display:grid; place-items:center; font-size:22px; margin:0 auto 14px; }
 .txn-hero-icon.failed { background:rgba(239,68,68,.15); color:var(--danger); }
 .txn-hero-icon.info { background:rgba(59,130,246,.15); color:var(--info); }
-.txn-hero h1 { font-size:1.7rem; margin-bottom:4px; }
+.txn-hero h1 { font-size:clamp(1.3rem,7vw,1.7rem); margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; }
 .txn-hero p { color:var(--muted); font-size:.9rem; }
 
 /* Recent Activity / Notifications / History rows now open the
@@ -1087,7 +1125,6 @@ button.currency-select { width:100%; text-align:left; }
             <div class="wizard-step active" data-step="1">
               <p class="wizard-eyebrow">Step 1 of 6 · Program Type</p>
               <h1 class="wizard-title">Choose a program type</h1>
-              <p class="wizard-subtext">This determines the rules KUNTRIBUTE applies to it.</p>
               <div class="type-card" id="type-rotational" data-type="Rotational Savings">
                 <div class="type-icon"><i class="fa-solid fa-rotate"></i></div>
                 <div><div class="type-name">Rotational Savings</div><div class="type-desc">Members take turns receiving the collected funds each cycle.</div></div>
@@ -1100,10 +1137,8 @@ button.currency-select { width:100%; text-align:left; }
             <!-- Step 2: Circle Details -->
             <div class="wizard-step" data-step="2">
               <p class="wizard-eyebrow">Step 2 of 6 · Circle Details</p>
-              <h1 class="wizard-title">Name your circle</h1>
-              <p class="wizard-subtext">Keep it focused — you can refine details later.</p>
+              <h1 class="wizard-title">Circle Details</h1>
               <div class="wizard-section">
-                <h4>Circle Details</h4>
                 <label class="form-field"><span>Circle Name</span><input type="text" id="circle-name" placeholder="e.g. IFFM Staff Savings Circle" /><p id="name-warning" class="field-warning"></p></label>
                 <label class="form-field"><span>Target Members</span><input type="text" id="circle-members" placeholder="e.g. 20" inputmode="numeric" /><small class="field-hint">Minimum 5 · Maximum 300</small><p id="member-warning" class="field-warning"></p></label>
               </div>
@@ -1113,20 +1148,11 @@ button.currency-select { width:100%; text-align:left; }
             <!-- Step 3: Contribution Rules -->
             <div class="wizard-step" data-step="3">
               <p class="wizard-eyebrow">Step 3 of 6 · Contribution Rules</p>
-              <h1 class="wizard-title">Set the contribution terms</h1>
-              <p class="wizard-subtext">One circle uses exactly one currency or asset for its lifetime — it can't be changed later.</p>
+              <h1 class="wizard-title">Contribution Rules</h1>
               <div class="wizard-section">
-                <h4>Contribution Rules</h4>
                 <label class="form-field"><span>Currency / Asset</span>
-                  <select id="circle-currency">
-                    <optgroup label="Fiat">
-                      <option value="NGN">Nigerian Naira (NGN)</option>
-                      <option value="USD">US Dollar (USD)</option>
-                    </optgroup>
-                    <optgroup label="Crypto">
-                      <option value="USDT">Tether USD (USDT)</option>
-                    </optgroup>
-                  </select>
+                  <button type="button" id="circle-currency-trigger" class="wizard-select-trigger"></button>
+                  <input type="hidden" id="circle-currency" value="NGN" />
                 </label>
                 <label class="form-field"><span>Contribution Amount</span><input type="text" id="circle-amount" placeholder="10,000" inputmode="numeric" /><small class="field-hint" id="amount-hint">Minimum ₦2,000</small><p id="amount-warning" class="field-warning"></p></label>
                 <label class="form-field"><span>Contribution Frequency</span><select id="circle-frequency"><option value="Daily">Daily</option><option value="Weekly">Weekly</option><option value="Monthly">Monthly</option></select></label>
@@ -1139,7 +1165,6 @@ button.currency-select { width:100%; text-align:left; }
             <div class="wizard-step" data-step="4">
               <p class="wizard-eyebrow">Step 4 of 6 · Circle Start</p>
               <h1 class="wizard-title">Circle Start</h1>
-              <p class="wizard-subtext">Creating the circle and starting its first cycle are two different moments.</p>
               <div class="type-card" id="start-option-date" data-start-mode="date">
                 <div class="type-icon"><i class="fa-solid fa-calendar-check"></i></div>
                 <div><div class="type-name">Start on a specific date</div><div class="type-desc">Members can begin contributing from that date.</div></div>
@@ -1158,8 +1183,8 @@ button.currency-select { width:100%; text-align:left; }
             <!-- Step 5: Payment Details -->
             <div class="wizard-step" data-step="5">
               <p class="wizard-eyebrow">Step 5 of 6 · Payment Details</p>
-              <h1 class="wizard-title">Where will members send their contributions?</h1>
-              <p class="wizard-subtext">This is your own payment destination — KUNTRIBUTE does not hold or move funds.</p>
+              <h1 class="wizard-title">Payment Details</h1>
+              <p class="wizard-subtext">Where will your members send their contribution?</p>
               <div class="wizard-section">
                 <h4>Payment Destination</h4>
                 <div class="segmented" id="payment-mode-segmented">
@@ -1170,9 +1195,10 @@ button.currency-select { width:100%; text-align:left; }
                 <div id="payment-custom-fields" hidden></div>
               </div>
               <p class="wizard-inline-summary">Members will use this destination when making contributions to this Circle.</p>
+              <p class="wizard-inline-summary">KUNTRIBUTE does not hold or custody your funds.</p>
               <div class="confirm-checkbox-row">
                 <input type="checkbox" id="payment-confirm-checkbox" />
-                <label for="payment-confirm-checkbox">I confirm these are the payment details members should use for this Circle.</label>
+                <label for="payment-confirm-checkbox">I confirm these payment details are correct and agree that members will use this destination for contributions to this Circle.</label>
               </div>
               <p id="payment-warning" class="field-warning"></p>
               <div class="wizard-actions"><button type="button" class="modal-secondary" id="step5-back">Back</button><button type="button" class="modal-submit" id="step5-next">Continue</button></div>
@@ -1202,10 +1228,7 @@ button.currency-select { width:100%; text-align:left; }
                 <div class="review-row"><span id="review-start-date-label">Start Date</span><strong id="review-start-date">-</strong></div>
               </div>
               <div class="review-section"><h3><i class="fa-solid fa-lock" style="font-size:.7rem;color:var(--muted);margin-right:5px;"></i>Payment Details</h3>
-                <div class="review-row"><span>Destination</span><strong id="review-payment-summary">-</strong></div>
-              </div>
-              <div class="review-section"><h3>Circle Summary</h3>
-                <div class="circle-card-badges" id="circle-summary-chips" style="margin-top:2px;padding-bottom:10px;"></div>
+                <div id="review-payment-destination"></div>
               </div>
               <p id="create-circle-error" class="field-warning" role="alert"></p>
               <div class="wizard-actions"><button type="button" class="modal-secondary" id="step6-back">Back</button><button type="button" class="modal-submit" id="step6-create">Confirm &amp; Create</button></div>
@@ -1223,10 +1246,11 @@ button.currency-select { width:100%; text-align:left; }
                 <p class="success-circle-meta" id="success-circle-terms">NGN · ₦0</p>
                 <span class="cd-status status-active" id="success-status-pill">Active</span>
                 <div class="review-section" style="text-align:left;">
-                  <h3>Invitation Link</h3>
-                  <div class="review-row"><span>Share to invite members</span></div>
-                  <p id="success-invite-link" style="font-size:.86rem;color:var(--green);word-break:break-all;">https://kuntribute.com/join/abc123</p>
-                  <p class="field-hint">Prototype representation only — invitations are not sent.</p>
+                  <h3>Invite Members</h3>
+                  <div class="review-row-copy" style="width:100%;justify-content:space-between;padding:11px 0;">
+                    <span id="success-invite-link" style="font-size:.86rem;color:var(--green);word-break:break-all;">https://kuntribute.com/join/abc123</span>
+                    <button type="button" class="copy-btn" id="success-invite-copy-btn" aria-label="Copy invitation link"><i class="fa-regular fa-copy"></i></button>
+                  </div>
                 </div>
                 <div class="success-actions">
                   <button type="button" class="modal-submit" id="view-created-circle">View Circle</button>
@@ -1272,8 +1296,9 @@ button.currency-select { width:100%; text-align:left; }
           <label class="form-field"><span>Amount</span><input type="text" id="member-pay-amount" inputmode="numeric" /></label>
           <label class="form-field"><span>Payment Type</span>
             <div class="segmented" id="member-pay-type-segmented">
-              <button type="button" data-type="full" class="active">Full Payment</button>
-              <button type="button" data-type="partial">Partial Payment</button>
+              <button type="button" data-type="current" class="active">Current</button>
+              <button type="button" data-type="outstanding">Outstanding</button>
+              <button type="button" data-type="forward">Forward</button>
             </div>
           </label>
           <label class="form-field"><span>Payment Date</span><input type="date" id="member-pay-date" /></label>
@@ -1349,6 +1374,7 @@ button.currency-select { width:100%; text-align:left; }
                 <p class="detail-caption" id="transaction-detail-to-sub"></p>
               </div>
             </div>
+            <div class="review-row"><span id="transaction-detail-destination-label">Account Number</span><strong id="transaction-detail-destination-value">-</strong></div>
             <div class="review-row"><span>From</span><strong id="transaction-detail-from">-</strong></div>
             <div class="review-row"><span>Date</span><strong id="transaction-detail-date">-</strong></div>
             <div class="review-row"><span>Payment Status</span><span class="activity-status" id="transaction-detail-status">-</span></div>
@@ -1391,19 +1417,26 @@ button.currency-select { width:100%; text-align:left; }
         </div>
       </div>
 
-      <!-- ================= MEMBER FILTER SHEET ================= -->
+      <!-- ================= MEMBER FILTER SHEET =================
+           header / scrollable content / sticky footer — the footer
+           (Clear/Show Results) is a real, always-visible flex child of
+           the sheet, never able to render over filter content (see
+           .modal-sheet.filter-sheet). -->
       <div class="modal-overlay" id="member-filter-overlay">
-        <div class="modal-sheet filter-sheet"><div class="modal-handle"></div>
+        <div class="modal-sheet filter-sheet">
+          <div class="modal-handle"></div>
           <div class="modal-header"><h2>Filter Members</h2><button type="button" class="modal-close" id="close-member-filter" aria-label="Close"><i class="fa-solid fa-xmark"></i></button></div>
-          <div class="filter-group"><h4>Program Type</h4><div class="filter-chip-row" id="filter-program-type-chips"></div></div>
-          <div class="filter-group"><h4>Membership Status</h4><div class="filter-chip-row" id="filter-status-chips"></div></div>
-          <div class="filter-group"><h4>Date Joined</h4><div class="filter-chip-row" id="filter-joined-chips"></div>
-            <div class="filter-date-range" id="filter-joined-date-range" hidden>
-              <label class="filter-date-field"><span>From</span><input type="date" id="filter-joined-date-from" /></label>
-              <label class="filter-date-field"><span>To</span><input type="date" id="filter-joined-date-to" /></label>
+          <div class="sheet-scroll-content">
+            <div class="filter-group"><h4>Program Type</h4><div class="filter-chip-row" id="filter-program-type-chips"></div></div>
+            <div class="filter-group"><h4>Membership Status</h4><div class="filter-chip-row" id="filter-status-chips"></div></div>
+            <div class="filter-group"><h4>Date Joined</h4><div class="filter-chip-row" id="filter-joined-chips"></div>
+              <div class="filter-date-range" id="filter-joined-date-range" hidden>
+                <label class="filter-date-field"><span>From</span><input type="date" id="filter-joined-date-from" /></label>
+                <label class="filter-date-field"><span>To</span><input type="date" id="filter-joined-date-to" /></label>
+              </div>
             </div>
           </div>
-          <div class="wizard-actions"><button type="button" class="modal-secondary" id="clear-filters-btn">Clear</button><button type="button" class="modal-submit" id="apply-filters-btn">Show Results</button></div>
+          <div class="sheet-actions-footer"><button type="button" class="modal-secondary" id="clear-filters-btn">Clear</button><button type="button" class="modal-submit" id="apply-filters-btn">Show Results</button></div>
         </div>
       </div>
 
@@ -1413,18 +1446,22 @@ button.currency-select { width:100%; text-align:left; }
            ever offers currencies the Organizer actually has circles in
            (see activeCurrencyCodes()), with no "All Currencies" entry:
            Notifications always resolves to exactly one currency at a
-           time, initialized from the dashboard's own Account Type. -->
+           time, initialized from the dashboard's own Account Type.
+           Same header/scroll/sticky-footer structure as Member Filter. -->
       <div class="modal-overlay" id="notifications-filter-overlay">
-        <div class="modal-sheet filter-sheet"><div class="modal-handle"></div>
+        <div class="modal-sheet filter-sheet">
+          <div class="modal-handle"></div>
           <div class="modal-header"><h2>Filter Notifications</h2><button type="button" class="modal-close" id="close-notifications-filter" aria-label="Close"><i class="fa-solid fa-xmark"></i></button></div>
-          <div class="filter-group"><h4>Currency / Account Type</h4><div class="filter-chip-row" id="notifications-filter-currency-chips"></div></div>
-          <div class="filter-group"><h4>Date</h4><div class="filter-chip-row" id="notifications-filter-date-chips"></div>
-            <div class="filter-date-range" id="notifications-filter-date-range" hidden>
-              <label class="filter-date-field"><span>From</span><input type="date" id="notifications-filter-date-from" /></label>
-              <label class="filter-date-field"><span>To</span><input type="date" id="notifications-filter-date-to" /></label>
+          <div class="sheet-scroll-content">
+            <div class="filter-group"><h4>Currency / Account Type</h4><div class="filter-chip-row" id="notifications-filter-currency-chips"></div></div>
+            <div class="filter-group"><h4>Date</h4><div class="filter-chip-row" id="notifications-filter-date-chips"></div>
+              <div class="filter-date-range" id="notifications-filter-date-range" hidden>
+                <label class="filter-date-field"><span>From</span><input type="date" id="notifications-filter-date-from" /></label>
+                <label class="filter-date-field"><span>To</span><input type="date" id="notifications-filter-date-to" /></label>
+              </div>
             </div>
           </div>
-          <div class="wizard-actions"><button type="button" class="modal-secondary" id="clear-notifications-filters-btn">Clear</button><button type="button" class="modal-submit" id="apply-notifications-filters-btn">Show Results</button></div>
+          <div class="sheet-actions-footer"><button type="button" class="modal-secondary" id="clear-notifications-filters-btn">Clear</button><button type="button" class="modal-submit" id="apply-notifications-filters-btn">Show Results</button></div>
         </div>
       </div>
 
@@ -1437,42 +1474,22 @@ button.currency-select { width:100%; text-align:left; }
             <div><h3 id="member-detail-name" style="margin-bottom:4px;">Member</h3><span class="cd-status status-active" id="member-detail-status-pill">Active</span></div>
           </div>
 
-          <p class="me-section-label">Identity</p>
+          <p class="me-section-label">Member Identity</p>
           <div class="review-section">
             <div class="review-row"><span>Name</span><strong id="member-detail-fullname">-</strong></div>
             <div class="review-row"><span>Email</span><a class="detail-link" id="member-detail-email" href="#">-</a></div>
             <div class="review-row"><span>KTB ID</span><strong id="member-detail-ktb">-</strong></div>
+            <div class="review-row"><span>Phone Number</span><strong id="member-detail-phone">-</strong></div>
           </div>
 
           <p class="me-section-label">Quick Actions</p>
           <div class="member-qa-grid">
             <button type="button" class="member-qa-item" id="member-pay-btn"><i class="fa-solid fa-hand-holding-dollar"></i>Pay Member</button>
             <button type="button" class="member-qa-item" id="member-suspend-btn"><i class="fa-solid fa-circle-pause"></i>Suspend Member</button>
-            <button type="button" class="member-qa-item" id="member-report-btn"><i class="fa-solid fa-flag"></i>Report</button>
+            <button type="button" class="member-qa-item" id="member-report-btn"><i class="fa-solid fa-flag"></i>Report Member</button>
             <button type="button" class="member-qa-item" id="member-support-btn"><i class="fa-solid fa-headset"></i>Support</button>
           </div>
-          <button type="button" class="member-view-details-btn" id="member-view-details-btn">View Details <i class="fa-solid fa-arrow-right"></i></button>
-        </div>
-      </div>
-
-      <!-- ================= MEMBER VIEW DETAILS (deeper record, gateway from
-           the Member Record Snapshot) ================= -->
-      <div class="modal-overlay" id="member-view-details-overlay">
-        <div class="modal-sheet"><div class="modal-handle"></div>
-          <div class="modal-header"><h2>Member Details</h2><button type="button" class="modal-close" id="close-member-view-details" aria-label="Close"><i class="fa-solid fa-xmark"></i></button></div>
-          <p class="me-section-label">Identity</p>
-          <div class="review-section">
-            <div class="review-row"><span>Name</span><strong id="member-view-fullname">-</strong></div>
-            <div class="review-row"><span>Email</span><strong id="member-view-email">-</strong></div>
-            <div class="review-row"><span>KTB ID</span><strong id="member-view-ktb">-</strong></div>
-          </div>
-          <p class="me-section-label">Membership</p>
-          <div class="review-section">
-            <div class="review-row"><span>Circle</span><strong id="member-view-circle">-</strong></div>
-            <div class="review-row"><span>Status</span><strong id="member-view-status">-</strong></div>
-            <div class="review-row"><span>Date Joined</span><strong id="member-view-joined">-</strong></div>
-          </div>
-          <button type="button" class="modal-secondary" id="member-download-btn" style="width:100%;"><i class="fa-solid fa-download"></i> Download Member Details</button>
+          <button type="button" class="modal-secondary" id="member-download-btn" style="width:100%;margin-top:12px;"><i class="fa-solid fa-download"></i> Download Member Details</button>
         </div>
       </div>
 
@@ -1482,6 +1499,18 @@ button.currency-select { width:100%; text-align:left; }
           <div class="modal-header"><h2>Suspend Member</h2><button type="button" class="modal-close" id="close-suspend-member" aria-label="Close"><i class="fa-solid fa-xmark"></i></button></div>
           <p class="modal-subtext" id="suspend-member-copy">Suspending this member pauses their standing in the circle. They will not appear as an active contributor or be assigned an upcoming payout until reactivated.</p>
           <div class="wizard-actions"><button type="button" class="modal-secondary" id="suspend-cancel-btn">Cancel</button><button type="button" class="modal-secondary warn" id="suspend-confirm-btn">Suspend Member</button></div>
+        </div>
+      </div>
+
+      <!-- ================= GENERIC CONFIRMATION SHEET =================
+           Reused for any action that changes financial state and
+           shouldn't fire on a single tap (currently: Approve/Reject a
+           contribution). See openConfirmAction(). -->
+      <div class="modal-overlay" id="confirm-action-overlay">
+        <div class="modal-sheet"><div class="modal-handle"></div>
+          <div class="modal-header"><h2 id="confirm-action-title">Confirm</h2><button type="button" class="modal-close" id="close-confirm-action" aria-label="Close"><i class="fa-solid fa-xmark"></i></button></div>
+          <p class="modal-subtext" id="confirm-action-body">Are you sure?</p>
+          <div class="wizard-actions"><button type="button" class="modal-secondary" id="confirm-action-cancel">Cancel</button><button type="button" class="modal-submit" id="confirm-action-confirm">Confirm</button></div>
         </div>
       </div>
 
@@ -1543,6 +1572,19 @@ button.currency-select { width:100%; text-align:left; }
         <div class="modal-sheet"><div class="modal-handle"></div>
           <div class="modal-header"><h2>Account Type</h2><button type="button" class="modal-close" id="close-account-type" aria-label="Close"><i class="fa-solid fa-xmark"></i></button></div>
           <div class="filter-chip-row account-type-list" id="account-type-options"></div>
+        </div>
+      </div>
+
+      <!-- ================= CIRCLE CURRENCY PICKER (custom, wizard Step 3) =================
+           Replaces a native <select> for Currency/Asset — unlike the
+           Account Type picker above (which only ever lists currencies
+           the Organizer already has circles in), this lists every
+           supported currency/asset, since the Circle being created
+           hasn't picked one yet. -->
+      <div class="modal-overlay" id="circle-currency-overlay">
+        <div class="modal-sheet"><div class="modal-handle"></div>
+          <div class="modal-header"><h2>Currency / Asset</h2><button type="button" class="modal-close" id="close-circle-currency" aria-label="Close"><i class="fa-solid fa-xmark"></i></button></div>
+          <div class="filter-chip-row account-type-list" id="circle-currency-options"></div>
         </div>
       </div>
 
@@ -1643,6 +1685,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initializeMemberPay();
   initializePaymentReview();
   initializeTransactionDetail();
+  initializeConfirmAction();
   initializeSearch();
   initializeCirclesSegments();
   initializeMemberFilters();
@@ -1816,7 +1859,13 @@ function bootstrapSession() {
 const CURRENCIES = {
   NGN: { type: "fiat", label: "Nigerian Naira", symbol: "₦", suffix: "", locale: "en-NG", minAmount: 2000, maxAmount: 10000000 },
   USD: { type: "fiat", label: "US Dollar", symbol: "$", suffix: "", locale: "en-US", minAmount: 1, maxAmount: 1000000 },
-  USDT: { type: "crypto", label: "Tether USD", symbol: "", suffix: " USDT", locale: "en-US", minAmount: 1, maxAmount: 1000000 },
+  // " USDT" (non-breaking space), not a plain " USDT" — a regular
+  // space here is exactly where "100 USDT" was splitting onto two
+  // lines on narrow screens. Since formatAmount/formatCompactAmount
+  // are the one shared place every amount in the app gets built, this
+  // one change fixes it everywhere at once rather than chasing nowrap
+  // CSS across every individual display location.
+  USDT: { type: "crypto", label: "Tether USD", symbol: "", suffix: " USDT", locale: "en-US", minAmount: 1, maxAmount: 1000000 },
 };
 function currencyMeta(code) { return CURRENCIES[code] || CURRENCIES.NGN; }
 function formatAmount(amount, currencyCode) {
@@ -2215,6 +2264,10 @@ function loadDashboardData() {
 // (the wizard's own Currency/Asset step keeps its fuller CURRENCIES
 // labels — this is just this one narrow row's own presentation).
 const ACCOUNT_TYPE_LABELS = { NGN: "Naira (NGN)", USD: "US Dollar (USD)", USDT: "Tether (USDT)" };
+// The three established Member payment types — which cycle a payment
+// is actually for — never a generic "Full/Partial Payment" label.
+const PAYMENT_TYPE_LABELS = { current: "Pay Current", outstanding: "Pay Outstanding", forward: "Pay Forward" };
+function paymentTypeLabel(key) { return PAYMENT_TYPE_LABELS[key] || PAYMENT_TYPE_LABELS.current; }
 
 // Only ever lists currencies the Organizer actually has circles in — a
 // contextual "Account Type" switcher, not a global "show everything"
@@ -2838,15 +2891,52 @@ function buildTransactionRecord(kind, item, circle) {
     circleId: circle ? circle.id : (item.circle_id ?? null),
     circleName: circle ? circle.name : "Unavailable",
     currency: circle ? circle.currency : "NGN",
-    amount: item.amount, date, statusKey, statusLabel,
-    paymentType: item.payment_type || "Full Payment",
+    amount: item.amount, date, dateTime: formatActivityDateTime(date, transactionKeyFor(kind, id)),
+    statusKey, statusLabel,
+    paymentType: paymentTypeLabel(item.payment_type),
     note: item.note || "",
     hasEvidence: evidenceCount > 0,
     txnId: item.txn_id || assignTxnId(`${kind}:${id}`),
     toName: isPayout ? (item.full_name || "Member") : "Amina Yusuf",
     toSub: isPayout ? (member?.bankName || "") : "",
     fromName: isPayout ? "Amina Yusuf" : (item.full_name || "Member"),
+    destination: transactionDestination(isPayout, circle, member),
   };
+}
+
+// The destination identifier a transaction actually verifies against —
+// masked account number for fiat, masked wallet address for crypto.
+// Payouts use the recipient member's own destination; contributions use
+// the Circle's own default payment account (what members pay INTO).
+function transactionDestination(isPayout, circle, member) {
+  const currency = circle ? circle.currency : "NGN";
+  if (isPayout) {
+    return currency === "USDT"
+      ? { label: "Payout Wallet Address", value: maskMiddle(member?.accountNumber) }
+      : { label: "Account Number", value: maskAccountNumber(member?.accountNumber) };
+  }
+  const account = circle ? defaultPaymentAccountFor(circle.currency) : null;
+  return currency === "USDT"
+    ? { label: "Wallet Address", value: account ? maskMiddle(account.walletAddress) : "Unavailable" }
+    : { label: "Account Number", value: account ? maskAccountNumber(account.accountNumber) : "Unavailable" };
+}
+
+// Mock records only ever carry a date, never a time — this derives a
+// stable (not random-per-render), plausible time from the transaction's
+// own key so "5 Sept 2026 · 14:32" stays the same every time you open
+// the same transaction, without needing a real timestamp field.
+function mockTimeFor(key) {
+  let hash = 0;
+  for (let i = 0; i < key.length; i++) hash = (hash * 31 + key.charCodeAt(i)) >>> 0;
+  return { hours: 8 + (hash % 12), minutes: (hash >> 3) % 60 };
+}
+function formatActivityDateTime(dateStr, key) {
+  if (!dateStr) return "Date not recorded";
+  const date = new Date(dateStr);
+  if (Number.isNaN(date.getTime())) return "Date not recorded";
+  const { hours, minutes } = mockTimeFor(key);
+  const dateLabel = date.toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" });
+  return `${dateLabel} · ${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
 }
 
 function findTransactionByKey(key) {
@@ -2894,8 +2984,10 @@ function openTransactionDetail(txn) {
   setText("transaction-detail-title", txn.kind === "payout" ? `Payout to ${txn.memberName}` : `Contribution from ${txn.memberName}`);
   setText("transaction-detail-to-name", txn.toName);
   setText("transaction-detail-to-sub", txn.toSub || "");
+  setText("transaction-detail-destination-label", txn.destination.label);
+  setText("transaction-detail-destination-value", txn.destination.value);
   setText("transaction-detail-from", txn.fromName);
-  setText("transaction-detail-date", formatActivityDate(txn.date));
+  setText("transaction-detail-date", txn.dateTime);
   const statusEl = document.getElementById("transaction-detail-status");
   if (statusEl) { statusEl.textContent = txn.statusLabel; statusEl.className = "activity-status " + txn.statusKey; }
   setText("transaction-detail-type", txn.paymentType);
@@ -2931,8 +3023,9 @@ function initializeTransactionDetail() {
       `Type: ${t.kind === "payout" ? "Payout" : "Contribution"}`,
       `Amount: ${formatAmount(t.amount, t.currency)}`,
       `To: ${t.toName}`,
+      `${t.destination.label}: ${t.destination.value}`,
       `From: ${t.fromName}`,
-      `Date: ${formatActivityDate(t.date)}`,
+      `Date: ${t.dateTime}`,
       `Status: ${t.statusLabel}`,
       `Payment Type: ${t.paymentType}`,
       `Circle: ${t.circleName}`,
@@ -2944,24 +3037,69 @@ function initializeTransactionDetail() {
     downloadMockFile(`kuntribute-receipt-${t.txnId}.txt`, lines.join("\n"));
   });
 
+  // Approving/rejecting changes financial state, so neither fires on
+  // the first tap — see openConfirmAction (a generic confirm sheet,
+  // not a one-off modal per action).
   document.getElementById("transaction-detail-approve")?.addEventListener("click", () => {
     if (!activeTransaction || activeTransaction.kind !== "contribution") return;
-    const item = mockContributions.find((c) => c.contribution_id === activeTransaction.id);
-    if (!item) return;
-    item.status = "confirmed";
-    if (!item.payment_date) item.payment_date = defaultPaymentDate();
-    loadDashboardData();
-    showToast("Contribution approved.", "fa-solid fa-circle-check");
-    openTransactionDetail(findTransactionByKey(activeTransaction.key));
+    const txnKey = activeTransaction.key;
+    openConfirmAction({
+      title: "Approve this contribution?",
+      body: "Confirm that this payment should be recorded as approved.",
+      confirmLabel: "Approve",
+      confirmClass: "modal-submit",
+      onConfirm: () => {
+        const item = mockContributions.find((c) => c.contribution_id === activeTransaction.id);
+        if (!item) return;
+        item.status = "confirmed";
+        if (!item.payment_date) item.payment_date = defaultPaymentDate();
+        loadDashboardData();
+        showToast("Contribution approved.", "fa-solid fa-circle-check");
+        openTransactionDetail(findTransactionByKey(txnKey));
+      },
+    });
   });
   document.getElementById("transaction-detail-reject")?.addEventListener("click", () => {
     if (!activeTransaction || activeTransaction.kind !== "contribution") return;
-    const item = mockContributions.find((c) => c.contribution_id === activeTransaction.id);
-    if (!item) return;
-    item.status = "rejected";
-    loadDashboardData();
-    showToast("Contribution rejected.", "fa-solid fa-circle-xmark");
-    openTransactionDetail(findTransactionByKey(activeTransaction.key));
+    const txnKey = activeTransaction.key;
+    openConfirmAction({
+      title: "Reject this contribution?",
+      body: "This contribution will be recorded as rejected.",
+      confirmLabel: "Reject",
+      confirmClass: "modal-secondary danger",
+      onConfirm: () => {
+        const item = mockContributions.find((c) => c.contribution_id === activeTransaction.id);
+        if (!item) return;
+        item.status = "rejected";
+        loadDashboardData();
+        showToast("Contribution rejected.", "fa-solid fa-circle-xmark");
+        openTransactionDetail(findTransactionByKey(txnKey));
+      },
+    });
+  });
+}
+
+/* ==========================================================
+   GENERIC CONFIRMATION SHEET — reused for any action that changes
+   financial state and must not fire on the first tap.
+========================================================== */
+let pendingConfirmAction = null;
+function openConfirmAction({ title, body, confirmLabel, confirmClass, onConfirm }) {
+  setText("confirm-action-title", title);
+  setText("confirm-action-body", body);
+  const confirmBtn = document.getElementById("confirm-action-confirm");
+  if (confirmBtn) { confirmBtn.textContent = confirmLabel; confirmBtn.className = confirmClass || "modal-submit"; }
+  pendingConfirmAction = onConfirm;
+  openModal("confirm-action-overlay");
+}
+function initializeConfirmAction() {
+  document.getElementById("close-confirm-action")?.addEventListener("click", () => { pendingConfirmAction = null; closeModal("confirm-action-overlay"); });
+  document.getElementById("confirm-action-cancel")?.addEventListener("click", () => { pendingConfirmAction = null; closeModal("confirm-action-overlay"); });
+  document.getElementById("confirm-action-confirm")?.addEventListener("click", () => {
+    const action = pendingConfirmAction;
+    pendingConfirmAction = null;
+    closeModal("confirm-action-overlay");
+    if (action) action();
   });
 }
 
@@ -3060,6 +3198,7 @@ function openMemberDetail(member) {
   const emailLink = document.getElementById("member-detail-email");
   if (emailLink) { emailLink.textContent = member.email || "Unavailable"; emailLink.href = member.email ? `mailto:${member.email}` : "#"; }
   setText("member-detail-ktb", member.ktbId || "Unavailable");
+  setText("member-detail-phone", member.phone || "Unavailable");
 
   openModal("member-detail-overlay");
   pushMemberDetailHistory(member);
@@ -3091,7 +3230,7 @@ function openMemberPay(member) {
       circleId: member.circleId, circleName: circle ? circle.name : "Unavailable",
       currency: circle ? circle.currency : "NGN",
       bank: member.bankName || "Unavailable", accountName: member.name, accountNumber: member.accountNumber || "Unavailable",
-      amount: circle ? circle.amount : 0, paymentType: "full", date: defaultPaymentDate(),
+      amount: circle ? circle.amount : 0, paymentType: "current", date: defaultPaymentDate(),
       evidence: [], note: "",
     };
   }
@@ -3206,7 +3345,7 @@ function renderPaymentReviewPage() {
   const amountStr = formatAmount(paymentDraft.amount, paymentDraft.currency);
   setText("payment-review-amount", amountStr);
   setText("payment-review-amount-row", amountStr);
-  setText("payment-review-type", paymentDraft.paymentType === "partial" ? "Partial Payment" : "Full Payment");
+  setText("payment-review-type", paymentTypeLabel(paymentDraft.paymentType));
   setText("payment-review-circle", paymentDraft.circleName);
   setText("payment-review-date", formatActivityDate(paymentDraft.date));
   setText("payment-review-bank", paymentDraft.bank);
@@ -3228,7 +3367,7 @@ function recordPayoutFromDraft(draft) {
     payout_id: payoutId, circle_id: draft.circleId, circle_member_id: member ? member.circleMemberId : null,
     user_id: member ? member.userId : null, full_name: draft.memberName, amount: Number(draft.amount) || 0,
     payout_date: draft.date, status: "pending",
-    payment_type: draft.paymentType === "partial" ? "Partial Payment" : "Full Payment",
+    payment_type: draft.paymentType || "current",
     note: draft.note || "", evidence_count: draft.evidence.length,
     txn_id: assignTxnId(`payout:${payoutId}`),
   };
@@ -3258,17 +3397,6 @@ function returnToMemberPay() {
 
 // View Details — the snapshot's gateway to deeper record info; carries
 // the Download action that used to sit directly on the snapshot.
-function openMemberViewDetails(member) {
-  setText("member-view-fullname", member.name);
-  setText("member-view-email", member.email || "Unavailable");
-  setText("member-view-ktb", member.ktbId || "Unavailable");
-  const circle = circlesData.find((c) => c.id === member.circleId);
-  setText("member-view-circle", circle ? circle.name : "Unavailable");
-  setText("member-view-status", membershipStatusLabel(member.membershipStatus));
-  setText("member-view-joined", member.joinedAt ? formatActivityDate(member.joinedAt) : "Unavailable");
-  openModal("member-view-details-overlay");
-}
-
 function updateMemberMembershipStatus(member, newStatus) {
   const record = mockCircleMembers.find((m) => m.circle_member_id === member.circleMemberId);
   if (record) record.membership_status = newStatus;
@@ -3299,15 +3427,6 @@ function initializeMemberActions() {
   document.getElementById("member-report-btn")?.addEventListener("click", () => showToast("Reporting is planned for a future release.", "fa-solid fa-hourglass-half"));
   document.getElementById("member-support-btn")?.addEventListener("click", () => showToast("Support is planned for a future release.", "fa-solid fa-hourglass-half"));
 
-  document.getElementById("member-view-details-btn")?.addEventListener("click", () => {
-    if (!activeMemberDetail) return;
-    closeModal("member-detail-overlay");
-    openMemberViewDetails(activeMemberDetail);
-  });
-
-  // Backdrop-click-to-close is already covered generically by
-  // initializeModals()'s ".modal-overlay" loop.
-  document.getElementById("close-member-view-details")?.addEventListener("click", () => closeModal("member-view-details-overlay"));
   document.getElementById("member-download-btn")?.addEventListener("click", downloadMemberDetails);
 }
 
@@ -3320,11 +3439,8 @@ function downloadMemberDetails() {
     `Name: ${member.name}`,
     `Email: ${member.email || "Unavailable"}`,
     `KTB ID: ${member.ktbId || "Unavailable"}`,
+    `Phone Number: ${member.phone || "Unavailable"}`,
     `Status: ${membershipStatusLabel(member.membershipStatus)}`,
-    "",
-    `Bank Name: ${member.bankName || "Unavailable"}`,
-    `Account Name: ${member.name}`,
-    `Account Number: ${member.accountNumber || "Unavailable"}`,
     "",
     "This is a prototype document generated locally. No real financial",
     "transactions or account data are represented.",
@@ -3558,6 +3674,11 @@ function initializeWizard() {
   document.getElementById("view-created-circle")?.addEventListener("click", () => { closeWizard(); if (createdCircleId) openCircleDetail(createdCircleId); });
   document.getElementById("close-success")?.addEventListener("click", () => { closeWizard(); switchPage("circles"); });
   document.getElementById("share-circle-btn")?.addEventListener("click", () => showToast("Share link copied (prototype — no real link).", "fa-solid fa-share-nodes"));
+  document.getElementById("success-invite-copy-btn")?.addEventListener("click", async () => {
+    const value = document.getElementById("success-invite-link")?.textContent || "";
+    try { await navigator.clipboard.writeText(value); showToast("Invitation link copied.", "fa-regular fa-copy"); }
+    catch (e) { showToast("Copy not supported in this browser.", "fa-solid fa-triangle-exclamation"); }
+  });
   document.getElementById("download-circle-btn")?.addEventListener("click", downloadCircleReceipt);
 
   initializeWizardStep1();
@@ -3631,10 +3752,53 @@ function validateStep2() {
 /* ---- Step 3: Contribution Rules — PRODUCT RULE: one Circle = one
    currency/asset, chosen here and never changed or converted later. ---- */
 function initializeWizardStep3Currency() {
-  document.getElementById("circle-currency")?.addEventListener("change", () => { updateAmountHint(); updateContributionRulesSummary(); });
   document.getElementById("circle-frequency")?.addEventListener("change", updateContributionRulesSummary);
+  initializeCircleCurrencyPicker();
   updateAmountHint();
   updateContributionRulesSummary();
+}
+
+// Custom in-app picker (not a native <select>) for the wizard's own
+// Currency/Asset field — mirrors the Account Type picker's pattern,
+// but lists every supported currency/asset rather than only ones the
+// Organizer already has circles in (this Circle hasn't picked one yet).
+// A hidden #circle-currency input keeps its .value as the single
+// source of truth so every existing reader of it (validateStep3,
+// updateAmountHint, the amount input's max-clamping, etc.) needs no
+// change at all.
+const WIZARD_CURRENCY_OPTIONS = [
+  { code: "NGN", label: "Nigerian Naira (NGN)" },
+  { code: "USD", label: "US Dollar (USD)" },
+  { code: "USDT", label: "Tether USD (USDT)" },
+];
+function renderCircleCurrencyTrigger() {
+  const trigger = document.getElementById("circle-currency-trigger");
+  const hidden = document.getElementById("circle-currency");
+  if (!trigger || !hidden) return;
+  const opt = WIZARD_CURRENCY_OPTIONS.find((o) => o.code === hidden.value) || WIZARD_CURRENCY_OPTIONS[0];
+  trigger.textContent = opt.label;
+}
+function initializeCircleCurrencyPicker() {
+  const trigger = document.getElementById("circle-currency-trigger");
+  const hidden = document.getElementById("circle-currency");
+  const list = document.getElementById("circle-currency-options");
+  if (!trigger || !hidden || !list) return;
+  list.innerHTML = WIZARD_CURRENCY_OPTIONS.map((o) => `<button type="button" class="filter-chip" data-currency="${o.code}">${o.label}</button>`).join("");
+  trigger.addEventListener("click", () => {
+    list.querySelectorAll("[data-currency]").forEach((btn) => btn.classList.toggle("active", btn.dataset.currency === hidden.value));
+    openModal("circle-currency-overlay");
+  });
+  document.getElementById("close-circle-currency")?.addEventListener("click", () => closeModal("circle-currency-overlay"));
+  list.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-currency]");
+    if (!btn) return;
+    hidden.value = btn.dataset.currency;
+    renderCircleCurrencyTrigger();
+    closeModal("circle-currency-overlay");
+    updateAmountHint();
+    updateContributionRulesSummary();
+  });
+  renderCircleCurrencyTrigger();
 }
 function updateAmountHint() {
   const select = document.getElementById("circle-currency");
@@ -3743,20 +3907,36 @@ function paymentAccountCardHTML(account) {
     ? `<div class="payment-account-card"><div class="payment-account-card-top"><strong>${account.asset || "Tether USD (USDT)"}</strong>${badge}</div><p>${account.network}</p><p>${maskMiddle(account.walletAddress)}</p></div>`
     : `<div class="payment-account-card"><div class="payment-account-card-top"><strong>${account.institution}</strong>${badge}</div><p>${account.accountName}</p><p>${maskAccountNumber(account.accountNumber)}</p></div>`;
 }
-function paymentAccountSummaryLine(account) {
-  if (!account) return "Not set";
-  return account.currency === "USDT" ? `${account.network} · ${maskMiddle(account.walletAddress)}` : `${account.institution} · ${maskAccountNumber(account.accountNumber)}`;
+// Full, unmasked destination rows — used by the wizard's own Payment
+// Details step and the Review step's Payment Details section, where
+// the Organizer is actively confirming exactly where money goes (unlike
+// the Payment Accounts settings list or Pay Member/Transaction Detail,
+// which mask for a "just reviewing a record" context — see
+// paymentAccountCardHTML/maskAccountNumber/maskMiddle for those).
+function paymentAccountFullRowsHTML(account) {
+  if (!account) return "";
+  return account.currency === "USDT"
+    ? `<div class="review-row"><span>Asset</span><strong>${account.asset || "Tether USD (USDT)"}</strong></div>
+       <div class="review-row"><span>Network</span><strong>${account.network}</strong></div>
+       <div class="review-row"><span>Wallet Address</span><strong style="word-break:break-all;text-align:right;max-width:60%;">${account.walletAddress}</strong></div>`
+    : `<div class="review-row"><span>Bank</span><strong>${account.institution}</strong></div>
+       <div class="review-row"><span>Account Name</span><strong>${account.accountName}</strong></div>
+       <div class="review-row"><span>Account Number</span><strong>${account.accountNumber}</strong></div>
+       <div class="review-row"><span>Currency</span><strong>${account.currency}</strong></div>`;
 }
-function summarizeCustomPaymentDetails(details, currency) {
-  if (!details) return "Not set";
-  return currency === "USDT" ? `${details.network || "—"} · ${maskMiddle(details.walletAddress)}` : `${details.institution || "—"} · ${maskAccountNumber(details.accountNumber)}`;
+// Same "show it in full" treatment for a custom (not saved-account)
+// destination — generic over whichever fields PAYMENT_DETAIL_FIELDS
+// defines for the Circle's currency.
+function customPaymentDetailsFullRowsHTML(details, currency) {
+  if (!details) return `<p class="payment-account-empty">Not set</p>`;
+  const fields = PAYMENT_DETAIL_FIELDS[currency] || PAYMENT_DETAIL_FIELDS.NGN;
+  return fields.map((f) => `<div class="review-row"><span>${f.label}</span><strong style="word-break:break-all;text-align:right;max-width:60%;">${details[f.key] || "—"}</strong></div>`).join("");
 }
-
 function renderPaymentDefaultPreview() {
   const container = document.getElementById("payment-default-preview");
   if (!container) return;
   const account = defaultPaymentAccountFor(pendingCircle.currency);
-  container.innerHTML = account ? paymentAccountCardHTML(account) : `<p class="payment-account-empty">No default ${pendingCircle.currency} payment account yet. Add one in Me → Payment Accounts, or use a custom destination for this Circle.</p>`;
+  container.innerHTML = account ? paymentAccountFullRowsHTML(account) : `<p class="payment-account-empty">No default ${pendingCircle.currency} payment account yet. Add one in Me → Payment Accounts, or use a custom destination for this Circle.</p>`;
 }
 function renderPaymentCustomFields() {
   const container = document.getElementById("payment-custom-fields");
@@ -3819,6 +3999,12 @@ function validateStep5() {
    Payment Details / Circle Summary — deliberately no Projected
    Schedule and no Circle Insights analytics; Circle Summary is the one
    small, concise final recap. ---- */
+// Exactly four contained sections — Circle / Contribution Rules /
+// Circle Start / Payment Details. No Circle Summary, no Circle
+// Insights, no Projected Schedule. Payment Details shows the full,
+// unmasked destination (see paymentAccountFullRowsHTML/
+// customPaymentDetailsFullRowsHTML) — the Organizer is confirming
+// exactly where members' money goes, not just glancing at a record.
 function populateStep6() {
   const { programType, name, membersTarget, currency, amount, frequency, startMode, startDate } = pendingCircle;
   setText("review-circle-type", programType);
@@ -3830,12 +4016,12 @@ function populateStep6() {
   setText("review-start-method", startMode === "manual" ? "Manual" : "Scheduled");
   setText("review-start-date-label", startMode === "manual" ? "Status after creation" : "Start Date");
   setText("review-start-date", startMode === "manual" ? "Setup" : new Date(startDate).toLocaleDateString("en-NG", { day: "numeric", month: "long", year: "numeric" }));
-  setText("review-payment-summary", pendingCircle.paymentMode === "default" ? paymentAccountSummaryLine(defaultPaymentAccountFor(currency)) : summarizeCustomPaymentDetails(pendingCircle.paymentDetails, currency));
 
-  const chips = document.getElementById("circle-summary-chips");
-  if (chips) {
-    const cadence = frequency === "Daily" ? "daily" : frequency === "Monthly" ? "monthly" : "weekly";
-    chips.innerHTML = `<span class="badge-frequency">${membersTarget} members</span><span class="badge-amount">${formatAmount(amount, currency)} ${cadence}</span><span class="badge-frequency">${currency}</span>`;
+  const destEl = document.getElementById("review-payment-destination");
+  if (destEl) {
+    destEl.innerHTML = pendingCircle.paymentMode === "default"
+      ? paymentAccountFullRowsHTML(defaultPaymentAccountFor(currency)) || `<p class="payment-account-empty">No default ${currency} payment account.</p>`
+      : customPaymentDetailsFullRowsHTML(pendingCircle.paymentDetails, currency);
   }
   document.getElementById("create-circle-error").textContent = "";
 }
